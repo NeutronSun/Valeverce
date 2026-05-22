@@ -1,0 +1,302 @@
+{
+  "count": 37,
+  "images": [
+    {
+      "id": "Athene",
+      "name": "Athene, Stratega dell'Olimpo",
+      "filename": "Athene.png",
+      "source_file": "valérios_protèros_matthaios_heroic_portrait.png",
+      "theme": "greco • oro • owl-core",
+      "rarity": "epica"
+    },
+    {
+      "id": "Magister",
+      "name": "Il Magister",
+      "filename": "Magister.png",
+      "source_file": "decimus_valerius_maximus_portrait_card.png",
+      "theme": "roma • registro • latino minaccioso",
+      "rarity": "rara"
+    },
+    {
+      "id": "Nasus",
+      "name": "Nasus, Custode delle Sabbie",
+      "filename": "Nasus.png",
+      "source_file": "majestic_pharaoh_on_golden_throne.png",
+      "theme": "egitto • sabbia • late game",
+      "rarity": "leggendaria"
+    },
+    {
+      "id": "Samurai",
+      "name": "Samurai del Sottoscala",
+      "filename": "Samurai.png",
+      "source_file": "warrior_of_honor_and_legacy.png",
+      "theme": "samurai • sakura • condominio",
+      "rarity": "epica"
+    },
+    {
+      "id": "Sir",
+      "name": "Sir Monocolo",
+      "filename": "Sir.png",
+      "source_file": "knight_of_data_and_strategy.png",
+      "theme": "cavaliere • codice • salotto blu",
+      "rarity": "rara"
+    },
+    {
+      "id": "auditore",
+      "name": "Valerio Auditore",
+      "filename": "auditore.png",
+      "source_file": "valerio_auditore_brotherhood_of_projects.png",
+      "theme": "rinascimento • stealth • piume perse",
+      "rarity": "leggendaria"
+    },
+    {
+      "id": "cave",
+      "name": "Cavernicolo Premium",
+      "filename": "cave.png",
+      "source_file": "cave_warrior_of_fire_and_rock.png",
+      "theme": "pietra • fuoco • bonk",
+      "rarity": "comune"
+    },
+    {
+      "id": "doom",
+      "name": "Doom Valerio",
+      "filename": "doom.png",
+      "source_file": "the_doom_of_valerian_von_quondoom.png",
+      "theme": "metallo • verde • boss finale",
+      "rarity": "mitica"
+    },
+    {
+      "id": "genshis",
+      "name": "Genshis del Pull Singolo",
+      "filename": "genshis.png",
+      "source_file": "heroic_khan_in_battle_ready_portrait.png",
+      "theme": "anime • fortuna • banner limitato",
+      "rarity": "rara"
+    },
+    {
+      "id": "gta",
+      "name": "Los Santos Valerio",
+      "filename": "gta.png",
+      "source_file": "vice_city_legends_sunset_streets.png",
+      "theme": "neon • crime • radio anni 80",
+      "rarity": "epica"
+    },
+    {
+      "id": "malenia",
+      "name": "Malenia, Lama Puntigliosa",
+      "filename": "malenia.png",
+      "source_file": "valenia_the_golden_warrior_king.png",
+      "theme": "oro • rosso • boss fight",
+      "rarity": "mitica"
+    },
+    {
+      "id": "nazi",
+      "name": "Il Burocrate Inquadrato",
+      "filename": "nazi.png",
+      "source_file": "valerian_von_quandamattheus_portrait_card.png",
+      "theme": "grigio • ufficio • calendario ostile",
+      "rarity": "rara"
+    },
+    {
+      "id": "pirate",
+      "name": "Capitan Sottocoperta",
+      "filename": "pirate.png",
+      "source_file": "commodore_val_the_dread_portrait.png",
+      "theme": "pirati • legno • teschi",
+      "rarity": "epica"
+    },
+    {
+      "id": "reddead",
+      "name": "Fuorilegge Red Deadline",
+      "filename": "reddead.png",
+      "source_file": "outlaw_at_sunset_deadline_redemption_2.png",
+      "theme": "western • tramonto • polvere",
+      "rarity": "epica"
+    },
+    {
+      "id": "shaman",
+      "name": "Sciamano Wi‑Fi",
+      "filename": "shaman.png",
+      "source_file": "shaman_of_the_canyon_spirit.png",
+      "theme": "totem • canyon • connessione instabile",
+      "rarity": "rara"
+    },
+    {
+      "id": "stark",
+      "name": "Tony Starkissimo",
+      "filename": "stark.png",
+      "source_file": "hero_of_the_iron_project.png",
+      "theme": "tech • oro • ego sostenibile",
+      "rarity": "mitica"
+    },
+    {
+      "id": "strano",
+      "name": "Dottor Strano",
+      "filename": "strano.png",
+      "source_file": "sorcerer_of_arcane_mastery.png",
+      "theme": "arcano • portali • bug cosmici",
+      "rarity": "leggendaria"
+    },
+    {
+      "id": "urss",
+      "name": "Compagno Borscht",
+      "filename": "urss.png",
+      "source_file": "stormy_portrait_of_valerian_kvondamatteyev.png",
+      "theme": "grigio • rosso • piano quinquennale",
+      "rarity": "rara"
+    },
+    {
+      "id": "v",
+      "name": "V, Maschera e Verbosità",
+      "filename": "v.png",
+      "source_file": "vigilante_in_a_gothic_london_night.png",
+      "theme": "gothic • rosso • allitterazioni",
+      "rarity": "leggendaria"
+    },
+    {
+      "id": "valcraft",
+      "name": "Valcraft",
+      "filename": "valcraft.png",
+      "source_file": "epic_adventure_in_a_voxel_world.png",
+      "theme": "voxel • diamante • crafting",
+      "rarity": "epica"
+    },
+    {
+      "id": "valdemort",
+      "name": "Valdemort",
+      "filename": "valdemort.png",
+      "source_file": "sorcerer_of_the_dark_fortress.png",
+      "theme": "nero • verde • serpentcore",
+      "rarity": "leggendaria"
+    },
+    {
+      "id": "valerio",
+      "name": "Valerio Prime",
+      "filename": "valerio.png",
+      "source_file": "mediterranean_wanderer_in_golden_frame.png",
+      "theme": "viaggio • mare • plot armor",
+      "rarity": "speciale"
+    },
+    {
+      "id": "vally",
+      "name": "Vally Allen",
+      "filename": "vally.png",
+      "source_file": "vally_allen_legendary_speedster_in_action.png",
+      "theme": "fulmine • rosso • speed force",
+      "rarity": "epica"
+    },
+    {
+      "id": "vratos",
+      "name": "Vratos, Padre Calmo",
+      "filename": "vratos.png",
+      "source_file": "vratos_god_of_power_and_fury.png",
+      "theme": "mito • cenere • furia controllata",
+      "rarity": "mitica"
+    },
+    {
+      "id": "vatriota",
+      "name": "Vatriota",
+      "filename": "vatriota.png",
+      "source_file": "vatriota_hero_of_the_skies.png",
+      "theme": "stelle • mantello • briefing aereo",
+      "rarity": "leggendaria"
+    },
+    {
+      "id": "the_veep",
+      "name": "The Veep",
+      "filename": "the_veep.png",
+      "source_file": "the_veep_maritime_warrior_hero.png",
+      "theme": "oceano • corazzata • tridente invisibile",
+      "rarity": "epica"
+    },
+    {
+      "id": "v_train",
+      "name": "V‑Train",
+      "filename": "v_train.png",
+      "source_file": "v_train_the_heroic_prospect.png",
+      "theme": "sport • blue armor • palestra futuristica",
+      "rarity": "epica"
+    },
+    {
+      "id": "fire_project",
+      "name": "Fire Project",
+      "filename": "fire_project.png",
+      "source_file": "heroic_fire_project_superhero_portrait.png",
+      "theme": "rosso • fuoco • city disaster",
+      "rarity": "rara"
+    },
+    {
+      "id": "project_boy",
+      "name": "Project Boy",
+      "filename": "project_boy.png",
+      "source_file": "hero_of_the_ruined_city.png",
+      "theme": "post‑apocalisse • scudo • morale basso",
+      "rarity": "rara"
+    },
+    {
+      "id": "starproject",
+      "name": "Starproject",
+      "filename": "starproject.png",
+      "source_file": "golden_hero_in_sunlit_cityscape.png",
+      "theme": "oro • luce • skyline",
+      "rarity": "mitica"
+    },
+    {
+      "id": "black_val",
+      "name": "Black Val",
+      "filename": "black_val.png",
+      "source_file": "warrior_of_the_black_val_dominion.png",
+      "theme": "nero • metallo • battaglia finale",
+      "rarity": "leggendaria"
+    },
+    {
+      "id": "valarot",
+      "name": "Valarot",
+      "filename": "valarot.png",
+      "source_file": "epic_warrior_with_dragon_balls_and_energy_storms.png",
+      "theme": "aura dorata • sfere del drago • potenza",
+      "rarity": "mitica"
+    },
+    {
+      "id": "buulerio",
+      "name": "Buulerio",
+      "filename": "buulerio.png",
+      "source_file": "majin_warrior_in_cosmic_glory.png",
+      "theme": "rosa • caramelle • caos cosmico",
+      "rarity": "leggendaria"
+    },
+    {
+      "id": "valinyu_squad",
+      "name": "Valinyu Squad",
+      "filename": "valinyu_squad.png",
+      "source_file": "valinyu_squad_in_electrifying_battle_pose.png",
+      "theme": "namek • squadra • pose impossibili",
+      "rarity": "mitica"
+    },
+    {
+      "id": "cellerio",
+      "name": "Cellerio",
+      "filename": "cellerio.png",
+      "source_file": "cellerio_master_of_cosmic_energy.png",
+      "theme": "verde • bio‑organic • perfezione",
+      "rarity": "mitica"
+    },
+    {
+      "id": "vallicolo",
+      "name": "Vallicolo",
+      "filename": "vallicolo.png",
+      "source_file": "valicolo_the_green_warrior_hero.png",
+      "theme": "namek • mantello bianco • aura verde",
+      "rarity": "leggendaria"
+    },
+    {
+      "id": "gogerio",
+      "name": "Gogerio",
+      "filename": "gogerio.png",
+      "source_file": "fiery_fusion_hero_card.png",
+      "theme": "rosso • ssj4 • aura devastante",
+      "rarity": "mitica"
+    }
+  ],
+  "missing": []
+}

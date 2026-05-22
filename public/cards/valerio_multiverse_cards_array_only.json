@@ -1,0 +1,1809 @@
+[
+  {
+    "id": "Athene",
+    "image": "Athene.png",
+    "name": "Athene, Stratega dell'Olimpo",
+    "subtitle": "Fa una retrospettiva anche sulla guerra di Troia.",
+    "rarity": "epica",
+    "archetype": "stratega",
+    "theme": "greco • oro • owl-core",
+    "frame": {
+      "preset": "olympus_gold",
+      "accent": "#d6a94f",
+      "icon": "owl"
+    },
+    "special": {
+      "S": 3,
+      "P": 8,
+      "E": 5,
+      "C": 7,
+      "I": 10,
+      "A": 5,
+      "L": 6
+    },
+    "active": {
+      "name": "Scacco dell'Olimpo",
+      "cost": 2,
+      "text": "Aggiungi Intelligence se è tra gli SPECIAL scelti.",
+      "effect": {
+        "type": "selected-stat",
+        "stat": "I"
+      },
+      "flavor": "La soluzione era ovvia, ma solo dopo che l'ha detta lui."
+    },
+    "passive": {
+      "name": "Consiglio non richiesto",
+      "text": "+2 se Perception è tra gli SPECIAL del turno.",
+      "effect": {
+        "type": "contains",
+        "stat": "P",
+        "value": 2
+      },
+      "flavor": "Vede il problema tre sprint prima degli altri."
+    },
+    "quote": "Non è micromanagement, è mitologia applicata.",
+    "tags": [
+      "strategia",
+      "olimpico",
+      "controllo"
+    ]
+  },
+  {
+    "id": "Magister",
+    "image": "Magister.png",
+    "name": "Il Magister",
+    "subtitle": "Spiega la task, poi interroga la task.",
+    "rarity": "rara",
+    "archetype": "controllore",
+    "theme": "roma • registro • latino minaccioso",
+    "frame": {
+      "preset": "roman_marble",
+      "accent": "#b7934e",
+      "icon": "laurel"
+    },
+    "special": {
+      "S": 3,
+      "P": 7,
+      "E": 4,
+      "C": 8,
+      "I": 10,
+      "A": 3,
+      "L": 5
+    },
+    "active": {
+      "name": "Interrogazione a Sorpresa",
+      "cost": 2,
+      "text": "+4 al punteggio.",
+      "effect": {
+        "type": "score",
+        "value": 4
+      },
+      "flavor": "La domanda era fuori programma. Anche il programma."
+    },
+    "passive": {
+      "name": "Voto sul Registro",
+      "text": "+2 se Intelligence è tra gli SPECIAL del turno.",
+      "effect": {
+        "type": "contains",
+        "stat": "I",
+        "value": 2
+      },
+      "flavor": "Segna tutto. Anche i sospiri."
+    },
+    "quote": "Apriamo una parentesi. Non la chiuderemo.",
+    "tags": [
+      "sapienza",
+      "latino",
+      "pressione psicologica"
+    ]
+  },
+  {
+    "id": "Nasus",
+    "image": "Nasus.png",
+    "name": "Nasus, Custode delle Sabbie",
+    "subtitle": "Stacka ticket come fossero minion.",
+    "rarity": "leggendaria",
+    "archetype": "scalatore",
+    "theme": "egitto • sabbia • late game",
+    "frame": {
+      "preset": "egyptian_gold",
+      "accent": "#d9a441",
+      "icon": "ankh"
+    },
+    "special": {
+      "S": 8,
+      "P": 5,
+      "E": 8,
+      "C": 3,
+      "I": 6,
+      "A": 3,
+      "L": 4
+    },
+    "active": {
+      "name": "Stack Infinito",
+      "cost": 2,
+      "text": "Aggiungi il valore più alto tra gli SPECIAL scelti.",
+      "effect": {
+        "type": "highest-selected"
+      },
+      "flavor": "Ogni Q è una riunione sopravvissuta."
+    },
+    "passive": {
+      "name": "Ultima Farmata",
+      "text": "+3 se ti restano 2 carte o meno.",
+      "effect": {
+        "type": "deck-low",
+        "count": 2,
+        "value": 3
+      },
+      "flavor": "Quando sembra finita, inizia il late game."
+    },
+    "quote": "Il tempo è una risorsa. La stack pure.",
+    "tags": [
+      "late-game",
+      "tank",
+      "sabbie"
+    ]
+  },
+  {
+    "id": "Samurai",
+    "image": "Samurai.png",
+    "name": "Samurai del Sottoscala",
+    "subtitle": "Onore massimo, budget minimo.",
+    "rarity": "epica",
+    "archetype": "duellante",
+    "theme": "samurai • sakura • condominio",
+    "frame": {
+      "preset": "sakura_steel",
+      "accent": "#c99958",
+      "icon": "katana"
+    },
+    "special": {
+      "S": 7,
+      "P": 6,
+      "E": 6,
+      "C": 4,
+      "I": 5,
+      "A": 10,
+      "L": 4
+    },
+    "active": {
+      "name": "Iaido da Condominio",
+      "cost": 2,
+      "text": "Aggiungi Agility se è tra gli SPECIAL scelti.",
+      "effect": {
+        "type": "selected-stat",
+        "stat": "A"
+      },
+      "flavor": "Estrae la soluzione prima ancora del problema."
+    },
+    "passive": {
+      "name": "Onore in Ciabatte",
+      "text": "+2 se Strength è tra gli SPECIAL del turno.",
+      "effect": {
+        "type": "contains",
+        "stat": "S",
+        "value": 2
+      },
+      "flavor": "Il codice d'onore consente le Crocs."
+    },
+    "quote": "Una lama, un branch, zero conflitti.",
+    "tags": [
+      "agilità",
+      "duello",
+      "sakura"
+    ]
+  },
+  {
+    "id": "Sir",
+    "image": "Sir.png",
+    "name": "Sir Monocolo",
+    "subtitle": "Gentilezza armata di sprint review.",
+    "rarity": "rara",
+    "archetype": "diplomatico",
+    "theme": "cavaliere • codice • salotto blu",
+    "frame": {
+      "preset": "royal_blue_gold",
+      "accent": "#1f4c85",
+      "icon": "lion"
+    },
+    "special": {
+      "S": 4,
+      "P": 7,
+      "E": 5,
+      "C": 10,
+      "I": 7,
+      "A": 4,
+      "L": 6
+    },
+    "active": {
+      "name": "Duello con Ricevuta",
+      "cost": 1,
+      "text": "Aggiungi il valore più basso tra gli SPECIAL scelti.",
+      "effect": {
+        "type": "lowest-selected"
+      },
+      "flavor": "Vince anche quando compila il form per perdere."
+    },
+    "passive": {
+      "name": "Etichetta Aggressiva",
+      "text": "+2 se Charisma è tra gli SPECIAL del turno.",
+      "effect": {
+        "type": "contains",
+        "stat": "C",
+        "value": 2
+      },
+      "flavor": "Ti distrugge, ma dandoti del Lei."
+    },
+    "quote": "Propongo una resa elegante.",
+    "tags": [
+      "charisma",
+      "nobiltà",
+      "diplomazia"
+    ]
+  },
+  {
+    "id": "auditore",
+    "image": "auditore.png",
+    "name": "Valerio Auditore",
+    "subtitle": "Brotherhood of Projects, DLC incluso.",
+    "rarity": "leggendaria",
+    "archetype": "assassino agile",
+    "theme": "rinascimento • stealth • piume perse",
+    "frame": {
+      "preset": "assassin_shadow_gold",
+      "accent": "#6b5b42",
+      "icon": "hidden-blade"
+    },
+    "special": {
+      "S": 5,
+      "P": 8,
+      "E": 5,
+      "C": 6,
+      "I": 7,
+      "A": 10,
+      "L": 6
+    },
+    "active": {
+      "name": "Lama nel Pagliaio",
+      "cost": 3,
+      "text": "Aggiungi Agility se è tra gli SPECIAL scelti.",
+      "effect": {
+        "type": "selected-stat",
+        "stat": "A"
+      },
+      "flavor": "Entra in call silenzioso, esce con la milestone."
+    },
+    "passive": {
+      "name": "Sincronizzazione al 99%",
+      "text": "+2 se Perception è tra gli SPECIAL del turno.",
+      "effect": {
+        "type": "contains",
+        "stat": "P",
+        "value": 2
+      },
+      "flavor": "Manca sempre una piuma o una acceptance criteria."
+    },
+    "quote": "Nulla è vero, tutto è backlog.",
+    "tags": [
+      "stealth",
+      "agility",
+      "rinascimento"
+    ]
+  },
+  {
+    "id": "cave",
+    "image": "cave.png",
+    "name": "Cavernicolo Premium",
+    "subtitle": "La user story è incisa sulla parete.",
+    "rarity": "comune",
+    "archetype": "bruto",
+    "theme": "pietra • fuoco • bonk",
+    "frame": {
+      "preset": "stone_bone",
+      "accent": "#9c7a4a",
+      "icon": "club"
+    },
+    "special": {
+      "S": 10,
+      "P": 3,
+      "E": 8,
+      "C": 2,
+      "I": 2,
+      "A": 5,
+      "L": 5
+    },
+    "active": {
+      "name": "Bonk Paleolitico",
+      "cost": 1,
+      "text": "+3 al punteggio.",
+      "effect": {
+        "type": "score",
+        "value": 3
+      },
+      "flavor": "Soluzione binaria: funziona o clava."
+    },
+    "passive": {
+      "name": "Ragionamento a Pietra",
+      "text": "+2 se Strength è tra gli SPECIAL del turno.",
+      "effect": {
+        "type": "contains",
+        "stat": "S",
+        "value": 2
+      },
+      "flavor": "Non è legacy: è archeologia."
+    },
+    "quote": "Ugh. Deploy.",
+    "tags": [
+      "strength",
+      "primitivo",
+      "bonk"
+    ]
+  },
+  {
+    "id": "doom",
+    "image": "doom.png",
+    "name": "Doom Valerio",
+    "subtitle": "Doom of the Grand Project.",
+    "rarity": "mitica",
+    "archetype": "demolitore",
+    "theme": "metallo • verde • boss finale",
+    "frame": {
+      "preset": "doom_emerald_iron",
+      "accent": "#0c6f3c",
+      "icon": "helmet"
+    },
+    "special": {
+      "S": 10,
+      "P": 6,
+      "E": 9,
+      "C": 2,
+      "I": 4,
+      "A": 7,
+      "L": 3
+    },
+    "active": {
+      "name": "Rip and Teoria",
+      "cost": 3,
+      "text": "Aggiungi Strength se è tra gli SPECIAL scelti.",
+      "effect": {
+        "type": "selected-stat",
+        "stat": "S"
+      },
+      "flavor": "Prima spiega il problema, poi lo cancella dall'esistenza."
+    },
+    "passive": {
+      "name": "Colonna Sonora Interna",
+      "text": "+3 se Endurance è tra gli SPECIAL del turno.",
+      "effect": {
+        "type": "contains",
+        "stat": "E",
+        "value": 3
+      },
+      "flavor": "Ogni escalation parte con un riff."
+    },
+    "quote": "Non ho bug. Ho demoni da ottimizzare.",
+    "tags": [
+      "boss",
+      "strength",
+      "endurance"
+    ]
+  },
+  {
+    "id": "genshis",
+    "image": "genshis.png",
+    "name": "Genshis del Pull Singolo",
+    "subtitle": "Ha trovato una 5★ nel deploy del venerdì.",
+    "rarity": "rara",
+    "archetype": "gacha",
+    "theme": "anime • fortuna • banner limitato",
+    "frame": {
+      "preset": "fantasy_gacha",
+      "accent": "#8ac7ff",
+      "icon": "wish"
+    },
+    "special": {
+      "S": 4,
+      "P": 6,
+      "E": 5,
+      "C": 8,
+      "I": 6,
+      "A": 7,
+      "L": 10
+    },
+    "active": {
+      "name": "Pull da Dieci",
+      "cost": 2,
+      "text": "+4 al punteggio.",
+      "effect": {
+        "type": "score",
+        "value": 4
+      },
+      "flavor": "Nove doppioni e una soluzione."
+    },
+    "passive": {
+      "name": "Pity Emotivo",
+      "text": "+2 se Luck è tra gli SPECIAL del turno.",
+      "effect": {
+        "type": "contains",
+        "stat": "L",
+        "value": 2
+      },
+      "flavor": "Perde fiducia, poi trova la pull giusta."
+    },
+    "quote": "Non è gambling, è resource planning.",
+    "tags": [
+      "luck",
+      "gacha",
+      "anime"
+    ]
+  },
+  {
+    "id": "gta",
+    "image": "gta.png",
+    "name": "Los Santos Valerio",
+    "subtitle": "Parcheggia il task dove capita.",
+    "rarity": "epica",
+    "archetype": "caos urbano",
+    "theme": "neon • crime • radio anni 80",
+    "frame": {
+      "preset": "vice_neon",
+      "accent": "#ff39c9",
+      "icon": "palm"
+    },
+    "special": {
+      "S": 6,
+      "P": 6,
+      "E": 6,
+      "C": 5,
+      "I": 4,
+      "A": 10,
+      "L": 7
+    },
+    "active": {
+      "name": "Cinque Stelle e Via",
+      "cost": 3,
+      "text": "+5 al punteggio.",
+      "effect": {
+        "type": "score",
+        "value": 5
+      },
+      "flavor": "Quando arriva il QA, ha già cambiato veicolo."
+    },
+    "passive": {
+      "name": "Parcheggio Creativo",
+      "text": "+2 se Agility è tra gli SPECIAL del turno.",
+      "effect": {
+        "type": "contains",
+        "stat": "A",
+        "value": 2
+      },
+      "flavor": "La soluzione è tecnicamente in divieto di sosta."
+    },
+    "quote": "Mission passed. Respect +3.",
+    "tags": [
+      "neon",
+      "agility",
+      "caos"
+    ]
+  },
+  {
+    "id": "malenia",
+    "image": "malenia.png",
+    "name": "Malenia, Lama Puntigliosa",
+    "subtitle": "Non ha mai perso: ha solo iterato.",
+    "rarity": "mitica",
+    "archetype": "duellante letale",
+    "theme": "oro • rosso • boss fight",
+    "frame": {
+      "preset": "scarlet_gold",
+      "accent": "#b13b2e",
+      "icon": "winged-helm"
+    },
+    "special": {
+      "S": 7,
+      "P": 6,
+      "E": 8,
+      "C": 4,
+      "I": 6,
+      "A": 10,
+      "L": 3
+    },
+    "active": {
+      "name": "Danza Acquatica ma Secca",
+      "cost": 3,
+      "text": "Aggiungi il valore più alto tra gli SPECIAL scelti.",
+      "effect": {
+        "type": "highest-selected"
+      },
+      "flavor": "Un colpo, tre revisioni, zero pietà."
+    },
+    "passive": {
+      "name": "Non Ho Mai Perso",
+      "text": "+3 se Agility è tra gli SPECIAL del turno.",
+      "effect": {
+        "type": "contains",
+        "stat": "A",
+        "value": 3
+      },
+      "flavor": "Il bug è morto prima del log."
+    },
+    "quote": "Witness me merge.",
+    "tags": [
+      "boss",
+      "agility",
+      "precisione"
+    ]
+  },
+  {
+    "id": "nazi",
+    "image": "nazi.png",
+    "name": "Il Burocrate Inquadrato",
+    "subtitle": "Molto rigido, sorprendentemente in ritardo.",
+    "rarity": "rara",
+    "archetype": "ordine e controllo",
+    "theme": "grigio • ufficio • calendario ostile",
+    "frame": {
+      "preset": "cold_steel_archive",
+      "accent": "#626262",
+      "icon": "folder"
+    },
+    "special": {
+      "S": 7,
+      "P": 8,
+      "E": 6,
+      "C": 3,
+      "I": 6,
+      "A": 7,
+      "L": 2
+    },
+    "active": {
+      "name": "Modulo in Triplice Copia",
+      "cost": 2,
+      "text": "+4 al punteggio con una manovra amministrativa fulminea.",
+      "effect": {
+        "type": "score",
+        "value": 4
+      },
+      "flavor": "Prima approva, poi chiede chi ha autorizzato."
+    },
+    "passive": {
+      "name": "Ordnung, ma in Ritardo",
+      "text": "+2 se Perception è tra gli SPECIAL del turno.",
+      "effect": {
+        "type": "contains",
+        "stat": "P",
+        "value": 2
+      },
+      "flavor": "Ha letto la mail. Tutte. Dal 2019."
+    },
+    "quote": "Il processo è il processo, anche quando nessuno sa quale.",
+    "tags": [
+      "ordine",
+      "perception",
+      "burocrazia"
+    ]
+  },
+  {
+    "id": "pirate",
+    "image": "pirate.png",
+    "name": "Capitan Sottocoperta",
+    "subtitle": "Saccheggia il backlog, poi chiede ferie.",
+    "rarity": "epica",
+    "archetype": "corsaro",
+    "theme": "pirati • legno • teschi",
+    "frame": {
+      "preset": "pirate_bone_wood",
+      "accent": "#8a642b",
+      "icon": "skull"
+    },
+    "special": {
+      "S": 7,
+      "P": 6,
+      "E": 6,
+      "C": 7,
+      "I": 4,
+      "A": 6,
+      "L": 8
+    },
+    "active": {
+      "name": "Cannonata Storta",
+      "cost": 2,
+      "text": "+4 al punteggio.",
+      "effect": {
+        "type": "score",
+        "value": 4
+      },
+      "flavor": "Non colpisce il target, ma spaventa la roadmap."
+    },
+    "passive": {
+      "name": "Mappa Disegnata Male",
+      "text": "+2 se Luck è tra gli SPECIAL del turno.",
+      "effect": {
+        "type": "contains",
+        "stat": "L",
+        "value": 2
+      },
+      "flavor": "La X indica un tesoro o il bagno."
+    },
+    "quote": "Arrr, chi ha spostato la deadline?",
+    "tags": [
+      "luck",
+      "pirata",
+      "caos controllato"
+    ]
+  },
+  {
+    "id": "reddead",
+    "image": "reddead.png",
+    "name": "Fuorilegge Red Deadline",
+    "subtitle": "Dead Eye sul ticket critico.",
+    "rarity": "epica",
+    "archetype": "tiratore",
+    "theme": "western • tramonto • polvere",
+    "frame": {
+      "preset": "western_sunset",
+      "accent": "#b5492a",
+      "icon": "revolver"
+    },
+    "special": {
+      "S": 6,
+      "P": 10,
+      "E": 7,
+      "C": 5,
+      "I": 5,
+      "A": 7,
+      "L": 6
+    },
+    "active": {
+      "name": "Dead Eye al Tramonto",
+      "cost": 3,
+      "text": "Aggiungi Perception se è tra gli SPECIAL scelti.",
+      "effect": {
+        "type": "selected-stat",
+        "stat": "P"
+      },
+      "flavor": "Rallenta il tempo abbastanza da leggere l'email."
+    },
+    "passive": {
+      "name": "Cavallo Parcheggiato Bene",
+      "text": "+2 se Luck è tra gli SPECIAL del turno.",
+      "effect": {
+        "type": "contains",
+        "stat": "L",
+        "value": 2
+      },
+      "flavor": "Non sa dov'è, ma è sicuramente coperto."
+    },
+    "quote": "This town ain't big enough for two PM.",
+    "tags": [
+      "western",
+      "perception",
+      "deadline"
+    ]
+  },
+  {
+    "id": "shaman",
+    "image": "shaman.png",
+    "name": "Sciamano Wi‑Fi",
+    "subtitle": "Parla con gli spiriti e con il router.",
+    "rarity": "rara",
+    "archetype": "support mistico",
+    "theme": "totem • canyon • connessione instabile",
+    "frame": {
+      "preset": "tribal_sunset",
+      "accent": "#b6783b",
+      "icon": "totem"
+    },
+    "special": {
+      "S": 4,
+      "P": 8,
+      "E": 6,
+      "C": 8,
+      "I": 5,
+      "A": 5,
+      "L": 7
+    },
+    "active": {
+      "name": "Totem del Router",
+      "cost": 2,
+      "text": "Aggiungi il valore più basso tra gli SPECIAL scelti.",
+      "effect": {
+        "type": "lowest-selected"
+      },
+      "flavor": "Il segnale è debole, ma la fede è in fibra."
+    },
+    "passive": {
+      "name": "Lag Profetico",
+      "text": "+2 se Intelligence non è tra gli SPECIAL del turno.",
+      "effect": {
+        "type": "missing",
+        "stat": "I",
+        "value": 2
+      },
+      "flavor": "Prevede il bug prima che venga pushato."
+    },
+    "quote": "Ho consultato gli antenati: serve riavviare.",
+    "tags": [
+      "support",
+      "luck",
+      "misticismo"
+    ]
+  },
+  {
+    "id": "stark",
+    "image": "stark.png",
+    "name": "Tony Starkissimo",
+    "subtitle": "Ha costruito l'armatura in una retrospettiva.",
+    "rarity": "mitica",
+    "archetype": "inventore",
+    "theme": "tech • oro • ego sostenibile",
+    "frame": {
+      "preset": "arc_reactor_gold",
+      "accent": "#38bdf8",
+      "icon": "reactor"
+    },
+    "special": {
+      "S": 5,
+      "P": 7,
+      "E": 5,
+      "C": 10,
+      "I": 10,
+      "A": 6,
+      "L": 5
+    },
+    "active": {
+      "name": "Armatura con Snack",
+      "cost": 3,
+      "text": "Aggiungi Intelligence se è tra gli SPECIAL scelti.",
+      "effect": {
+        "type": "selected-stat",
+        "stat": "I"
+      },
+      "flavor": "Il prototipo vola. Il budget no."
+    },
+    "passive": {
+      "name": "Conferenza Stampa Inutile",
+      "text": "+2 se Charisma è tra gli SPECIAL del turno.",
+      "effect": {
+        "type": "contains",
+        "stat": "C",
+        "value": 2
+      },
+      "flavor": "Convince tutti che il bug era una feature premium."
+    },
+    "quote": "Genius, billionaire, playboy, project manager.",
+    "tags": [
+      "tech",
+      "intelligence",
+      "charisma"
+    ]
+  },
+  {
+    "id": "strano",
+    "image": "strano.png",
+    "name": "Dottor Strano",
+    "subtitle": "Custode del calendario multiversale.",
+    "rarity": "leggendaria",
+    "archetype": "mago controllo",
+    "theme": "arcano • portali • bug cosmici",
+    "frame": {
+      "preset": "arcane_gold",
+      "accent": "#f59e0b",
+      "icon": "sigil"
+    },
+    "special": {
+      "S": 3,
+      "P": 8,
+      "E": 5,
+      "C": 6,
+      "I": 10,
+      "A": 5,
+      "L": 8
+    },
+    "active": {
+      "name": "Portale Sbagliato",
+      "cost": 2,
+      "text": "Aggiungi il valore più alto tra gli SPECIAL scelti.",
+      "effect": {
+        "type": "highest-selected"
+      },
+      "flavor": "Voleva aprire staging, è finito in produzione."
+    },
+    "passive": {
+      "name": "Ho Visto 14 Milioni di Bug",
+      "text": "+2 se Intelligence è tra gli SPECIAL del turno.",
+      "effect": {
+        "type": "contains",
+        "stat": "I",
+        "value": 2
+      },
+      "flavor": "E in uno solo la build passava."
+    },
+    "quote": "Dormammu, sono venuto a contrattare lo scope.",
+    "tags": [
+      "arcano",
+      "intelligence",
+      "controllo"
+    ]
+  },
+  {
+    "id": "urss",
+    "image": "urss.png",
+    "name": "Compagno Borscht",
+    "subtitle": "La burn‑down chart è collettiva.",
+    "rarity": "rara",
+    "archetype": "resiliente",
+    "theme": "grigio • rosso • piano quinquennale",
+    "frame": {
+      "preset": "soviet_stone",
+      "accent": "#7f1d1d",
+      "icon": "gear"
+    },
+    "special": {
+      "S": 7,
+      "P": 5,
+      "E": 10,
+      "C": 6,
+      "I": 5,
+      "A": 4,
+      "L": 4
+    },
+    "active": {
+      "name": "Piano Quinquennale Express",
+      "cost": 2,
+      "text": "+4 al punteggio.",
+      "effect": {
+        "type": "score",
+        "value": 4
+      },
+      "flavor": "Cinque anni compressi in due daily."
+    },
+    "passive": {
+      "name": "Mana Collettivizzato",
+      "text": "+2 se Endurance è tra gli SPECIAL del turno.",
+      "effect": {
+        "type": "contains",
+        "stat": "E",
+        "value": 2
+      },
+      "flavor": "Se uno è stanco, siamo tutti stanchi."
+    },
+    "quote": "Nostro task. Nostro merge.",
+    "tags": [
+      "endurance",
+      "resistenza",
+      "piano"
+    ]
+  },
+  {
+    "id": "v",
+    "image": "v.png",
+    "name": "V, Maschera e Verbosità",
+    "subtitle": "Vendetta, validazione, verbali.",
+    "rarity": "leggendaria",
+    "archetype": "oratore oscuro",
+    "theme": "gothic • rosso • allitterazioni",
+    "frame": {
+      "preset": "gothic_crimson",
+      "accent": "#991b1b",
+      "icon": "mask"
+    },
+    "special": {
+      "S": 5,
+      "P": 8,
+      "E": 5,
+      "C": 10,
+      "I": 8,
+      "A": 7,
+      "L": 6
+    },
+    "active": {
+      "name": "Monologo con Maschera",
+      "cost": 2,
+      "text": "Aggiungi Charisma se è tra gli SPECIAL scelti.",
+      "effect": {
+        "type": "selected-stat",
+        "stat": "C"
+      },
+      "flavor": "Finisce il discorso quando finisce il budget."
+    },
+    "passive": {
+      "name": "Allitterazione Vendicativa",
+      "text": "+2 se Luck è tra gli SPECIAL del turno.",
+      "effect": {
+        "type": "contains",
+        "stat": "L",
+        "value": 2
+      },
+      "flavor": "Vince verbalmente, verticalmente, vagamente."
+    },
+    "quote": "Ricorda, ricorda, la deadline di novembre.",
+    "tags": [
+      "charisma",
+      "gothic",
+      "vendetta"
+    ]
+  },
+  {
+    "id": "valcraft",
+    "image": "valcraft.png",
+    "name": "Valcraft",
+    "subtitle": "Build your project, blocco dopo blocco.",
+    "rarity": "epica",
+    "archetype": "costruttore",
+    "theme": "voxel • diamante • crafting",
+    "frame": {
+      "preset": "voxel_diamond",
+      "accent": "#22d3ee",
+      "icon": "pickaxe"
+    },
+    "special": {
+      "S": 7,
+      "P": 5,
+      "E": 7,
+      "C": 4,
+      "I": 6,
+      "A": 5,
+      "L": 8
+    },
+    "active": {
+      "name": "Piccone Leggendario",
+      "cost": 1,
+      "text": "Aggiungi il valore più basso tra gli SPECIAL scelti.",
+      "effect": {
+        "type": "lowest-selected"
+      },
+      "flavor": "Anche la skill più bassa può minare diamanti."
+    },
+    "passive": {
+      "name": "Craftato al Volo",
+      "text": "+3 se ti restano 2 carte o meno.",
+      "effect": {
+        "type": "deck-low",
+        "count": 2,
+        "value": 3
+      },
+      "flavor": "Una porta, due assi e un piano B."
+    },
+    "quote": "Non è un bug, è un blocco invisibile.",
+    "tags": [
+      "craft",
+      "luck",
+      "voxel"
+    ]
+  },
+  {
+    "id": "valdemort",
+    "image": "valdemort.png",
+    "name": "Valdemort",
+    "subtitle": "Colui che non deve essere taggato.",
+    "rarity": "leggendaria",
+    "archetype": "mago oscuro",
+    "theme": "nero • verde • serpentcore",
+    "frame": {
+      "preset": "dark_magic_emerald",
+      "accent": "#10b981",
+      "icon": "serpent"
+    },
+    "special": {
+      "S": 4,
+      "P": 7,
+      "E": 5,
+      "C": 8,
+      "I": 10,
+      "A": 5,
+      "L": 3
+    },
+    "active": {
+      "name": "Accio Nasone",
+      "cost": 3,
+      "text": "Aggiungi Intelligence se è tra gli SPECIAL scelti.",
+      "effect": {
+        "type": "selected-stat",
+        "stat": "I"
+      },
+      "flavor": "Evoca una soluzione proibita, ma funziona."
+    },
+    "passive": {
+      "name": "Horcrux in Saldo",
+      "text": "+2 se Charisma è tra gli SPECIAL del turno.",
+      "effect": {
+        "type": "contains",
+        "stat": "C",
+        "value": 2
+      },
+      "flavor": "Ha diviso l'anima in sette repository."
+    },
+    "quote": "Avada Kedavra al ticket duplicato.",
+    "tags": [
+      "dark",
+      "intelligence",
+      "serpente"
+    ]
+  },
+  {
+    "id": "valerio",
+    "image": "valerio.png",
+    "name": "Valerio Prime",
+    "subtitle": "Carta base, potere da protagonista.",
+    "rarity": "speciale",
+    "archetype": "jolly",
+    "theme": "viaggio • mare • plot armor",
+    "frame": {
+      "preset": "travel_blue_gold",
+      "accent": "#1e3a8a",
+      "icon": "compass"
+    },
+    "special": {
+      "S": 6,
+      "P": 7,
+      "E": 6,
+      "C": 8,
+      "I": 7,
+      "A": 6,
+      "L": 10
+    },
+    "active": {
+      "name": "Plot Armor Personale",
+      "cost": 2,
+      "text": "+5 al punteggio.",
+      "effect": {
+        "type": "score",
+        "value": 5
+      },
+      "flavor": "Il destino gli dà sempre un branch pulito."
+    },
+    "passive": {
+      "name": "Protagonista per Contratto",
+      "text": "+3 se Luck è tra gli SPECIAL del turno.",
+      "effect": {
+        "type": "contains",
+        "stat": "L",
+        "value": 3
+      },
+      "flavor": "Quando serve un critico, sorride alla camera."
+    },
+    "quote": "Semplicemente Valerio.",
+    "tags": [
+      "base",
+      "luck",
+      "protagonista"
+    ]
+  },
+  {
+    "id": "vally",
+    "image": "vally.png",
+    "name": "Vally Allen",
+    "subtitle": "Il PM più veloce vivo, almeno in stand‑up.",
+    "rarity": "epica",
+    "archetype": "speedster",
+    "theme": "fulmine • rosso • speed force",
+    "frame": {
+      "preset": "speed_red_gold",
+      "accent": "#f59e0b",
+      "icon": "lightning"
+    },
+    "special": {
+      "S": 4,
+      "P": 7,
+      "E": 5,
+      "C": 9,
+      "I": 7,
+      "A": 10,
+      "L": 7
+    },
+    "active": {
+      "name": "Critica Gentile",
+      "cost": 1,
+      "text": "+3 al punteggio.",
+      "effect": {
+        "type": "score",
+        "value": 3
+      },
+      "flavor": "Ti corregge così veloce che sembra un complimento."
+    },
+    "passive": {
+      "name": "Sguardo che Sistema",
+      "text": "+2 se Charisma è tra gli SPECIAL del turno.",
+      "effect": {
+        "type": "contains",
+        "stat": "C",
+        "value": 2
+      },
+      "flavor": "Un'occhiata e il CSS smette di fluttuare."
+    },
+    "quote": "Corro perché la call è già iniziata.",
+    "tags": [
+      "speed",
+      "charisma",
+      "fulmine"
+    ]
+  },
+  {
+    "id": "vratos",
+    "image": "vratos.png",
+    "name": "Vratos, Padre Calmo",
+    "subtitle": "God of PMs, pazienza non inclusa.",
+    "rarity": "mitica",
+    "archetype": "berserker controllato",
+    "theme": "mito • cenere • furia controllata",
+    "frame": {
+      "preset": "mythic_ash_gold",
+      "accent": "#c2410c",
+      "icon": "omega"
+    },
+    "special": {
+      "S": 10,
+      "P": 5,
+      "E": 10,
+      "C": 3,
+      "I": 5,
+      "A": 6,
+      "L": 4
+    },
+    "active": {
+      "name": "Boy, Calmàti",
+      "cost": 3,
+      "text": "Aggiungi Strength se è tra gli SPECIAL scelti.",
+      "effect": {
+        "type": "selected-stat",
+        "stat": "S"
+      },
+      "flavor": "Il tono è basso. Il danno no."
+    },
+    "passive": {
+      "name": "Ascia in Smart Working",
+      "text": "+2 se Endurance è tra gli SPECIAL del turno.",
+      "effect": {
+        "type": "contains",
+        "stat": "E",
+        "value": 2
+      },
+      "flavor": "Può attendere. L'ascia no."
+    },
+    "quote": "Non urlare. Prioritizza.",
+    "tags": [
+      "strength",
+      "endurance",
+      "mitico"
+    ]
+  },
+  {
+    "id": "vatriota",
+    "image": "ChatGPT Image 21 mag 2026, 16_58_53.png",
+    "name": "Vatriota",
+    "subtitle": "Supereroe nazionale del follow‑up.",
+    "rarity": "leggendaria",
+    "archetype": "leader patriottico",
+    "theme": "stelle • mantello • briefing aereo",
+    "frame": {
+      "preset": "heroic_stars_gold",
+      "accent": "#1d4ed8",
+      "icon": "winged-v"
+    },
+    "special": {
+      "S": 8,
+      "P": 7,
+      "E": 8,
+      "C": 9,
+      "I": 6,
+      "A": 6,
+      "L": 5
+    },
+    "active": {
+      "name": "Briefing sulle Nuvole",
+      "cost": 2,
+      "text": "+4 al punteggio.",
+      "effect": {
+        "type": "score",
+        "value": 4
+      },
+      "flavor": "Motiva il team anche se nessuno ha capito il perimetro."
+    },
+    "passive": {
+      "name": "Mantello di Governance",
+      "text": "+2 se Charisma è tra gli SPECIAL del turno.",
+      "effect": {
+        "type": "contains",
+        "stat": "C",
+        "value": 2
+      },
+      "flavor": "La roadmap sventola dietro di lui."
+    },
+    "quote": "Per la patria, per il project plan.",
+    "tags": [
+      "eroe",
+      "charisma",
+      "leadership"
+    ]
+  },
+  {
+    "id": "the_veep",
+    "image": "ChatGPT Image 21 mag 2026, 16_59_02.png",
+    "name": "The Veep",
+    "subtitle": "Re degli abissi e delle escalation.",
+    "rarity": "epica",
+    "archetype": "guardiano marino",
+    "theme": "oceano • corazzata • tridente invisibile",
+    "frame": {
+      "preset": "atlantean_teal_gold",
+      "accent": "#0f766e",
+      "icon": "anchor"
+    },
+    "special": {
+      "S": 8,
+      "P": 7,
+      "E": 9,
+      "C": 6,
+      "I": 5,
+      "A": 5,
+      "L": 5
+    },
+    "active": {
+      "name": "Mareggiata di Priorità",
+      "cost": 2,
+      "text": "Aggiungi Endurance se è tra gli SPECIAL scelti.",
+      "effect": {
+        "type": "selected-stat",
+        "stat": "E"
+      },
+      "flavor": "Più sale la pressione, più sorride alla tempesta."
+    },
+    "passive": {
+      "name": "Nave sullo Sfondo",
+      "text": "+2 se Perception è tra gli SPECIAL del turno.",
+      "effect": {
+        "type": "contains",
+        "stat": "P",
+        "value": 2
+      },
+      "flavor": "Vede arrivare il problema dall'orizzonte."
+    },
+    "quote": "Non è mare mosso. È stakeholder alignment.",
+    "tags": [
+      "oceano",
+      "endurance",
+      "controllo"
+    ]
+  },
+  {
+    "id": "v_train",
+    "image": "ChatGPT Image 21 mag 2026, 16_59_08.png",
+    "name": "V‑Train",
+    "subtitle": "Allenamento funzionale alla sopravvivenza in call.",
+    "rarity": "epica",
+    "archetype": "atleta tech",
+    "theme": "sport • blue armor • palestra futuristica",
+    "frame": {
+      "preset": "neon_sport_blue",
+      "accent": "#38bdf8",
+      "icon": "v"
+    },
+    "special": {
+      "S": 8,
+      "P": 6,
+      "E": 8,
+      "C": 6,
+      "I": 6,
+      "A": 7,
+      "L": 5
+    },
+    "active": {
+      "name": "Circuito Massacrante",
+      "cost": 2,
+      "text": "Aggiungi Strength se è tra gli SPECIAL scelti.",
+      "effect": {
+        "type": "selected-stat",
+        "stat": "S"
+      },
+      "flavor": "Tre serie da dodici e una retrospettiva."
+    },
+    "passive": {
+      "name": "Recovery tra le Call",
+      "text": "+2 se Endurance è tra gli SPECIAL del turno.",
+      "effect": {
+        "type": "contains",
+        "stat": "E",
+        "value": 2
+      },
+      "flavor": "Il cooldown dura meno della daily."
+    },
+    "quote": "No pain, no sprint.",
+    "tags": [
+      "sport",
+      "strength",
+      "endurance"
+    ]
+  },
+  {
+    "id": "fire_project",
+    "image": "ChatGPT Image 21 mag 2026, 16_59_16.png",
+    "name": "Fire Project",
+    "subtitle": "Quando il progetto brucia, lui posa.",
+    "rarity": "rara",
+    "archetype": "piromane gestionale",
+    "theme": "rosso • fuoco • city disaster",
+    "frame": {
+      "preset": "burning_hero_red",
+      "accent": "#dc2626",
+      "icon": "flame"
+    },
+    "special": {
+      "S": 7,
+      "P": 5,
+      "E": 8,
+      "C": 7,
+      "I": 4,
+      "A": 6,
+      "L": 5
+    },
+    "active": {
+      "name": "Incendio Controllato",
+      "cost": 2,
+      "text": "+4 al punteggio.",
+      "effect": {
+        "type": "score",
+        "value": 4
+      },
+      "flavor": "Controllato nel senso che lo guarda bruciare con fiducia."
+    },
+    "passive": {
+      "name": "Fumo negli Occhi",
+      "text": "+2 se Charisma è tra gli SPECIAL del turno.",
+      "effect": {
+        "type": "contains",
+        "stat": "C",
+        "value": 2
+      },
+      "flavor": "Nessuno capisce, ma tutti applaudono."
+    },
+    "quote": "Non è in fiamme. È in fase di trasformazione.",
+    "tags": [
+      "fuoco",
+      "charisma",
+      "crisi"
+    ]
+  },
+  {
+    "id": "project_boy",
+    "image": "ChatGPT Image 21 mag 2026, 16_59_30.png",
+    "name": "Project Boy",
+    "subtitle": "Lo scudo blocca i bug, non le richieste.",
+    "rarity": "rara",
+    "archetype": "difensore",
+    "theme": "post‑apocalisse • scudo • morale basso",
+    "frame": {
+      "preset": "wasteland_steel",
+      "accent": "#334155",
+      "icon": "shield"
+    },
+    "special": {
+      "S": 6,
+      "P": 7,
+      "E": 9,
+      "C": 5,
+      "I": 6,
+      "A": 5,
+      "L": 4
+    },
+    "active": {
+      "name": "Scudo Anti‑Scope",
+      "cost": 2,
+      "text": "Aggiungi Endurance se è tra gli SPECIAL scelti.",
+      "effect": {
+        "type": "selected-stat",
+        "stat": "E"
+      },
+      "flavor": "Può bloccare tutto tranne 'piccola modifica'."
+    },
+    "passive": {
+      "name": "Ultima Stand‑Up",
+      "text": "+2 se Perception è tra gli SPECIAL del turno.",
+      "effect": {
+        "type": "contains",
+        "stat": "P",
+        "value": 2
+      },
+      "flavor": "Individua il rischio dietro le rovine."
+    },
+    "quote": "Project boy, but make it endgame.",
+    "tags": [
+      "tank",
+      "endurance",
+      "wasteland"
+    ]
+  },
+  {
+    "id": "starproject",
+    "image": "ChatGPT Image 21 mag 2026, 17_10_58.png",
+    "name": "Starproject",
+    "subtitle": "Splende così tanto che acceca la deadline.",
+    "rarity": "mitica",
+    "archetype": "campione solare",
+    "theme": "oro • luce • skyline",
+    "frame": {
+      "preset": "solar_gold",
+      "accent": "#facc15",
+      "icon": "star"
+    },
+    "special": {
+      "S": 8,
+      "P": 6,
+      "E": 8,
+      "C": 9,
+      "I": 7,
+      "A": 5,
+      "L": 6
+    },
+    "active": {
+      "name": "Bagliore da Milestone",
+      "cost": 3,
+      "text": "+5 al punteggio.",
+      "effect": {
+        "type": "score",
+        "value": 5
+      },
+      "flavor": "Quando entra, la presentazione diventa HDR."
+    },
+    "passive": {
+      "name": "Aura Motivazionale",
+      "text": "+2 se Charisma è tra gli SPECIAL del turno.",
+      "effect": {
+        "type": "contains",
+        "stat": "C",
+        "value": 2
+      },
+      "flavor": "Anche il Gantt sembra ottimista."
+    },
+    "quote": "Brilla. Consegnare è opzionale, ma consigliato.",
+    "tags": [
+      "luce",
+      "charisma",
+      "eroe"
+    ]
+  },
+  {
+    "id": "black_val",
+    "image": "ChatGPT Image 21 mag 2026, 17_11_17.png",
+    "name": "Black Val",
+    "subtitle": "Il lato oscuro della project board.",
+    "rarity": "leggendaria",
+    "archetype": "anti‑eroe",
+    "theme": "nero • metallo • battaglia finale",
+    "frame": {
+      "preset": "black_ops_steel",
+      "accent": "#7f1d1d",
+      "icon": "v"
+    },
+    "special": {
+      "S": 8,
+      "P": 7,
+      "E": 7,
+      "C": 5,
+      "I": 6,
+      "A": 7,
+      "L": 4
+    },
+    "active": {
+      "name": "Protocollo Nero",
+      "cost": 3,
+      "text": "Aggiungi Strength se è tra gli SPECIAL scelti.",
+      "effect": {
+        "type": "selected-stat",
+        "stat": "S"
+      },
+      "flavor": "La soluzione è classificata. Il danno è pubblico."
+    },
+    "passive": {
+      "name": "Silenzio da War Room",
+      "text": "+2 se Endurance è tra gli SPECIAL del turno.",
+      "effect": {
+        "type": "contains",
+        "stat": "E",
+        "value": 2
+      },
+      "flavor": "Resiste finché anche il caos si stanca."
+    },
+    "quote": "Non sono il piano B. Sono il piano finale.",
+    "tags": [
+      "dark",
+      "strength",
+      "antihero"
+    ]
+  },
+  {
+    "id": "valarot",
+    "image": "dragonball/valarot.png",
+    "name": "Valarot",
+    "subtitle": "Saiyan del backlog infinito.",
+    "rarity": "mitica",
+    "archetype": "saiyan",
+    "theme": "aura dorata • sfere del drago • potenza",
+    "frame": {
+      "preset": "dragonball_orange_gold",
+      "accent": "#f59e0b",
+      "icon": "dragonball"
+    },
+    "special": {
+      "S": 9,
+      "P": 7,
+      "E": 9,
+      "C": 6,
+      "I": 5,
+      "A": 8,
+      "L": 6
+    },
+    "active": {
+      "name": "Kamehame‑Check",
+      "cost": 3,
+      "text": "Aggiungi Strength se è tra gli SPECIAL scelti.",
+      "effect": {
+        "type": "selected-stat",
+        "stat": "S"
+      },
+      "flavor": "Cancella il problema con un'onda di energia e un commento in PR."
+    },
+    "passive": {
+      "name": "Zenkai da Deadline",
+      "text": "+3 se ti restano 2 carte o meno.",
+      "effect": {
+        "type": "deck-low",
+        "count": 2,
+        "value": 3
+      },
+      "flavor": "Più è vicino alla fine, più urla."
+    },
+    "quote": "Il mio livello di priorità è oltre 9000.",
+    "tags": [
+      "saiyan",
+      "strength",
+      "late-game"
+    ]
+  },
+  {
+    "id": "buulerio",
+    "image": "dragonball/buulerio.png",
+    "name": "Buulerio",
+    "subtitle": "Assorbe snack, bug e responsabilità.",
+    "rarity": "leggendaria",
+    "archetype": "majin",
+    "theme": "rosa • caramelle • caos cosmico",
+    "frame": {
+      "preset": "majin_candy_pink",
+      "accent": "#ec4899",
+      "icon": "majin"
+    },
+    "special": {
+      "S": 8,
+      "P": 4,
+      "E": 10,
+      "C": 8,
+      "I": 4,
+      "A": 4,
+      "L": 8
+    },
+    "active": {
+      "name": "Trasformazione in Caramella",
+      "cost": 2,
+      "text": "+4 al punteggio.",
+      "effect": {
+        "type": "score",
+        "value": 4
+      },
+      "flavor": "Il blocker era dolce, quindi l'ha mangiato."
+    },
+    "passive": {
+      "name": "Rigenerazione Majin",
+      "text": "+2 se Endurance è tra gli SPECIAL del turno.",
+      "effect": {
+        "type": "contains",
+        "stat": "E",
+        "value": 2
+      },
+      "flavor": "Lo abbattono in call, torna più rosa."
+    },
+    "quote": "Buu vuole approvazione.",
+    "tags": [
+      "majin",
+      "endurance",
+      "meme"
+    ]
+  },
+  {
+    "id": "valinyu_squad",
+    "image": "dragonball/valinyu_squad.png",
+    "name": "Valinyu Squad",
+    "subtitle": "Cinque pose, una sola retrospettiva.",
+    "rarity": "mitica",
+    "archetype": "team combo",
+    "theme": "namek • squadra • pose impossibili",
+    "frame": {
+      "preset": "namek_green_orange",
+      "accent": "#65a30d",
+      "icon": "pose"
+    },
+    "special": {
+      "S": 7,
+      "P": 7,
+      "E": 7,
+      "C": 10,
+      "I": 5,
+      "A": 8,
+      "L": 6
+    },
+    "active": {
+      "name": "Posa Coordinata",
+      "cost": 3,
+      "text": "Aggiungi Charisma se è tra gli SPECIAL scelti.",
+      "effect": {
+        "type": "selected-stat",
+        "stat": "C"
+      },
+      "flavor": "La posa dura più della pianificazione."
+    },
+    "passive": {
+      "name": "Team Impact S+",
+      "text": "+2 se Agility è tra gli SPECIAL del turno.",
+      "effect": {
+        "type": "contains",
+        "stat": "A",
+        "value": 2
+      },
+      "flavor": "Entrano male, vincono stilosi."
+    },
+    "quote": "Squad, non force. Rispetto per il naming.",
+    "tags": [
+      "team",
+      "charisma",
+      "namek"
+    ]
+  },
+  {
+    "id": "cellerio",
+    "image": "dragonball/cellerio.png",
+    "name": "Cellerio",
+    "subtitle": "Bio‑android del refactoring perfetto.",
+    "rarity": "mitica",
+    "archetype": "bio‑android",
+    "theme": "verde • bio‑organic • perfezione",
+    "frame": {
+      "preset": "cell_bio_green",
+      "accent": "#84cc16",
+      "icon": "bio-core"
+    },
+    "special": {
+      "S": 8,
+      "P": 8,
+      "E": 8,
+      "C": 5,
+      "I": 9,
+      "A": 7,
+      "L": 4
+    },
+    "active": {
+      "name": "Forma Perfetta",
+      "cost": 3,
+      "text": "Aggiungi Intelligence se è tra gli SPECIAL scelti.",
+      "effect": {
+        "type": "selected-stat",
+        "stat": "I"
+      },
+      "flavor": "Assorbe due feedback e diventa la versione definitiva."
+    },
+    "passive": {
+      "name": "Adattamento Cellulare",
+      "text": "+2 se Perception è tra gli SPECIAL del turno.",
+      "effect": {
+        "type": "contains",
+        "stat": "P",
+        "value": 2
+      },
+      "flavor": "Capisce il pattern prima del designer."
+    },
+    "quote": "La perfezione richiede solo un ultimo fix.",
+    "tags": [
+      "cell",
+      "intelligence",
+      "perfection"
+    ]
+  },
+  {
+    "id": "vallicolo",
+    "image": "dragonball/vallicolo.png",
+    "name": "Vallicolo",
+    "subtitle": "Namecciano del silenzio giudicante.",
+    "rarity": "leggendaria",
+    "archetype": "maestro",
+    "theme": "namek • mantello bianco • aura verde",
+    "frame": {
+      "preset": "namek_guardian_green",
+      "accent": "#22c55e",
+      "icon": "dragon"
+    },
+    "special": {
+      "S": 6,
+      "P": 9,
+      "E": 8,
+      "C": 5,
+      "I": 8,
+      "A": 6,
+      "L": 4
+    },
+    "active": {
+      "name": "Meditazione da Merge",
+      "cost": 2,
+      "text": "Aggiungi Perception se è tra gli SPECIAL scelti.",
+      "effect": {
+        "type": "selected-stat",
+        "stat": "P"
+      },
+      "flavor": "Resta fermo e il bug si sente in colpa."
+    },
+    "passive": {
+      "name": "Mantello Pesante",
+      "text": "+2 se Endurance è tra gli SPECIAL del turno.",
+      "effect": {
+        "type": "contains",
+        "stat": "E",
+        "value": 2
+      },
+      "flavor": "Si allena portando addosso il peso dello scope."
+    },
+    "quote": "Parlo poco. Reviewo tutto.",
+    "tags": [
+      "namek",
+      "perception",
+      "mentor"
+    ]
+  },
+  {
+    "id": "gogerio",
+    "image": "dragonball/gogerio.png",
+    "name": "Gogerio",
+    "subtitle": "Fusione definitiva tra potenza e approvazione.",
+    "rarity": "mitica",
+    "archetype": "fusion warrior",
+    "theme": "rosso • ssj4 • aura devastante",
+    "frame": {
+      "preset": "fusion_red_gold",
+      "accent": "#ef4444",
+      "icon": "fusion"
+    },
+    "special": {
+      "S": 10,
+      "P": 7,
+      "E": 8,
+      "C": 7,
+      "I": 6,
+      "A": 10,
+      "L": 5
+    },
+    "active": {
+      "name": "Big Bang Planning",
+      "cost": 3,
+      "text": "Aggiungi Agility se è tra gli SPECIAL scelti.",
+      "effect": {
+        "type": "selected-stat",
+        "stat": "A"
+      },
+      "flavor": "La mano è aperta. La tolleranza allo scope creep no."
+    },
+    "passive": {
+      "name": "Aura da Fusione",
+      "text": "+3 se Strength è tra gli SPECIAL del turno.",
+      "effect": {
+        "type": "contains",
+        "stat": "S",
+        "value": 3
+      },
+      "flavor": "Quando entra in campo, il Jira trema."
+    },
+    "quote": "Non sono due persone. Sono due deadline fuse male.",
+    "tags": [
+      "fusion",
+      "strength",
+      "agility"
+    ]
+  }
+]

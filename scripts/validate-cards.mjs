@@ -1,18 +1,25 @@
 import fs from "node:fs";
 import path from "node:path";
+import {
+  SETTINGS,
+  VALERIO_KEYS,
+  getDraftCostFromCombat,
+  validateCardValerio
+} from "../src/game.js";
 
 const cardsPath = path.join("public", "data", "cards.json");
 const cardsDir = path.join("public", "cards");
-const specialKeys = ["S", "P", "E", "C", "I", "A", "L"];
 const supportedEffects = new Set([
+  "damage",
   "score",
-  "selected-stat",
-  "highest-selected",
-  "lowest-selected",
+  "break-cap",
+  "ignore-defense",
+  "attack-stat-bonus",
+  "defense-stat-bonus",
+  "flat-damage",
+  "defense-hit-bonus",
   "contains",
-  "missing",
-  "deck-low",
-  "mana-low"
+  "missing"
 ]);
 
 const data = JSON.parse(fs.readFileSync(cardsPath, "utf8"));
@@ -51,19 +58,16 @@ if (!Array.isArray(cards)) {
       issues.push(`${label}: manca immagine public/cards/${card.id}.png`);
     }
 
-    for (const key of specialKeys) {
-      const value = card.special?.[key];
-      if (!Number.isInteger(value) || value < 0 || value > 10) {
-        issues.push(`${label}: SPECIAL ${key} deve essere un intero tra 0 e 10`);
-      }
+    if (card.special) {
+      issues.push(`${label}: usa ancora special invece di valerio`);
     }
 
-    for (const key of Object.keys(card.special ?? {})) {
-      if (!specialKeys.includes(key)) {
-        issues.push(`${label}: SPECIAL sconosciuto ${key}`);
-      }
+    const valerio = validateCardValerio(card);
+    for (const issue of valerio.issues) {
+      issues.push(issue);
     }
 
+    validateCombat(card, label);
     validateAbility(card, "active", label);
     validateAbility(card, "passive", label);
   }
@@ -87,13 +91,37 @@ if (issues.length) {
 
 console.log("OK");
 
+function validateCombat(card, label) {
+  const combat = card.combat;
+  if (!combat || typeof combat !== "object") {
+    issues.push(`${label}: combat mancante`);
+    return;
+  }
+
+  for (const key of ["attackPower", "defensePower"]) {
+    const value = combat[key];
+    if (!Number.isInteger(value) || value < 0 || value > 100) {
+      issues.push(`${label}: combat.${key} deve essere un intero tra 0 e 100`);
+    }
+  }
+
+  if (!Number.isInteger(combat.draftCost) || combat.draftCost < 1) {
+    issues.push(`${label}: combat.draftCost deve essere un intero positivo`);
+  }
+
+  const expectedCost = getDraftCostFromCombat(combat);
+  if (combat.draftCost !== expectedCost) {
+    issues.push(`${label}: combat.draftCost ${combat.draftCost} non coerente con potenza (${expectedCost})`);
+  }
+}
+
 function validateAbility(card, key, label) {
   const ability = card[key];
   if (!ability?.name) {
     issues.push(`${label}: ${key}.name mancante`);
   }
-  if (key === "active" && (!Number.isInteger(ability?.cost) || ability.cost < 0)) {
-    issues.push(`${label}: active.cost deve essere un intero >= 0`);
+  if (key === "active" && (!Number.isInteger(ability?.cost) || ability.cost < 0 || ability.cost > SETTINGS.maxMana)) {
+    issues.push(`${label}: active.cost deve essere un intero tra 0 e ${SETTINGS.maxMana}`);
   }
   if (!ability?.text) {
     issues.push(`${label}: ${key}.text mancante`);
@@ -109,11 +137,20 @@ function validateAbility(card, key, label) {
     issues.push(`${label}: ${key}.effect.type non supportato (${effect.type})`);
   }
 
-  if (["selected-stat", "contains", "missing"].includes(effect.type) && !specialKeys.includes(effect.stat)) {
+  if (
+    ["ignore-defense", "attack-stat-bonus", "defense-stat-bonus", "contains", "missing"].includes(effect.type) &&
+    effect.stat &&
+    !VALERIO_KEYS.includes(effect.stat)
+  ) {
     issues.push(`${label}: ${key}.effect.stat non valido (${effect.stat})`);
   }
 
-  if (["score", "contains", "missing", "deck-low", "mana-low"].includes(effect.type) && typeof effect.value !== "number") {
+  if (
+    ["damage", "score", "attack-stat-bonus", "defense-stat-bonus", "flat-damage", "defense-hit-bonus", "contains", "missing"].includes(
+      effect.type
+    ) &&
+    typeof effect.value !== "number"
+  ) {
     issues.push(`${label}: ${key}.effect.value deve essere numerico`);
   }
 }

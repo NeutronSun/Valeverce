@@ -1,29 +1,30 @@
 {
-  "schema_version": "2.0",
+  "schema_version": "3.0",
   "collection": {
     "id": "valerio_multiverse",
     "name": "Valerio Multiverse Cards",
     "language": "it",
-    "description": "Set completo e più creativo/divertente delle carte Valerio, con SPECIAL, abilità attiva, passiva, tema grafico, rarità e flavor.",
+    "description": "Set completo e più creativo/divertente delle carte Valerio, con VALERIO, abilità attiva, passiva, tema grafico, rarità e flavor.",
     "stats_legend": {
-      "S": "Strength",
-      "P": "Perception",
-      "E": "Endurance",
-      "C": "Charisma",
-      "I": "Intelligence",
-      "A": "Agility",
-      "L": "Luck"
+      "V": "Vigore",
+      "A": "Astuzia",
+      "L": "Lucidita",
+      "E": "Ego",
+      "R": "Rigore",
+      "I": "Istinto",
+      "O": "Opportunismo"
     },
     "effect_types_supported": [
-      "score",
-      "selected-stat",
-      "highest-selected",
-      "lowest-selected",
-      "contains",
-      "missing",
-      "deck-low"
+      "damage",
+      "break-cap",
+      "ignore-defense",
+      "attack-stat-bonus",
+      "defense-stat-bonus",
+      "flat-damage",
+      "defense-hit-bonus",
+      "missing"
     ],
-    "design_note": "I campi extra come subtitle, rarity, archetype, theme, frame, quote e tags servono per UI, card renderer, filtri, tooltip e restyling grafico. Il blocco active/passive resta compatibile con la logica del JSON originale."
+    "design_note": "Carte aggiornate al sistema VALERIO: draft budget, pool attacco/difesa, Breccia, PV, mana e cooldown."
   },
   "cards": [
     {
@@ -39,31 +40,22 @@
         "accent": "#d6a94f",
         "icon": "owl"
       },
-      "special": {
-        "S": 3,
-        "P": 8,
-        "E": 5,
-        "C": 7,
-        "I": 10,
-        "A": 5,
-        "L": 6
-      },
       "active": {
         "name": "Scacco dell'Olimpo",
         "cost": 2,
-        "text": "Aggiungi Intelligence se è tra gli SPECIAL scelti.",
+        "text": "Ignora la difesa avversaria su Lucidita.",
         "effect": {
-          "type": "selected-stat",
-          "stat": "I"
+          "type": "ignore-defense",
+          "stat": "L"
         },
         "flavor": "La soluzione era ovvia, ma solo dopo che l'ha detta lui."
       },
       "passive": {
         "name": "Consiglio non richiesto",
-        "text": "+2 se Perception è tra gli SPECIAL del turno.",
+        "text": "+2 Breccia se attacchi con Astuzia.",
         "effect": {
-          "type": "contains",
-          "stat": "P",
+          "type": "attack-stat-bonus",
+          "stat": "A",
           "value": 2
         },
         "flavor": "Vede il problema tre sprint prima degli altri."
@@ -73,7 +65,21 @@
         "strategia",
         "olimpico",
         "controllo"
-      ]
+      ],
+      "valerio": {
+        "V": 3,
+        "A": 7,
+        "L": 7,
+        "E": 7,
+        "R": 5,
+        "I": 5,
+        "O": 6
+      },
+      "combat": {
+        "attackPower": 70,
+        "defensePower": 75,
+        "draftCost": 4
+      }
     },
     {
       "id": "Magister",
@@ -88,31 +94,22 @@
         "accent": "#b7934e",
         "icon": "laurel"
       },
-      "special": {
-        "S": 3,
-        "P": 7,
-        "E": 4,
-        "C": 8,
-        "I": 10,
-        "A": 3,
-        "L": 5
-      },
       "active": {
         "name": "Interrogazione a Sorpresa",
         "cost": 2,
-        "text": "+4 al punteggio.",
+        "text": "+4 danni oltre il cap se vinci il fight.",
         "effect": {
-          "type": "score",
+          "type": "damage",
           "value": 4
         },
         "flavor": "La domanda era fuori programma. Anche il programma."
       },
       "passive": {
         "name": "Voto sul Registro",
-        "text": "+2 se Intelligence è tra gli SPECIAL del turno.",
+        "text": "+2 Breccia se attacchi con Lucidita.",
         "effect": {
-          "type": "contains",
-          "stat": "I",
+          "type": "attack-stat-bonus",
+          "stat": "L",
           "value": 2
         },
         "flavor": "Segna tutto. Anche i sospiri."
@@ -122,7 +119,21 @@
         "sapienza",
         "latino",
         "pressione psicologica"
-      ]
+      ],
+      "valerio": {
+        "V": 3,
+        "A": 7,
+        "L": 10,
+        "E": 8,
+        "R": 4,
+        "I": 3,
+        "O": 5
+      },
+      "combat": {
+        "attackPower": 65,
+        "defensePower": 80,
+        "draftCost": 4
+      }
     },
     {
       "id": "Nasus",
@@ -137,30 +148,20 @@
         "accent": "#d9a441",
         "icon": "ankh"
       },
-      "special": {
-        "S": 8,
-        "P": 5,
-        "E": 8,
-        "C": 3,
-        "I": 6,
-        "A": 3,
-        "L": 4
-      },
       "active": {
         "name": "Stack Infinito",
         "cost": 2,
-        "text": "Aggiungi il valore più alto tra gli SPECIAL scelti.",
+        "text": "Se vinci, puoi infliggere tutta la Breccia oltre il cap.",
         "effect": {
-          "type": "highest-selected"
+          "type": "break-cap"
         },
         "flavor": "Ogni Q è una riunione sopravvissuta."
       },
       "passive": {
         "name": "Ultima Farmata",
-        "text": "+3 se ti restano 2 carte o meno.",
+        "text": "+3 Breccia sempre attiva.",
         "effect": {
-          "type": "deck-low",
-          "count": 2,
+          "type": "flat-damage",
           "value": 3
         },
         "flavor": "Quando sembra finita, inizia il late game."
@@ -170,7 +171,21 @@
         "late-game",
         "tank",
         "sabbie"
-      ]
+      ],
+      "valerio": {
+        "V": 8,
+        "A": 5,
+        "L": 6,
+        "E": 3,
+        "R": 8,
+        "I": 3,
+        "O": 4
+      },
+      "combat": {
+        "attackPower": 65,
+        "defensePower": 70,
+        "draftCost": 4
+      }
     },
     {
       "id": "Samurai",
@@ -185,31 +200,22 @@
         "accent": "#c99958",
         "icon": "katana"
       },
-      "special": {
-        "S": 7,
-        "P": 6,
-        "E": 6,
-        "C": 4,
-        "I": 5,
-        "A": 10,
-        "L": 4
-      },
       "active": {
         "name": "Iaido da Condominio",
         "cost": 2,
-        "text": "Aggiungi Agility se è tra gli SPECIAL scelti.",
+        "text": "Ignora la difesa avversaria su Istinto.",
         "effect": {
-          "type": "selected-stat",
-          "stat": "A"
+          "type": "ignore-defense",
+          "stat": "I"
         },
         "flavor": "Estrae la soluzione prima ancora del problema."
       },
       "passive": {
         "name": "Onore in Ciabatte",
-        "text": "+2 se Strength è tra gli SPECIAL del turno.",
+        "text": "+2 Breccia se attacchi con Vigore.",
         "effect": {
-          "type": "contains",
-          "stat": "S",
+          "type": "attack-stat-bonus",
+          "stat": "V",
           "value": 2
         },
         "flavor": "Il codice d'onore consente le Crocs."
@@ -219,7 +225,21 @@
         "agilità",
         "duello",
         "sakura"
-      ]
+      ],
+      "valerio": {
+        "V": 7,
+        "A": 6,
+        "L": 5,
+        "E": 4,
+        "R": 6,
+        "I": 8,
+        "O": 4
+      },
+      "combat": {
+        "attackPower": 75,
+        "defensePower": 65,
+        "draftCost": 4
+      }
     },
     {
       "id": "Sir",
@@ -234,30 +254,22 @@
         "accent": "#1f4c85",
         "icon": "lion"
       },
-      "special": {
-        "S": 4,
-        "P": 7,
-        "E": 5,
-        "C": 10,
-        "I": 7,
-        "A": 4,
-        "L": 6
-      },
       "active": {
         "name": "Duello con Ricevuta",
         "cost": 1,
-        "text": "Aggiungi il valore più basso tra gli SPECIAL scelti.",
+        "text": "+2 danni oltre il cap se vinci il fight.",
         "effect": {
-          "type": "lowest-selected"
+          "type": "damage",
+          "value": 2
         },
         "flavor": "Vince anche quando compila il form per perdere."
       },
       "passive": {
         "name": "Etichetta Aggressiva",
-        "text": "+2 se Charisma è tra gli SPECIAL del turno.",
+        "text": "+2 Breccia se attacchi con Ego.",
         "effect": {
-          "type": "contains",
-          "stat": "C",
+          "type": "attack-stat-bonus",
+          "stat": "E",
           "value": 2
         },
         "flavor": "Ti distrugge, ma dandoti del Lei."
@@ -267,7 +279,21 @@
         "charisma",
         "nobiltà",
         "diplomazia"
-      ]
+      ],
+      "valerio": {
+        "V": 4,
+        "A": 7,
+        "L": 7,
+        "E": 7,
+        "R": 5,
+        "I": 4,
+        "O": 6
+      },
+      "combat": {
+        "attackPower": 70,
+        "defensePower": 75,
+        "draftCost": 4
+      }
     },
     {
       "id": "auditore",
@@ -282,31 +308,22 @@
         "accent": "#6b5b42",
         "icon": "hidden-blade"
       },
-      "special": {
-        "S": 5,
-        "P": 8,
-        "E": 5,
-        "C": 6,
-        "I": 7,
-        "A": 10,
-        "L": 6
-      },
       "active": {
         "name": "Lama nel Pagliaio",
         "cost": 3,
-        "text": "Aggiungi Agility se è tra gli SPECIAL scelti.",
+        "text": "Ignora la difesa avversaria su Istinto.",
         "effect": {
-          "type": "selected-stat",
-          "stat": "A"
+          "type": "ignore-defense",
+          "stat": "I"
         },
         "flavor": "Entra in call silenzioso, esce con la milestone."
       },
       "passive": {
         "name": "Sincronizzazione al 99%",
-        "text": "+2 se Perception è tra gli SPECIAL del turno.",
+        "text": "+2 Breccia se attacchi con Astuzia.",
         "effect": {
-          "type": "contains",
-          "stat": "P",
+          "type": "attack-stat-bonus",
+          "stat": "A",
           "value": 2
         },
         "flavor": "Manca sempre una piuma o una acceptance criteria."
@@ -316,7 +333,21 @@
         "stealth",
         "agility",
         "rinascimento"
-      ]
+      ],
+      "valerio": {
+        "V": 5,
+        "A": 6,
+        "L": 6,
+        "E": 6,
+        "R": 5,
+        "I": 6,
+        "O": 6
+      },
+      "combat": {
+        "attackPower": 70,
+        "defensePower": 70,
+        "draftCost": 4
+      }
     },
     {
       "id": "cave",
@@ -331,31 +362,22 @@
         "accent": "#9c7a4a",
         "icon": "club"
       },
-      "special": {
-        "S": 10,
-        "P": 3,
-        "E": 8,
-        "C": 2,
-        "I": 2,
-        "A": 5,
-        "L": 5
-      },
       "active": {
         "name": "Bonk Paleolitico",
         "cost": 1,
-        "text": "+3 al punteggio.",
+        "text": "+3 danni oltre il cap se vinci il fight.",
         "effect": {
-          "type": "score",
+          "type": "damage",
           "value": 3
         },
         "flavor": "Soluzione binaria: funziona o clava."
       },
       "passive": {
         "name": "Ragionamento a Pietra",
-        "text": "+2 se Strength è tra gli SPECIAL del turno.",
+        "text": "+2 Breccia se attacchi con Vigore.",
         "effect": {
-          "type": "contains",
-          "stat": "S",
+          "type": "attack-stat-bonus",
+          "stat": "V",
           "value": 2
         },
         "flavor": "Non è legacy: è archeologia."
@@ -365,7 +387,21 @@
         "strength",
         "primitivo",
         "bonk"
-      ]
+      ],
+      "valerio": {
+        "V": 10,
+        "A": 3,
+        "L": 2,
+        "E": 2,
+        "R": 8,
+        "I": 5,
+        "O": 5
+      },
+      "combat": {
+        "attackPower": 70,
+        "defensePower": 60,
+        "draftCost": 3
+      }
     },
     {
       "id": "doom",
@@ -380,31 +416,22 @@
         "accent": "#0c6f3c",
         "icon": "helmet"
       },
-      "special": {
-        "S": 10,
-        "P": 6,
-        "E": 9,
-        "C": 2,
-        "I": 4,
-        "A": 7,
-        "L": 3
-      },
       "active": {
         "name": "Rip and Teoria",
         "cost": 3,
-        "text": "Aggiungi Strength se è tra gli SPECIAL scelti.",
+        "text": "Ignora la difesa avversaria su Vigore.",
         "effect": {
-          "type": "selected-stat",
-          "stat": "S"
+          "type": "ignore-defense",
+          "stat": "V"
         },
         "flavor": "Prima spiega il problema, poi lo cancella dall'esistenza."
       },
       "passive": {
         "name": "Colonna Sonora Interna",
-        "text": "+3 se Endurance è tra gli SPECIAL del turno.",
+        "text": "+3 Breccia se attacchi con Rigore.",
         "effect": {
-          "type": "contains",
-          "stat": "E",
+          "type": "attack-stat-bonus",
+          "stat": "R",
           "value": 3
         },
         "flavor": "Ogni escalation parte con un riff."
@@ -414,7 +441,21 @@
         "boss",
         "strength",
         "endurance"
-      ]
+      ],
+      "valerio": {
+        "V": 9,
+        "A": 6,
+        "L": 4,
+        "E": 2,
+        "R": 9,
+        "I": 7,
+        "O": 3
+      },
+      "combat": {
+        "attackPower": 75,
+        "defensePower": 65,
+        "draftCost": 4
+      }
     },
     {
       "id": "genshis",
@@ -429,31 +470,22 @@
         "accent": "#8ac7ff",
         "icon": "wish"
       },
-      "special": {
-        "S": 4,
-        "P": 6,
-        "E": 5,
-        "C": 8,
-        "I": 6,
-        "A": 7,
-        "L": 10
-      },
       "active": {
         "name": "Pull da Dieci",
         "cost": 2,
-        "text": "+4 al punteggio.",
+        "text": "+4 danni oltre il cap se vinci il fight.",
         "effect": {
-          "type": "score",
+          "type": "damage",
           "value": 4
         },
         "flavor": "Nove doppioni e una soluzione."
       },
       "passive": {
         "name": "Pity Emotivo",
-        "text": "+2 se Luck è tra gli SPECIAL del turno.",
+        "text": "+2 Breccia se attacchi con Opportunismo.",
         "effect": {
-          "type": "contains",
-          "stat": "L",
+          "type": "attack-stat-bonus",
+          "stat": "O",
           "value": 2
         },
         "flavor": "Perde fiducia, poi trova la pull giusta."
@@ -463,7 +495,21 @@
         "luck",
         "gacha",
         "anime"
-      ]
+      ],
+      "valerio": {
+        "V": 4,
+        "A": 6,
+        "L": 6,
+        "E": 6,
+        "R": 5,
+        "I": 6,
+        "O": 7
+      },
+      "combat": {
+        "attackPower": 70,
+        "defensePower": 70,
+        "draftCost": 4
+      }
     },
     {
       "id": "gta",
@@ -478,31 +524,22 @@
         "accent": "#ff39c9",
         "icon": "palm"
       },
-      "special": {
-        "S": 6,
-        "P": 6,
-        "E": 6,
-        "C": 5,
-        "I": 4,
-        "A": 10,
-        "L": 7
-      },
       "active": {
         "name": "Cinque Stelle e Via",
         "cost": 3,
-        "text": "+5 al punteggio.",
+        "text": "+5 danni oltre il cap se vinci il fight.",
         "effect": {
-          "type": "score",
+          "type": "damage",
           "value": 5
         },
         "flavor": "Quando arriva il QA, ha già cambiato veicolo."
       },
       "passive": {
         "name": "Parcheggio Creativo",
-        "text": "+2 se Agility è tra gli SPECIAL del turno.",
+        "text": "+2 Breccia se attacchi con Istinto.",
         "effect": {
-          "type": "contains",
-          "stat": "A",
+          "type": "attack-stat-bonus",
+          "stat": "I",
           "value": 2
         },
         "flavor": "La soluzione è tecnicamente in divieto di sosta."
@@ -512,7 +549,21 @@
         "neon",
         "agility",
         "caos"
-      ]
+      ],
+      "valerio": {
+        "V": 6,
+        "A": 6,
+        "L": 4,
+        "E": 5,
+        "R": 6,
+        "I": 6,
+        "O": 7
+      },
+      "combat": {
+        "attackPower": 75,
+        "defensePower": 65,
+        "draftCost": 4
+      }
     },
     {
       "id": "malenia",
@@ -527,30 +578,21 @@
         "accent": "#b13b2e",
         "icon": "winged-helm"
       },
-      "special": {
-        "S": 7,
-        "P": 6,
-        "E": 8,
-        "C": 4,
-        "I": 6,
-        "A": 10,
-        "L": 3
-      },
       "active": {
         "name": "Danza Acquatica ma Secca",
         "cost": 3,
-        "text": "Aggiungi il valore più alto tra gli SPECIAL scelti.",
+        "text": "Se vinci, puoi infliggere tutta la Breccia oltre il cap.",
         "effect": {
-          "type": "highest-selected"
+          "type": "break-cap"
         },
         "flavor": "Un colpo, tre revisioni, zero pietà."
       },
       "passive": {
         "name": "Non Ho Mai Perso",
-        "text": "+3 se Agility è tra gli SPECIAL del turno.",
+        "text": "+3 Breccia se attacchi con Istinto.",
         "effect": {
-          "type": "contains",
-          "stat": "A",
+          "type": "attack-stat-bonus",
+          "stat": "I",
           "value": 3
         },
         "flavor": "Il bug è morto prima del log."
@@ -560,7 +602,21 @@
         "boss",
         "agility",
         "precisione"
-      ]
+      ],
+      "valerio": {
+        "V": 7,
+        "A": 6,
+        "L": 6,
+        "E": 4,
+        "R": 7,
+        "I": 7,
+        "O": 3
+      },
+      "combat": {
+        "attackPower": 70,
+        "defensePower": 70,
+        "draftCost": 4
+      }
     },
     {
       "id": "nazi",
@@ -575,31 +631,22 @@
         "accent": "#626262",
         "icon": "folder"
       },
-      "special": {
-        "S": 7,
-        "P": 8,
-        "E": 6,
-        "C": 3,
-        "I": 6,
-        "A": 7,
-        "L": 2
-      },
       "active": {
         "name": "Modulo in Triplice Copia",
         "cost": 2,
-        "text": "+4 al punteggio con una manovra amministrativa fulminea.",
+        "text": "+4 danni oltre il cap se vinci il fight.",
         "effect": {
-          "type": "score",
+          "type": "damage",
           "value": 4
         },
         "flavor": "Prima approva, poi chiede chi ha autorizzato."
       },
       "passive": {
         "name": "Ordnung, ma in Ritardo",
-        "text": "+2 se Perception è tra gli SPECIAL del turno.",
+        "text": "+2 Breccia se attacchi con Astuzia.",
         "effect": {
-          "type": "contains",
-          "stat": "P",
+          "type": "attack-stat-bonus",
+          "stat": "A",
           "value": 2
         },
         "flavor": "Ha letto la mail. Tutte. Dal 2019."
@@ -609,7 +656,21 @@
         "ordine",
         "perception",
         "burocrazia"
-      ]
+      ],
+      "valerio": {
+        "V": 7,
+        "A": 8,
+        "L": 6,
+        "E": 3,
+        "R": 6,
+        "I": 7,
+        "O": 2
+      },
+      "combat": {
+        "attackPower": 75,
+        "defensePower": 65,
+        "draftCost": 4
+      }
     },
     {
       "id": "pirate",
@@ -624,31 +685,22 @@
         "accent": "#8a642b",
         "icon": "skull"
       },
-      "special": {
-        "S": 7,
-        "P": 6,
-        "E": 6,
-        "C": 7,
-        "I": 4,
-        "A": 6,
-        "L": 8
-      },
       "active": {
         "name": "Cannonata Storta",
         "cost": 2,
-        "text": "+4 al punteggio.",
+        "text": "+4 danni oltre il cap se vinci il fight.",
         "effect": {
-          "type": "score",
+          "type": "damage",
           "value": 4
         },
         "flavor": "Non colpisce il target, ma spaventa la roadmap."
       },
       "passive": {
         "name": "Mappa Disegnata Male",
-        "text": "+2 se Luck è tra gli SPECIAL del turno.",
+        "text": "+2 Breccia se attacchi con Opportunismo.",
         "effect": {
-          "type": "contains",
-          "stat": "L",
+          "type": "attack-stat-bonus",
+          "stat": "O",
           "value": 2
         },
         "flavor": "La X indica un tesoro o il bagno."
@@ -658,7 +710,21 @@
         "luck",
         "pirata",
         "caos controllato"
-      ]
+      ],
+      "valerio": {
+        "V": 6,
+        "A": 6,
+        "L": 4,
+        "E": 6,
+        "R": 6,
+        "I": 6,
+        "O": 6
+      },
+      "combat": {
+        "attackPower": 75,
+        "defensePower": 70,
+        "draftCost": 4
+      }
     },
     {
       "id": "reddead",
@@ -673,31 +739,22 @@
         "accent": "#b5492a",
         "icon": "revolver"
       },
-      "special": {
-        "S": 6,
-        "P": 10,
-        "E": 7,
-        "C": 5,
-        "I": 5,
-        "A": 7,
-        "L": 6
-      },
       "active": {
         "name": "Dead Eye al Tramonto",
         "cost": 3,
-        "text": "Aggiungi Perception se è tra gli SPECIAL scelti.",
+        "text": "Ignora la difesa avversaria su Astuzia.",
         "effect": {
-          "type": "selected-stat",
-          "stat": "P"
+          "type": "ignore-defense",
+          "stat": "A"
         },
         "flavor": "Rallenta il tempo abbastanza da leggere l'email."
       },
       "passive": {
         "name": "Cavallo Parcheggiato Bene",
-        "text": "+2 se Luck è tra gli SPECIAL del turno.",
+        "text": "+2 Breccia se attacchi con Opportunismo.",
         "effect": {
-          "type": "contains",
-          "stat": "L",
+          "type": "attack-stat-bonus",
+          "stat": "O",
           "value": 2
         },
         "flavor": "Non sa dov'è, ma è sicuramente coperto."
@@ -707,7 +764,21 @@
         "western",
         "perception",
         "deadline"
-      ]
+      ],
+      "valerio": {
+        "V": 6,
+        "A": 6,
+        "L": 5,
+        "E": 5,
+        "R": 6,
+        "I": 6,
+        "O": 6
+      },
+      "combat": {
+        "attackPower": 75,
+        "defensePower": 70,
+        "draftCost": 4
+      }
     },
     {
       "id": "shaman",
@@ -722,30 +793,22 @@
         "accent": "#b6783b",
         "icon": "totem"
       },
-      "special": {
-        "S": 4,
-        "P": 8,
-        "E": 6,
-        "C": 8,
-        "I": 5,
-        "A": 5,
-        "L": 7
-      },
       "active": {
         "name": "Totem del Router",
         "cost": 2,
-        "text": "Aggiungi il valore più basso tra gli SPECIAL scelti.",
+        "text": "+2 danni oltre il cap se vinci il fight.",
         "effect": {
-          "type": "lowest-selected"
+          "type": "damage",
+          "value": 2
         },
         "flavor": "Il segnale è debole, ma la fede è in fibra."
       },
       "passive": {
         "name": "Lag Profetico",
-        "text": "+2 se Intelligence non è tra gli SPECIAL del turno.",
+        "text": "+2 Breccia se non usi Lucidita nel piano.",
         "effect": {
           "type": "missing",
-          "stat": "I",
+          "stat": "L",
           "value": 2
         },
         "flavor": "Prevede il bug prima che venga pushato."
@@ -755,7 +818,21 @@
         "support",
         "luck",
         "misticismo"
-      ]
+      ],
+      "valerio": {
+        "V": 4,
+        "A": 6,
+        "L": 5,
+        "E": 7,
+        "R": 6,
+        "I": 5,
+        "O": 7
+      },
+      "combat": {
+        "attackPower": 70,
+        "defensePower": 75,
+        "draftCost": 4
+      }
     },
     {
       "id": "stark",
@@ -770,31 +847,22 @@
         "accent": "#38bdf8",
         "icon": "reactor"
       },
-      "special": {
-        "S": 5,
-        "P": 7,
-        "E": 5,
-        "C": 10,
-        "I": 10,
-        "A": 6,
-        "L": 5
-      },
       "active": {
         "name": "Armatura con Snack",
         "cost": 3,
-        "text": "Aggiungi Intelligence se è tra gli SPECIAL scelti.",
+        "text": "Ignora la difesa avversaria su Lucidita.",
         "effect": {
-          "type": "selected-stat",
-          "stat": "I"
+          "type": "ignore-defense",
+          "stat": "L"
         },
         "flavor": "Il prototipo vola. Il budget no."
       },
       "passive": {
         "name": "Conferenza Stampa Inutile",
-        "text": "+2 se Charisma è tra gli SPECIAL del turno.",
+        "text": "+2 Breccia se attacchi con Ego.",
         "effect": {
-          "type": "contains",
-          "stat": "C",
+          "type": "attack-stat-bonus",
+          "stat": "E",
           "value": 2
         },
         "flavor": "Convince tutti che il bug era una feature premium."
@@ -804,7 +872,21 @@
         "tech",
         "intelligence",
         "charisma"
-      ]
+      ],
+      "valerio": {
+        "V": 5,
+        "A": 6,
+        "L": 7,
+        "E": 6,
+        "R": 5,
+        "I": 6,
+        "O": 5
+      },
+      "combat": {
+        "attackPower": 70,
+        "defensePower": 75,
+        "draftCost": 4
+      }
     },
     {
       "id": "strano",
@@ -819,30 +901,21 @@
         "accent": "#f59e0b",
         "icon": "sigil"
       },
-      "special": {
-        "S": 3,
-        "P": 8,
-        "E": 5,
-        "C": 6,
-        "I": 10,
-        "A": 5,
-        "L": 8
-      },
       "active": {
         "name": "Portale Sbagliato",
         "cost": 2,
-        "text": "Aggiungi il valore più alto tra gli SPECIAL scelti.",
+        "text": "Se vinci, puoi infliggere tutta la Breccia oltre il cap.",
         "effect": {
-          "type": "highest-selected"
+          "type": "break-cap"
         },
         "flavor": "Voleva aprire staging, è finito in produzione."
       },
       "passive": {
         "name": "Ho Visto 14 Milioni di Bug",
-        "text": "+2 se Intelligence è tra gli SPECIAL del turno.",
+        "text": "+2 Breccia se attacchi con Lucidita.",
         "effect": {
-          "type": "contains",
-          "stat": "I",
+          "type": "attack-stat-bonus",
+          "stat": "L",
           "value": 2
         },
         "flavor": "E in uno solo la build passava."
@@ -852,7 +925,21 @@
         "arcano",
         "intelligence",
         "controllo"
-      ]
+      ],
+      "valerio": {
+        "V": 3,
+        "A": 7,
+        "L": 7,
+        "E": 6,
+        "R": 5,
+        "I": 5,
+        "O": 7
+      },
+      "combat": {
+        "attackPower": 70,
+        "defensePower": 75,
+        "draftCost": 4
+      }
     },
     {
       "id": "urss",
@@ -867,31 +954,22 @@
         "accent": "#7f1d1d",
         "icon": "gear"
       },
-      "special": {
-        "S": 7,
-        "P": 5,
-        "E": 10,
-        "C": 6,
-        "I": 5,
-        "A": 4,
-        "L": 4
-      },
       "active": {
         "name": "Piano Quinquennale Express",
         "cost": 2,
-        "text": "+4 al punteggio.",
+        "text": "+4 danni oltre il cap se vinci il fight.",
         "effect": {
-          "type": "score",
+          "type": "damage",
           "value": 4
         },
         "flavor": "Cinque anni compressi in due daily."
       },
       "passive": {
         "name": "Mana Collettivizzato",
-        "text": "+2 se Endurance è tra gli SPECIAL del turno.",
+        "text": "+2 Breccia se attacchi con Rigore.",
         "effect": {
-          "type": "contains",
-          "stat": "E",
+          "type": "attack-stat-bonus",
+          "stat": "R",
           "value": 2
         },
         "flavor": "Se uno è stanco, siamo tutti stanchi."
@@ -901,7 +979,21 @@
         "endurance",
         "resistenza",
         "piano"
-      ]
+      ],
+      "valerio": {
+        "V": 7,
+        "A": 5,
+        "L": 5,
+        "E": 6,
+        "R": 9,
+        "I": 4,
+        "O": 4
+      },
+      "combat": {
+        "attackPower": 65,
+        "defensePower": 80,
+        "draftCost": 4
+      }
     },
     {
       "id": "v",
@@ -916,31 +1008,22 @@
         "accent": "#991b1b",
         "icon": "mask"
       },
-      "special": {
-        "S": 5,
-        "P": 8,
-        "E": 5,
-        "C": 10,
-        "I": 8,
-        "A": 7,
-        "L": 6
-      },
       "active": {
         "name": "Monologo con Maschera",
         "cost": 2,
-        "text": "Aggiungi Charisma se è tra gli SPECIAL scelti.",
+        "text": "Ignora la difesa avversaria su Ego.",
         "effect": {
-          "type": "selected-stat",
-          "stat": "C"
+          "type": "ignore-defense",
+          "stat": "E"
         },
         "flavor": "Finisce il discorso quando finisce il budget."
       },
       "passive": {
         "name": "Allitterazione Vendicativa",
-        "text": "+2 se Luck è tra gli SPECIAL del turno.",
+        "text": "+2 Breccia se attacchi con Opportunismo.",
         "effect": {
-          "type": "contains",
-          "stat": "L",
+          "type": "attack-stat-bonus",
+          "stat": "O",
           "value": 2
         },
         "flavor": "Vince verbalmente, verticalmente, vagamente."
@@ -950,7 +1033,21 @@
         "charisma",
         "gothic",
         "vendetta"
-      ]
+      ],
+      "valerio": {
+        "V": 5,
+        "A": 6,
+        "L": 6,
+        "E": 6,
+        "R": 5,
+        "I": 6,
+        "O": 6
+      },
+      "combat": {
+        "attackPower": 70,
+        "defensePower": 70,
+        "draftCost": 4
+      }
     },
     {
       "id": "valcraft",
@@ -965,30 +1062,21 @@
         "accent": "#22d3ee",
         "icon": "pickaxe"
       },
-      "special": {
-        "S": 7,
-        "P": 5,
-        "E": 7,
-        "C": 4,
-        "I": 6,
-        "A": 5,
-        "L": 8
-      },
       "active": {
         "name": "Piccone Leggendario",
         "cost": 1,
-        "text": "Aggiungi il valore più basso tra gli SPECIAL scelti.",
+        "text": "+2 danni oltre il cap se vinci il fight.",
         "effect": {
-          "type": "lowest-selected"
+          "type": "damage",
+          "value": 2
         },
         "flavor": "Anche la skill più bassa può minare diamanti."
       },
       "passive": {
         "name": "Craftato al Volo",
-        "text": "+3 se ti restano 2 carte o meno.",
+        "text": "+3 Breccia sempre attiva.",
         "effect": {
-          "type": "deck-low",
-          "count": 2,
+          "type": "flat-damage",
           "value": 3
         },
         "flavor": "Una porta, due assi e un piano B."
@@ -998,7 +1086,21 @@
         "craft",
         "luck",
         "voxel"
-      ]
+      ],
+      "valerio": {
+        "V": 7,
+        "A": 5,
+        "L": 6,
+        "E": 4,
+        "R": 7,
+        "I": 5,
+        "O": 6
+      },
+      "combat": {
+        "attackPower": 70,
+        "defensePower": 70,
+        "draftCost": 4
+      }
     },
     {
       "id": "valdemort",
@@ -1013,31 +1115,22 @@
         "accent": "#10b981",
         "icon": "serpent"
       },
-      "special": {
-        "S": 4,
-        "P": 7,
-        "E": 5,
-        "C": 8,
-        "I": 10,
-        "A": 5,
-        "L": 3
-      },
       "active": {
         "name": "Accio Nasone",
         "cost": 3,
-        "text": "Aggiungi Intelligence se è tra gli SPECIAL scelti.",
+        "text": "Ignora la difesa avversaria su Lucidita.",
         "effect": {
-          "type": "selected-stat",
-          "stat": "I"
+          "type": "ignore-defense",
+          "stat": "L"
         },
         "flavor": "Evoca una soluzione proibita, ma funziona."
       },
       "passive": {
         "name": "Horcrux in Saldo",
-        "text": "+2 se Charisma è tra gli SPECIAL del turno.",
+        "text": "+2 Breccia se attacchi con Ego.",
         "effect": {
-          "type": "contains",
-          "stat": "C",
+          "type": "attack-stat-bonus",
+          "stat": "E",
           "value": 2
         },
         "flavor": "Ha diviso l'anima in sette repository."
@@ -1047,7 +1140,21 @@
         "dark",
         "intelligence",
         "serpente"
-      ]
+      ],
+      "valerio": {
+        "V": 4,
+        "A": 7,
+        "L": 8,
+        "E": 8,
+        "R": 5,
+        "I": 5,
+        "O": 3
+      },
+      "combat": {
+        "attackPower": 65,
+        "defensePower": 80,
+        "draftCost": 4
+      }
     },
     {
       "id": "valerio",
@@ -1062,31 +1169,22 @@
         "accent": "#1e3a8a",
         "icon": "compass"
       },
-      "special": {
-        "S": 6,
-        "P": 7,
-        "E": 6,
-        "C": 8,
-        "I": 7,
-        "A": 6,
-        "L": 10
-      },
       "active": {
         "name": "Plot Armor Personale",
         "cost": 2,
-        "text": "+5 al punteggio.",
+        "text": "+5 danni oltre il cap se vinci il fight.",
         "effect": {
-          "type": "score",
+          "type": "damage",
           "value": 5
         },
         "flavor": "Il destino gli dà sempre un branch pulito."
       },
       "passive": {
         "name": "Protagonista per Contratto",
-        "text": "+3 se Luck è tra gli SPECIAL del turno.",
+        "text": "+3 Breccia se attacchi con Opportunismo.",
         "effect": {
-          "type": "contains",
-          "stat": "L",
+          "type": "attack-stat-bonus",
+          "stat": "O",
           "value": 3
         },
         "flavor": "Quando serve un critico, sorride alla camera."
@@ -1096,7 +1194,21 @@
         "base",
         "luck",
         "protagonista"
-      ]
+      ],
+      "valerio": {
+        "V": 6,
+        "A": 5,
+        "L": 6,
+        "E": 5,
+        "R": 6,
+        "I": 6,
+        "O": 6
+      },
+      "combat": {
+        "attackPower": 70,
+        "defensePower": 70,
+        "draftCost": 4
+      }
     },
     {
       "id": "vally",
@@ -1111,31 +1223,22 @@
         "accent": "#f59e0b",
         "icon": "lightning"
       },
-      "special": {
-        "S": 4,
-        "P": 7,
-        "E": 5,
-        "C": 9,
-        "I": 7,
-        "A": 10,
-        "L": 7
-      },
       "active": {
         "name": "Critica Gentile",
         "cost": 1,
-        "text": "+3 al punteggio.",
+        "text": "+3 danni oltre il cap se vinci il fight.",
         "effect": {
-          "type": "score",
+          "type": "damage",
           "value": 3
         },
         "flavor": "Ti corregge così veloce che sembra un complimento."
       },
       "passive": {
         "name": "Sguardo che Sistema",
-        "text": "+2 se Charisma è tra gli SPECIAL del turno.",
+        "text": "+2 Breccia se attacchi con Ego.",
         "effect": {
-          "type": "contains",
-          "stat": "C",
+          "type": "attack-stat-bonus",
+          "stat": "E",
           "value": 2
         },
         "flavor": "Un'occhiata e il CSS smette di fluttuare."
@@ -1145,7 +1248,21 @@
         "speed",
         "charisma",
         "fulmine"
-      ]
+      ],
+      "valerio": {
+        "V": 4,
+        "A": 6,
+        "L": 6,
+        "E": 6,
+        "R": 5,
+        "I": 6,
+        "O": 7
+      },
+      "combat": {
+        "attackPower": 70,
+        "defensePower": 70,
+        "draftCost": 4
+      }
     },
     {
       "id": "vratos",
@@ -1160,31 +1277,22 @@
         "accent": "#c2410c",
         "icon": "omega"
       },
-      "special": {
-        "S": 10,
-        "P": 5,
-        "E": 10,
-        "C": 3,
-        "I": 5,
-        "A": 6,
-        "L": 4
-      },
       "active": {
         "name": "Boy, Calmàti",
         "cost": 3,
-        "text": "Aggiungi Strength se è tra gli SPECIAL scelti.",
+        "text": "Ignora la difesa avversaria su Vigore.",
         "effect": {
-          "type": "selected-stat",
-          "stat": "S"
+          "type": "ignore-defense",
+          "stat": "V"
         },
         "flavor": "Il tono è basso. Il danno no."
       },
       "passive": {
         "name": "Ascia in Smart Working",
-        "text": "+2 se Endurance è tra gli SPECIAL del turno.",
+        "text": "+2 Breccia se attacchi con Rigore.",
         "effect": {
-          "type": "contains",
-          "stat": "E",
+          "type": "attack-stat-bonus",
+          "stat": "R",
           "value": 2
         },
         "flavor": "Può attendere. L'ascia no."
@@ -1194,7 +1302,21 @@
         "strength",
         "endurance",
         "mitico"
-      ]
+      ],
+      "valerio": {
+        "V": 9,
+        "A": 5,
+        "L": 5,
+        "E": 3,
+        "R": 8,
+        "I": 6,
+        "O": 4
+      },
+      "combat": {
+        "attackPower": 75,
+        "defensePower": 70,
+        "draftCost": 4
+      }
     },
     {
       "id": "vatriota",
@@ -1209,31 +1331,22 @@
         "accent": "#1d4ed8",
         "icon": "winged-v"
       },
-      "special": {
-        "S": 8,
-        "P": 7,
-        "E": 8,
-        "C": 9,
-        "I": 6,
-        "A": 6,
-        "L": 5
-      },
       "active": {
         "name": "Briefing sulle Nuvole",
         "cost": 2,
-        "text": "+4 al punteggio.",
+        "text": "+4 danni oltre il cap se vinci il fight.",
         "effect": {
-          "type": "score",
+          "type": "damage",
           "value": 4
         },
         "flavor": "Motiva il team anche se nessuno ha capito il perimetro."
       },
       "passive": {
         "name": "Mantello di Governance",
-        "text": "+2 se Charisma è tra gli SPECIAL del turno.",
+        "text": "+2 Breccia se attacchi con Ego.",
         "effect": {
-          "type": "contains",
-          "stat": "C",
+          "type": "attack-stat-bonus",
+          "stat": "E",
           "value": 2
         },
         "flavor": "La roadmap sventola dietro di lui."
@@ -1243,7 +1356,21 @@
         "eroe",
         "charisma",
         "leadership"
-      ]
+      ],
+      "valerio": {
+        "V": 6,
+        "A": 5,
+        "L": 6,
+        "E": 6,
+        "R": 6,
+        "I": 6,
+        "O": 5
+      },
+      "combat": {
+        "attackPower": 70,
+        "defensePower": 75,
+        "draftCost": 4
+      }
     },
     {
       "id": "the_veep",
@@ -1258,31 +1385,22 @@
         "accent": "#0f766e",
         "icon": "anchor"
       },
-      "special": {
-        "S": 8,
-        "P": 7,
-        "E": 9,
-        "C": 6,
-        "I": 5,
-        "A": 5,
-        "L": 5
-      },
       "active": {
         "name": "Mareggiata di Priorità",
         "cost": 2,
-        "text": "Aggiungi Endurance se è tra gli SPECIAL scelti.",
+        "text": "Ignora la difesa avversaria su Rigore.",
         "effect": {
-          "type": "selected-stat",
-          "stat": "E"
+          "type": "ignore-defense",
+          "stat": "R"
         },
         "flavor": "Più sale la pressione, più sorride alla tempesta."
       },
       "passive": {
         "name": "Nave sullo Sfondo",
-        "text": "+2 se Perception è tra gli SPECIAL del turno.",
+        "text": "+2 Breccia se attacchi con Astuzia.",
         "effect": {
-          "type": "contains",
-          "stat": "P",
+          "type": "attack-stat-bonus",
+          "stat": "A",
           "value": 2
         },
         "flavor": "Vede arrivare il problema dall'orizzonte."
@@ -1292,7 +1410,21 @@
         "oceano",
         "endurance",
         "controllo"
-      ]
+      ],
+      "valerio": {
+        "V": 7,
+        "A": 6,
+        "L": 5,
+        "E": 6,
+        "R": 6,
+        "I": 5,
+        "O": 5
+      },
+      "combat": {
+        "attackPower": 70,
+        "defensePower": 70,
+        "draftCost": 4
+      }
     },
     {
       "id": "v_train",
@@ -1307,31 +1439,22 @@
         "accent": "#38bdf8",
         "icon": "v"
       },
-      "special": {
-        "S": 8,
-        "P": 6,
-        "E": 8,
-        "C": 6,
-        "I": 6,
-        "A": 7,
-        "L": 5
-      },
       "active": {
         "name": "Circuito Massacrante",
         "cost": 2,
-        "text": "Aggiungi Strength se è tra gli SPECIAL scelti.",
+        "text": "Ignora la difesa avversaria su Vigore.",
         "effect": {
-          "type": "selected-stat",
-          "stat": "S"
+          "type": "ignore-defense",
+          "stat": "V"
         },
         "flavor": "Tre serie da dodici e una retrospettiva."
       },
       "passive": {
         "name": "Recovery tra le Call",
-        "text": "+2 se Endurance è tra gli SPECIAL del turno.",
+        "text": "+2 Breccia se attacchi con Rigore.",
         "effect": {
-          "type": "contains",
-          "stat": "E",
+          "type": "attack-stat-bonus",
+          "stat": "R",
           "value": 2
         },
         "flavor": "Il cooldown dura meno della daily."
@@ -1341,7 +1464,21 @@
         "sport",
         "strength",
         "endurance"
-      ]
+      ],
+      "valerio": {
+        "V": 6,
+        "A": 5,
+        "L": 6,
+        "E": 6,
+        "R": 6,
+        "I": 6,
+        "O": 5
+      },
+      "combat": {
+        "attackPower": 70,
+        "defensePower": 75,
+        "draftCost": 4
+      }
     },
     {
       "id": "fire_project",
@@ -1356,31 +1493,22 @@
         "accent": "#dc2626",
         "icon": "flame"
       },
-      "special": {
-        "S": 7,
-        "P": 5,
-        "E": 8,
-        "C": 7,
-        "I": 4,
-        "A": 6,
-        "L": 5
-      },
       "active": {
         "name": "Incendio Controllato",
         "cost": 2,
-        "text": "+4 al punteggio.",
+        "text": "+4 danni oltre il cap se vinci il fight.",
         "effect": {
-          "type": "score",
+          "type": "damage",
           "value": 4
         },
         "flavor": "Controllato nel senso che lo guarda bruciare con fiducia."
       },
       "passive": {
         "name": "Fumo negli Occhi",
-        "text": "+2 se Charisma è tra gli SPECIAL del turno.",
+        "text": "+2 Breccia se attacchi con Ego.",
         "effect": {
-          "type": "contains",
-          "stat": "C",
+          "type": "attack-stat-bonus",
+          "stat": "E",
           "value": 2
         },
         "flavor": "Nessuno capisce, ma tutti applaudono."
@@ -1390,7 +1518,21 @@
         "fuoco",
         "charisma",
         "crisi"
-      ]
+      ],
+      "valerio": {
+        "V": 7,
+        "A": 5,
+        "L": 4,
+        "E": 6,
+        "R": 7,
+        "I": 6,
+        "O": 5
+      },
+      "combat": {
+        "attackPower": 70,
+        "defensePower": 70,
+        "draftCost": 4
+      }
     },
     {
       "id": "project_boy",
@@ -1405,31 +1547,22 @@
         "accent": "#334155",
         "icon": "shield"
       },
-      "special": {
-        "S": 6,
-        "P": 7,
-        "E": 9,
-        "C": 5,
-        "I": 6,
-        "A": 5,
-        "L": 4
-      },
       "active": {
         "name": "Scudo Anti‑Scope",
         "cost": 2,
-        "text": "Aggiungi Endurance se è tra gli SPECIAL scelti.",
+        "text": "Ignora la difesa avversaria su Rigore.",
         "effect": {
-          "type": "selected-stat",
-          "stat": "E"
+          "type": "ignore-defense",
+          "stat": "R"
         },
         "flavor": "Può bloccare tutto tranne 'piccola modifica'."
       },
       "passive": {
         "name": "Ultima Stand‑Up",
-        "text": "+2 se Perception è tra gli SPECIAL del turno.",
+        "text": "+2 Breccia se attacchi con Astuzia.",
         "effect": {
-          "type": "contains",
-          "stat": "P",
+          "type": "attack-stat-bonus",
+          "stat": "A",
           "value": 2
         },
         "flavor": "Individua il rischio dietro le rovine."
@@ -1439,7 +1572,21 @@
         "tank",
         "endurance",
         "wasteland"
-      ]
+      ],
+      "valerio": {
+        "V": 6,
+        "A": 7,
+        "L": 6,
+        "E": 5,
+        "R": 7,
+        "I": 5,
+        "O": 4
+      },
+      "combat": {
+        "attackPower": 70,
+        "defensePower": 75,
+        "draftCost": 4
+      }
     },
     {
       "id": "starproject",
@@ -1454,31 +1601,22 @@
         "accent": "#facc15",
         "icon": "star"
       },
-      "special": {
-        "S": 8,
-        "P": 6,
-        "E": 8,
-        "C": 9,
-        "I": 7,
-        "A": 5,
-        "L": 6
-      },
       "active": {
         "name": "Bagliore da Milestone",
         "cost": 3,
-        "text": "+5 al punteggio.",
+        "text": "+5 danni oltre il cap se vinci il fight.",
         "effect": {
-          "type": "score",
+          "type": "damage",
           "value": 5
         },
         "flavor": "Quando entra, la presentazione diventa HDR."
       },
       "passive": {
         "name": "Aura Motivazionale",
-        "text": "+2 se Charisma è tra gli SPECIAL del turno.",
+        "text": "+2 Breccia se attacchi con Ego.",
         "effect": {
-          "type": "contains",
-          "stat": "C",
+          "type": "attack-stat-bonus",
+          "stat": "E",
           "value": 2
         },
         "flavor": "Anche il Gantt sembra ottimista."
@@ -1488,7 +1626,21 @@
         "luce",
         "charisma",
         "eroe"
-      ]
+      ],
+      "valerio": {
+        "V": 6,
+        "A": 5,
+        "L": 6,
+        "E": 6,
+        "R": 6,
+        "I": 5,
+        "O": 6
+      },
+      "combat": {
+        "attackPower": 70,
+        "defensePower": 75,
+        "draftCost": 4
+      }
     },
     {
       "id": "black_val",
@@ -1503,31 +1655,22 @@
         "accent": "#7f1d1d",
         "icon": "v"
       },
-      "special": {
-        "S": 8,
-        "P": 7,
-        "E": 7,
-        "C": 5,
-        "I": 6,
-        "A": 7,
-        "L": 4
-      },
       "active": {
         "name": "Protocollo Nero",
         "cost": 3,
-        "text": "Aggiungi Strength se è tra gli SPECIAL scelti.",
+        "text": "Ignora la difesa avversaria su Vigore.",
         "effect": {
-          "type": "selected-stat",
-          "stat": "S"
+          "type": "ignore-defense",
+          "stat": "V"
         },
         "flavor": "La soluzione è classificata. Il danno è pubblico."
       },
       "passive": {
         "name": "Silenzio da War Room",
-        "text": "+2 se Endurance è tra gli SPECIAL del turno.",
+        "text": "+2 Breccia se attacchi con Rigore.",
         "effect": {
-          "type": "contains",
-          "stat": "E",
+          "type": "attack-stat-bonus",
+          "stat": "R",
           "value": 2
         },
         "flavor": "Resiste finché anche il caos si stanca."
@@ -1537,7 +1680,21 @@
         "dark",
         "strength",
         "antihero"
-      ]
+      ],
+      "valerio": {
+        "V": 7,
+        "A": 6,
+        "L": 6,
+        "E": 5,
+        "R": 6,
+        "I": 6,
+        "O": 4
+      },
+      "combat": {
+        "attackPower": 70,
+        "defensePower": 70,
+        "draftCost": 4
+      }
     },
     {
       "id": "valarot",
@@ -1552,31 +1709,21 @@
         "accent": "#f59e0b",
         "icon": "dragonball"
       },
-      "special": {
-        "S": 9,
-        "P": 7,
-        "E": 9,
-        "C": 6,
-        "I": 5,
-        "A": 8,
-        "L": 6
-      },
       "active": {
         "name": "Kamehame‑Check",
         "cost": 3,
-        "text": "Aggiungi Strength se è tra gli SPECIAL scelti.",
+        "text": "Ignora la difesa avversaria su Vigore.",
         "effect": {
-          "type": "selected-stat",
-          "stat": "S"
+          "type": "ignore-defense",
+          "stat": "V"
         },
         "flavor": "Cancella il problema con un'onda di energia e un commento in PR."
       },
       "passive": {
         "name": "Zenkai da Deadline",
-        "text": "+3 se ti restano 2 carte o meno.",
+        "text": "+3 Breccia sempre attiva.",
         "effect": {
-          "type": "deck-low",
-          "count": 2,
+          "type": "flat-damage",
           "value": 3
         },
         "flavor": "Più è vicino alla fine, più urla."
@@ -1586,7 +1733,21 @@
         "saiyan",
         "strength",
         "late-game"
-      ]
+      ],
+      "valerio": {
+        "V": 6,
+        "A": 5,
+        "L": 5,
+        "E": 6,
+        "R": 6,
+        "I": 6,
+        "O": 6
+      },
+      "combat": {
+        "attackPower": 70,
+        "defensePower": 70,
+        "draftCost": 4
+      }
     },
     {
       "id": "buulerio",
@@ -1601,31 +1762,22 @@
         "accent": "#ec4899",
         "icon": "majin"
       },
-      "special": {
-        "S": 8,
-        "P": 4,
-        "E": 10,
-        "C": 8,
-        "I": 4,
-        "A": 4,
-        "L": 8
-      },
       "active": {
         "name": "Trasformazione in Caramella",
         "cost": 2,
-        "text": "+4 al punteggio.",
+        "text": "+4 danni oltre il cap se vinci il fight.",
         "effect": {
-          "type": "score",
+          "type": "damage",
           "value": 4
         },
         "flavor": "Il blocker era dolce, quindi l'ha mangiato."
       },
       "passive": {
         "name": "Rigenerazione Majin",
-        "text": "+2 se Endurance è tra gli SPECIAL del turno.",
+        "text": "+2 Breccia se attacchi con Rigore.",
         "effect": {
-          "type": "contains",
-          "stat": "E",
+          "type": "attack-stat-bonus",
+          "stat": "R",
           "value": 2
         },
         "flavor": "Lo abbattono in call, torna più rosa."
@@ -1635,7 +1787,21 @@
         "majin",
         "endurance",
         "meme"
-      ]
+      ],
+      "valerio": {
+        "V": 7,
+        "A": 4,
+        "L": 4,
+        "E": 7,
+        "R": 7,
+        "I": 4,
+        "O": 7
+      },
+      "combat": {
+        "attackPower": 70,
+        "defensePower": 75,
+        "draftCost": 4
+      }
     },
     {
       "id": "valinyu_squad",
@@ -1650,31 +1816,22 @@
         "accent": "#65a30d",
         "icon": "pose"
       },
-      "special": {
-        "S": 7,
-        "P": 7,
-        "E": 7,
-        "C": 10,
-        "I": 5,
-        "A": 8,
-        "L": 6
-      },
       "active": {
         "name": "Posa Coordinata",
         "cost": 3,
-        "text": "Aggiungi Charisma se è tra gli SPECIAL scelti.",
+        "text": "Ignora la difesa avversaria su Ego.",
         "effect": {
-          "type": "selected-stat",
-          "stat": "C"
+          "type": "ignore-defense",
+          "stat": "E"
         },
         "flavor": "La posa dura più della pianificazione."
       },
       "passive": {
         "name": "Team Impact S+",
-        "text": "+2 se Agility è tra gli SPECIAL del turno.",
+        "text": "+2 Breccia se attacchi con Istinto.",
         "effect": {
-          "type": "contains",
-          "stat": "A",
+          "type": "attack-stat-bonus",
+          "stat": "I",
           "value": 2
         },
         "flavor": "Entrano male, vincono stilosi."
@@ -1684,7 +1841,21 @@
         "team",
         "charisma",
         "namek"
-      ]
+      ],
+      "valerio": {
+        "V": 6,
+        "A": 5,
+        "L": 5,
+        "E": 6,
+        "R": 6,
+        "I": 6,
+        "O": 6
+      },
+      "combat": {
+        "attackPower": 70,
+        "defensePower": 70,
+        "draftCost": 4
+      }
     },
     {
       "id": "cellerio",
@@ -1699,31 +1870,22 @@
         "accent": "#84cc16",
         "icon": "bio-core"
       },
-      "special": {
-        "S": 8,
-        "P": 8,
-        "E": 8,
-        "C": 5,
-        "I": 9,
-        "A": 7,
-        "L": 4
-      },
       "active": {
         "name": "Forma Perfetta",
         "cost": 3,
-        "text": "Aggiungi Intelligence se è tra gli SPECIAL scelti.",
+        "text": "Ignora la difesa avversaria su Lucidita.",
         "effect": {
-          "type": "selected-stat",
-          "stat": "I"
+          "type": "ignore-defense",
+          "stat": "L"
         },
         "flavor": "Assorbe due feedback e diventa la versione definitiva."
       },
       "passive": {
         "name": "Adattamento Cellulare",
-        "text": "+2 se Perception è tra gli SPECIAL del turno.",
+        "text": "+2 Breccia se attacchi con Astuzia.",
         "effect": {
-          "type": "contains",
-          "stat": "P",
+          "type": "attack-stat-bonus",
+          "stat": "A",
           "value": 2
         },
         "flavor": "Capisce il pattern prima del designer."
@@ -1733,7 +1895,21 @@
         "cell",
         "intelligence",
         "perfection"
-      ]
+      ],
+      "valerio": {
+        "V": 7,
+        "A": 6,
+        "L": 6,
+        "E": 5,
+        "R": 6,
+        "I": 6,
+        "O": 4
+      },
+      "combat": {
+        "attackPower": 70,
+        "defensePower": 70,
+        "draftCost": 4
+      }
     },
     {
       "id": "vallicolo",
@@ -1748,31 +1924,22 @@
         "accent": "#22c55e",
         "icon": "dragon"
       },
-      "special": {
-        "S": 6,
-        "P": 9,
-        "E": 8,
-        "C": 5,
-        "I": 8,
-        "A": 6,
-        "L": 4
-      },
       "active": {
         "name": "Meditazione da Merge",
         "cost": 2,
-        "text": "Aggiungi Perception se è tra gli SPECIAL scelti.",
+        "text": "Ignora la difesa avversaria su Astuzia.",
         "effect": {
-          "type": "selected-stat",
-          "stat": "P"
+          "type": "ignore-defense",
+          "stat": "A"
         },
         "flavor": "Resta fermo e il bug si sente in colpa."
       },
       "passive": {
         "name": "Mantello Pesante",
-        "text": "+2 se Endurance è tra gli SPECIAL del turno.",
+        "text": "+2 Breccia se attacchi con Rigore.",
         "effect": {
-          "type": "contains",
-          "stat": "E",
+          "type": "attack-stat-bonus",
+          "stat": "R",
           "value": 2
         },
         "flavor": "Si allena portando addosso il peso dello scope."
@@ -1782,7 +1949,21 @@
         "namek",
         "perception",
         "mentor"
-      ]
+      ],
+      "valerio": {
+        "V": 6,
+        "A": 6,
+        "L": 6,
+        "E": 5,
+        "R": 7,
+        "I": 6,
+        "O": 4
+      },
+      "combat": {
+        "attackPower": 70,
+        "defensePower": 75,
+        "draftCost": 4
+      }
     },
     {
       "id": "gogerio",
@@ -1797,31 +1978,22 @@
         "accent": "#ef4444",
         "icon": "fusion"
       },
-      "special": {
-        "S": 10,
-        "P": 7,
-        "E": 8,
-        "C": 7,
-        "I": 6,
-        "A": 10,
-        "L": 5
-      },
       "active": {
         "name": "Big Bang Planning",
         "cost": 3,
-        "text": "Aggiungi Agility se è tra gli SPECIAL scelti.",
+        "text": "Ignora la difesa avversaria su Istinto.",
         "effect": {
-          "type": "selected-stat",
-          "stat": "A"
+          "type": "ignore-defense",
+          "stat": "I"
         },
         "flavor": "La mano è aperta. La tolleranza allo scope creep no."
       },
       "passive": {
         "name": "Aura da Fusione",
-        "text": "+3 se Strength è tra gli SPECIAL del turno.",
+        "text": "+3 Breccia se attacchi con Vigore.",
         "effect": {
-          "type": "contains",
-          "stat": "S",
+          "type": "attack-stat-bonus",
+          "stat": "V",
           "value": 3
         },
         "flavor": "Quando entra in campo, il Jira trema."
@@ -1831,7 +2003,21 @@
         "fusion",
         "strength",
         "agility"
-      ]
+      ],
+      "valerio": {
+        "V": 6,
+        "A": 5,
+        "L": 6,
+        "E": 6,
+        "R": 6,
+        "I": 6,
+        "O": 5
+      },
+      "combat": {
+        "attackPower": 70,
+        "defensePower": 75,
+        "draftCost": 4
+      }
     }
   ]
 }

@@ -7,10 +7,13 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   SETTINGS,
-  SPECIAL_LABELS,
-  pickSpecials,
-  scorePlay,
-  shuffle
+  VALERIO_LABELS,
+  getAttackPool,
+  getDefensePool,
+  getDraftCost,
+  scoreFightPlan,
+  shuffle,
+  validateValerioPlan
 } from "./game.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -74,7 +77,7 @@ server.on("upgrade", (request, socket) => {
 });
 
 server.listen(port, "0.0.0.0", () => {
-  console.log(`valeverce`);
+  console.log("valeverce");
   console.log(`Local:   http://localhost:${port}`);
   for (const address of getLanAddresses()) {
     console.log(`Network: http://${address}:${port}`);
@@ -102,7 +105,7 @@ async function serveStaticFile(request, response) {
 
     response.writeHead(200, {
       "Content-Type": getMimeType(filePath),
-      "Cache-Control": filePath.endsWith("index.html") ? "no-store" : "public, max-age=120"
+      "Cache-Control": getCacheControl(filePath)
     });
     createReadStream(filePath).pipe(response);
   } catch (error) {
@@ -130,6 +133,11 @@ function getMimeType(filePath) {
     ".webp": "image/webp",
     ".svg": "image/svg+xml"
   }[extension] ?? "application/octet-stream";
+}
+
+function getCacheControl(filePath) {
+  const extension = path.extname(filePath).toLowerCase();
+  return [".html", ".css", ".js", ".json"].includes(extension) ? "no-store" : "public, max-age=120";
 }
 
 function readCards(data) {
@@ -180,14 +188,19 @@ function handleMessage(client, rawMessage) {
     case "selectCard":
       selectCard(client, String(payload.cardId ?? ""));
       break;
+    case "submitPlan":
+      submitPlan(client, payload);
+      break;
     case "submitFight":
-      submitFight(client, Boolean(payload.useActive));
+      sendError(client, "Protocollo aggiornato: usa submitPlan");
       break;
     case "submitPlay":
       if (getClientLobby(client)?.phase === "select") {
         selectCard(client, String(payload.cardId ?? ""));
+      } else if (getClientLobby(client)?.phase === "plan") {
+        submitPlan(client, payload);
       } else {
-        submitFight(client, Boolean(payload.useActive));
+        sendError(client, "Azione non valida in questa fase");
       }
       break;
     case "nextRound":
@@ -211,7 +224,6 @@ function createLobby(client) {
     hostId: client.id,
     phase: "lobby",
     round: 0,
-    specialKeys: [],
     playerOrder: [client.id],
     activePair: [],
     pairCursor: 0,
@@ -268,16 +280,12 @@ function startGame(client) {
   }
 
   for (const player of lobby.players.values()) {
-    player.mana = SETTINGS.startingMana;
-    player.deck = [];
-    player.alive = true;
-    player.selected = null;
+    resetPlayerForGame(player);
   }
 
   lobby.round = 0;
   lobby.winnerId = null;
   lobby.lastResult = null;
-  lobby.specialKeys = [];
   lobby.activePair = [];
   lobby.pairCursor = 0;
   lobby.playerOrder = lobby.playerOrder.filter((playerId) => lobby.players.has(playerId));
@@ -286,11 +294,15 @@ function startGame(client) {
     taken: [],
     pickIndex: 0,
     order: [...lobby.playerOrder],
-    target: SETTINGS.draftSize
+    target: SETTINGS.draftSize,
+    budget: SETTINGS.draftBudget
   };
   lobby.phase = "draft";
   scheduleActionTimer(lobby, "draft");
-  pushChat(lobby, { kind: "system", text: `Draft iniziato: ${SETTINGS.draftSize} carte a testa` });
+  pushChat(lobby, {
+    kind: "system",
+    text: `Draft iniziato: ${SETTINGS.draftSize} carte max, budget ${SETTINGS.draftBudget}`
+  });
   broadcastAllStates();
 }
 
@@ -308,29 +320,22 @@ function draftCard(client, cardId) {
     return;
   }
 
-  if (!cardsById.has(cardId) || !lobby.draft.pool.includes(cardId) || lobby.draft.taken.includes(cardId)) {
-    sendError(client, "Carta non disponibile");
-    return;
-  }
-
-  if (player.deck.length >= lobby.draft.target) {
-    sendError(client, "Hai gia completato il draft");
+  const card = cardsById.get(cardId);
+  const availability = canPlayerDraftCard(lobby, player, card);
+  if (!availability.ok) {
+    sendError(client, availability.error);
     return;
   }
 
   player.deck.push(cardId);
+  player.draftSpent += getDraftCost(card);
   lobby.draft.taken.push(cardId);
-  pushChat(lobby, { kind: "system", text: `${player.name} drafta ${cardsById.get(cardId).name}` });
+  pushChat(lobby, {
+    kind: "system",
+    text: `${player.name} drafta ${card.name} (${getDraftCost(card)} budget)`
+  });
 
-  if (isDraftComplete(lobby)) {
-    pushChat(lobby, { kind: "system", text: "Draft completato, si entra nei duelli" });
-    startRound(lobby);
-    return;
-  }
-
-  advanceDraftTurn(lobby);
-  scheduleActionTimer(lobby, "draft");
-  broadcastAllStates();
+  finishOrAdvanceDraft(lobby);
 }
 
 function selectCard(client, cardId) {
@@ -357,22 +362,32 @@ function selectCard(client, cardId) {
     return;
   }
 
-  if (player.selected) {
+  if (Number(player.cooldowns[cardId] ?? 0) > 0) {
+    sendError(client, "Carta in cooldown");
+    return;
+  }
+
+  if (player.selected?.cardId) {
     sendError(client, "Hai gia scelto la carta");
     return;
   }
 
-  player.selected = { cardId, useActive: null };
+  player.selected = {
+    cardId,
+    attacks: null,
+    defenses: null,
+    useActive: null
+  };
   advanceRoundIfReady(lobby);
   broadcastAllStates();
 }
 
-function submitFight(client, useActive) {
+function submitPlan(client, payload) {
   const lobby = getClientLobby(client);
   const player = lobby?.players.get(client.id);
 
-  if (!lobby || !player || lobby.phase !== "fight") {
-    sendError(client, "Non puoi combattere ora");
+  if (!lobby || !player || lobby.phase !== "plan") {
+    sendError(client, "Non puoi confermare un piano ora");
     return;
   }
 
@@ -391,20 +406,28 @@ function submitFight(client, useActive) {
     return;
   }
 
-  if (player.selected.useActive !== null) {
-    sendError(client, "Hai gia confermato il fight");
+  if (hasSubmittedPlan(player)) {
+    sendError(client, "Hai gia confermato il piano");
     return;
   }
 
   const card = cardsById.get(player.selected.cardId);
-  if (useActive && Number(card.active?.cost ?? 0) > player.mana) {
+  const plan = normalizePlan(payload);
+  const validation = validateValerioPlan(plan, card);
+  if (!validation.ok) {
+    sendError(client, validation.error);
+    return;
+  }
+
+  if (plan.useActive && Number(card.active?.cost ?? 0) > player.mana) {
     sendError(client, "Mana insufficiente");
     return;
   }
 
-  player.selected.useActive = useActive;
+  player.selected.attacks = plan.attacks;
+  player.selected.defenses = plan.defenses;
+  player.selected.useActive = plan.useActive;
   advanceRoundIfReady(lobby);
-
   broadcastAllStates();
 }
 
@@ -453,7 +476,6 @@ function restartLobby(client) {
 
   lobby.phase = "lobby";
   lobby.round = 0;
-  lobby.specialKeys = [];
   lobby.activePair = [];
   lobby.pairCursor = 0;
   lobby.draft = null;
@@ -462,21 +484,28 @@ function restartLobby(client) {
   lobby.winnerId = null;
 
   for (const player of lobby.players.values()) {
-    player.mana = SETTINGS.startingMana;
-    player.deck = [];
-    player.alive = true;
-    player.selected = null;
+    resetPlayerForGame(player);
   }
 
   broadcastAllStates();
 }
 
 function startRound(lobby) {
+  const alivePlayers = getAlivePlayers(lobby);
+  if (alivePlayers.length < SETTINGS.minPlayers) {
+    lobby.phase = "ended";
+    lobby.winnerId = alivePlayers[0]?.id ?? null;
+    clearActionTimer(lobby);
+    broadcastAllStates();
+    return;
+  }
+
+  tickCooldowns(lobby);
+
   const activePair = pickActivePair(lobby);
   if (activePair.length < SETTINGS.minPlayers) {
-    const winner = getAlivePlayers(lobby)[0] ?? null;
     lobby.phase = "ended";
-    lobby.winnerId = winner?.id ?? null;
+    lobby.winnerId = alivePlayers[0]?.id ?? null;
     clearActionTimer(lobby);
     broadcastAllStates();
     return;
@@ -484,19 +513,11 @@ function startRound(lobby) {
 
   lobby.phase = "select";
   lobby.round += 1;
-  lobby.specialKeys = pickSpecials(3);
   lobby.activePair = activePair;
   lobby.lastResult = null;
 
   for (const player of lobby.players.values()) {
     player.selected = null;
-  }
-
-  for (const playerId of lobby.activePair) {
-    const player = lobby.players.get(playerId);
-    if (player) {
-      player.mana = Math.min(SETTINGS.maxMana, player.mana + SETTINGS.roundManaGain);
-    }
   }
 
   pushChat(lobby, {
@@ -508,12 +529,14 @@ function startRound(lobby) {
   broadcastAllStates();
 }
 
-function enterFight(lobby) {
-  lobby.phase = "fight";
+function enterPlan(lobby) {
+  lobby.phase = "plan";
   clearActionTimer(lobby);
 
   for (const player of getActiveDuelists(lobby)) {
     if (player.selected) {
+      player.selected.attacks = null;
+      player.selected.defenses = null;
       player.selected.useActive = null;
     }
   }
@@ -526,51 +549,71 @@ function advanceRoundIfReady(lobby) {
   }
 
   if (lobby.phase === "select" && activePlayers.every((player) => player.selected?.cardId)) {
-    enterFight(lobby);
+    enterPlan(lobby);
   }
 
-  if (
-    lobby.phase === "fight" &&
-    activePlayers.every((player) => player.selected?.useActive !== null && player.selected?.useActive !== undefined)
-  ) {
+  if (lobby.phase === "plan" && activePlayers.every((player) => hasSubmittedPlan(player))) {
     resolveRound(lobby);
   }
 }
 
 function resolveRound(lobby) {
-  const plays = getActiveDuelists(lobby).map((player) => {
+  const duelists = getActiveDuelists(lobby);
+  if (duelists.length < SETTINGS.minPlayers) {
+    return;
+  }
+
+  const before = new Map(
+    duelists.map((player) => [
+      player.id,
+      {
+        health: player.health,
+        mana: player.mana
+      }
+    ])
+  );
+  const scores = duelists.map((player, index) => {
+    const opponent = duelists[index === 0 ? 1 : 0];
     const card = cardsById.get(player.selected.cardId);
-    const detail = scorePlay({
-      card,
-      specials: lobby.specialKeys,
+    const opponentCard = cardsById.get(opponent.selected.cardId);
+    const detail = scoreFightPlan({
+      attacker: player,
+      defender: opponent,
+      attackerCard: card,
+      defenderCard: opponentCard,
+      attacks: player.selected.attacks,
+      ownDefenses: player.selected.defenses,
+      enemyDefenses: opponent.selected.defenses,
+      enemyAttacks: opponent.selected.attacks,
       useActive: player.selected.useActive,
-      mana: player.mana,
-      deckSize: player.deck.length
+      mana: player.mana
     });
 
-    player.mana = Math.max(0, player.mana - detail.manaCost);
-
-    return { player, card, detail };
+    return { player, opponent, card, opponentCard, detail };
   });
 
-  const topScore = Math.max(...plays.map((play) => play.detail.score));
-  const contenders = plays.filter((play) => play.detail.score === topScore);
+  const highestBreach = Math.max(...scores.map((score) => score.detail.breach));
+  const contenders = scores.filter((score) => score.detail.breach === highestBreach);
   const isTie = contenders.length > 1;
   const winner = isTie ? null : contenders[0];
+  const damageTaken = new Map(duelists.map((player) => [player.id, 0]));
+
+  for (const score of scores) {
+    score.player.mana = Math.max(0, score.player.mana - score.detail.manaCost);
+    score.player.cooldowns[score.card.id] = SETTINGS.cardCooldownRounds + 1;
+  }
 
   if (winner) {
-    winner.player.mana = Math.min(SETTINGS.maxMana, winner.player.mana + SETTINGS.winnerManaGain);
+    const loser = winner.opponent;
+    const damage = winner.detail.finalDamage;
+    loser.health = Math.max(0, loser.health - damage);
+    damageTaken.set(loser.id, damage);
+  }
 
-    for (const play of plays) {
-      if (play.player.id === winner.player.id) {
-        continue;
-      }
-
-      play.player.mana = Math.min(SETTINGS.maxMana, play.player.mana + SETTINGS.loserManaGain);
-      play.player.deck = play.player.deck.filter((cardId) => cardId !== play.card.id);
-      if (play.player.deck.length === 0) {
-        play.player.alive = false;
-      }
+  for (const player of duelists) {
+    player.mana = Math.min(SETTINGS.maxMana, player.mana + SETTINGS.roundManaGain);
+    if (player.health <= 0) {
+      player.alive = false;
     }
   }
 
@@ -579,30 +622,58 @@ function resolveRound(lobby) {
 
   lobby.lastResult = {
     round: lobby.round,
-    specialKeys: lobby.specialKeys,
     activePair: lobby.activePair,
     winnerId: winner?.player.id ?? null,
-    tieBreak: isTie,
-    summary: makeRoundSummary(plays, winner),
-    plays: plays.map((play) => ({
-      playerId: play.player.id,
-      playerName: play.player.name,
-      cardId: play.card.id,
-      cardName: play.card.name,
-      card: play.card,
-      useActive: play.player.selected.useActive,
-      score: play.detail.score,
-      baseScore: play.detail.baseScore,
-      activeScore: play.detail.activeScore,
-      passiveScore: play.detail.passiveScore,
-      manaCost: play.detail.manaCost,
-      manaStartGain: SETTINGS.roundManaGain,
-      manaOutcomeGain: winner && play.player.id === winner.player.id ? SETTINGS.winnerManaGain : SETTINGS.loserManaGain,
-      activeApplied: play.detail.activeApplied,
-      notes: play.detail.notes,
-      outcome: winner ? (play.player.id === winner.player.id ? "win" : "lose") : "tie",
-      eliminated: !play.player.alive
-    }))
+    isTie,
+    summary: makeRoundSummary(scores, winner, isTie, damageTaken),
+    plays: scores.map((score) => {
+      const healthBefore = before.get(score.player.id).health;
+      const manaBefore = before.get(score.player.id).mana;
+      const actualFinalDamage = winner?.player.id === score.player.id ? score.detail.finalDamage : 0;
+
+      return {
+        playerId: score.player.id,
+        playerName: score.player.name,
+        cardId: score.card.id,
+        cardName: score.card.name,
+        card: score.card,
+
+        attacks: score.player.selected.attacks,
+        defenses: score.player.selected.defenses,
+
+        attackPool: score.detail.attackPool,
+        defensePool: score.detail.defensePool,
+
+        breach: score.detail.breach,
+        breachBeforeTrait: score.detail.breachBeforeTrait,
+        normalDamageCap: score.detail.normalDamageCap,
+        normalDamage: score.detail.normalDamage,
+        activeDamage: score.detail.activeDamage,
+        finalDamage: actualFinalDamage,
+        potentialFinalDamage: score.detail.finalDamage,
+        damageTaken: damageTaken.get(score.player.id) ?? 0,
+
+        useActive: score.detail.useActive,
+        activeApplied: score.detail.activeApplied,
+        manaCost: score.detail.manaCost,
+
+        traitApplied: score.detail.traitApplied,
+        traitNotes: score.detail.traitNotes,
+        activeNotes: score.detail.activeNotes,
+        defenseTraitNotes: score.detail.defenseTraitNotes,
+
+        attackLines: score.detail.attackLines,
+
+        healthBefore,
+        healthAfter: score.player.health,
+        manaBefore,
+        manaAfter: score.player.mana,
+        manaGain: SETTINGS.roundManaGain,
+        cooldown: score.player.cooldowns[score.card.id] ?? 0,
+
+        outcome: winner ? (score.player.id === winner.player.id ? "win" : "lose") : "tie"
+      };
+    })
   };
 
   lobby.phase = gameWinner ? "ended" : "reveal";
@@ -610,7 +681,9 @@ function resolveRound(lobby) {
   clearActionTimer(lobby);
   pushChat(lobby, {
     kind: "system",
-    text: winner ? `${winner.player.name} vince il duello ${lobby.round}` : `Duello ${lobby.round} in pareggio`
+    text: winner
+      ? `${winner.player.name} vince il duello ${lobby.round} e infligge ${damageTaken.get(winner.opponent.id)} PV`
+      : `Duello ${lobby.round} in pareggio: nessun danno PV`
   });
 }
 
@@ -645,13 +718,10 @@ function leaveLobby(client, options = { broadcast: true }) {
         lobby.phase = "lobby";
         lobby.draft = null;
         clearActionTimer(lobby);
-      } else if (isDraftComplete(lobby)) {
-        startRound(lobby);
       } else {
-        advanceDraftTurn(lobby);
-        scheduleActionTimer(lobby, "draft");
+        finishOrAdvanceDraft(lobby);
       }
-    } else if (["select", "fight", "reveal"].includes(lobby.phase) && stillAlive.length <= 1) {
+    } else if (["select", "plan", "reveal"].includes(lobby.phase) && stillAlive.length <= 1) {
       lobby.phase = "ended";
       lobby.winnerId = stillAlive[0]?.id ?? null;
       clearActionTimer(lobby);
@@ -687,11 +757,24 @@ function makePlayer(client) {
   return {
     id: client.id,
     name: client.name,
+    health: SETTINGS.startingHealth,
     mana: SETTINGS.startingMana,
     deck: [],
+    draftSpent: 0,
+    cooldowns: {},
     alive: true,
     selected: null
   };
+}
+
+function resetPlayerForGame(player) {
+  player.health = SETTINGS.startingHealth;
+  player.mana = SETTINGS.startingMana;
+  player.deck = [];
+  player.draftSpent = 0;
+  player.cooldowns = {};
+  player.alive = true;
+  player.selected = null;
 }
 
 function getClientLobby(client) {
@@ -727,27 +810,32 @@ function pickActivePair(lobby) {
 }
 
 function getCurrentDrafterId(lobby) {
-  if (!lobby.draft) {
-    return null;
-  }
-
-  const order = lobby.draft.order.filter((playerId) => {
-    const player = lobby.players.get(playerId);
-    return player && player.deck.length < lobby.draft.target;
-  });
-
-  if (order.length === 0) {
+  if (!lobby.draft || isDraftComplete(lobby)) {
     return null;
   }
 
   for (let offset = 0; offset < lobby.draft.order.length; offset += 1) {
-    const playerId = lobby.draft.order[(lobby.draft.pickIndex + offset) % lobby.draft.order.length];
-    if (order.includes(playerId)) {
+    const index = (lobby.draft.pickIndex + offset) % lobby.draft.order.length;
+    const playerId = lobby.draft.order[index];
+    const player = lobby.players.get(playerId);
+    if (player && !isPlayerDraftDone(lobby, player)) {
       return playerId;
     }
   }
 
-  return order[0];
+  return null;
+}
+
+function finishOrAdvanceDraft(lobby) {
+  if (isDraftComplete(lobby)) {
+    pushChat(lobby, { kind: "system", text: "Draft completato, si entra nei duelli" });
+    startRound(lobby);
+    return;
+  }
+
+  advanceDraftTurn(lobby);
+  scheduleActionTimer(lobby, "draft");
+  broadcastAllStates();
 }
 
 function advanceDraftTurn(lobby) {
@@ -755,16 +843,11 @@ function advanceDraftTurn(lobby) {
     return;
   }
 
-  for (let attempts = 0; attempts < lobby.draft.order.length; attempts += 1) {
-    lobby.draft.pickIndex = (lobby.draft.pickIndex + 1) % lobby.draft.order.length;
-    const currentId = getCurrentDrafterId(lobby);
-    if (currentId) {
-      const index = lobby.draft.order.indexOf(currentId);
-      if (index >= 0) {
-        lobby.draft.pickIndex = index;
-      }
-      return;
-    }
+  lobby.draft.pickIndex = (lobby.draft.pickIndex + 1) % lobby.draft.order.length;
+  const currentId = getCurrentDrafterId(lobby);
+  const currentIndex = lobby.draft.order.indexOf(currentId);
+  if (currentIndex >= 0) {
+    lobby.draft.pickIndex = currentIndex;
   }
 }
 
@@ -773,8 +856,41 @@ function isDraftComplete(lobby) {
     lobby.draft &&
       lobby.draft.order
         .filter((playerId) => lobby.players.has(playerId))
-        .every((playerId) => lobby.players.get(playerId).deck.length >= lobby.draft.target)
+        .every((playerId) => isPlayerDraftDone(lobby, lobby.players.get(playerId)))
   );
+}
+
+function isPlayerDraftDone(lobby, player) {
+  return (
+    !player ||
+    player.deck.length >= lobby.draft.target ||
+    player.draftSpent >= SETTINGS.draftBudget ||
+    !findAffordableDraftCard(lobby, player)
+  );
+}
+
+function canPlayerDraftCard(lobby, player, card) {
+  if (!card || !cardsById.has(card.id) || !lobby.draft.pool.includes(card.id) || lobby.draft.taken.includes(card.id)) {
+    return { ok: false, error: "Carta non disponibile" };
+  }
+
+  if (player.deck.length >= lobby.draft.target) {
+    return { ok: false, error: "Hai gia completato il draft" };
+  }
+
+  const cost = getDraftCost(card);
+  if (player.draftSpent + cost > SETTINGS.draftBudget) {
+    return { ok: false, error: `Budget insufficiente (${cost} richiesti)` };
+  }
+
+  return { ok: true, error: "" };
+}
+
+function findAffordableDraftCard(lobby, player) {
+  return lobby.draft?.pool.find((cardId) => {
+    const card = cardsById.get(cardId);
+    return canPlayerDraftCard(lobby, player, card).ok;
+  });
 }
 
 function scheduleActionTimer(lobby, phase) {
@@ -813,34 +929,41 @@ function handleActionTimeout(lobbyId, phase, deadlineAt) {
 function autoDraftCard(lobby) {
   const currentPlayerId = getCurrentDrafterId(lobby);
   const player = currentPlayerId ? lobby.players.get(currentPlayerId) : null;
-  const cardId = lobby.draft?.pool.find((candidateId) => cardsById.has(candidateId) && !lobby.draft.taken.includes(candidateId));
+  const cardId = player ? findAffordableDraftCard(lobby, player) : null;
+  const card = cardId ? cardsById.get(cardId) : null;
 
-  if (!player || !cardId) {
-    clearActionTimer(lobby);
-    broadcastAllStates();
+  if (!player || !card) {
+    finishOrAdvanceDraft(lobby);
     return;
   }
 
-  player.deck.push(cardId);
-  lobby.draft.taken.push(cardId);
-  pushChat(lobby, { kind: "system", text: `Timer scaduto: ${player.name} drafta ${cardsById.get(cardId).name}` });
+  player.deck.push(card.id);
+  player.draftSpent += getDraftCost(card);
+  lobby.draft.taken.push(card.id);
+  pushChat(lobby, {
+    kind: "system",
+    text: `Timer scaduto: ${player.name} drafta ${card.name}`
+  });
 
-  if (isDraftComplete(lobby)) {
-    pushChat(lobby, { kind: "system", text: "Draft completato, si entra nei duelli" });
-    startRound(lobby);
-    return;
-  }
-
-  advanceDraftTurn(lobby);
-  scheduleActionTimer(lobby, "draft");
-  broadcastAllStates();
+  finishOrAdvanceDraft(lobby);
 }
 
 function autoSelectCards(lobby) {
   for (const player of getActiveDuelists(lobby)) {
-    if (!player.selected?.cardId && player.deck.length > 0) {
-      player.selected = { cardId: player.deck[0], useActive: null };
-      pushChat(lobby, { kind: "system", text: `Timer scaduto: ${player.name} sceglie ${cardsById.get(player.deck[0])?.name ?? "una carta"}` });
+    if (!player.selected?.cardId) {
+      const cardId = findSelectableCardId(player);
+      if (cardId) {
+        player.selected = {
+          cardId,
+          attacks: null,
+          defenses: null,
+          useActive: null
+        };
+        pushChat(lobby, {
+          kind: "system",
+          text: `Timer scaduto: ${player.name} sceglie ${cardsById.get(cardId)?.name ?? "una carta"}`
+        });
+      }
     }
   }
 
@@ -851,25 +974,67 @@ function autoSelectCards(lobby) {
   broadcastAllStates();
 }
 
-function makeRoundSummary(plays, winner) {
-  const [first, second] = plays;
-  const margin = Math.abs(first.detail.score - second.detail.score);
-  const reason = winner
-    ? `${winner.player.name} ha chiuso con ${margin} punti di vantaggio.`
-    : "Pareggio pieno: nessuno perde carte, nessuno recupera mana. Si passa al prossimo round.";
+function findSelectableCardId(player) {
+  return player.deck.find((cardId) => Number(player.cooldowns[cardId] ?? 0) <= 0 && cardsById.has(cardId));
+}
 
+function tickCooldowns(lobby) {
+  for (const player of lobby.players.values()) {
+    for (const [cardId, turns] of Object.entries(player.cooldowns)) {
+      const nextTurns = Number(turns) - 1;
+      if (nextTurns <= 0) {
+        delete player.cooldowns[cardId];
+      } else {
+        player.cooldowns[cardId] = nextTurns;
+      }
+    }
+  }
+}
+
+function hasSubmittedPlan(player) {
+  return Boolean(
+    player.selected?.attacks &&
+      player.selected?.defenses &&
+      player.selected?.useActive !== null &&
+      player.selected?.useActive !== undefined
+  );
+}
+
+function normalizePlan(payload) {
   return {
-    reason,
-    margin,
-    lines: plays.map((play) => ({
-      playerId: play.player.id,
-      text: `${play.player.name}: ${play.detail.baseScore} base, ${formatScorePart(play.detail.activeScore)} attiva, ${formatScorePart(play.detail.passiveScore)} passiva = ${play.detail.score}`
-    }))
+    attacks: normalizeDistribution(payload.attacks),
+    defenses: normalizeDistribution(payload.defenses),
+    useActive: Boolean(payload.useActive)
   };
 }
 
-function formatScorePart(value) {
-  return value >= 0 ? `+${value}` : String(value);
+function normalizeDistribution(distribution) {
+  return Object.fromEntries(
+    Object.entries(distribution ?? {}).map(([key, value]) => [key, Number(value)])
+  );
+}
+
+function makeRoundSummary(scores, winner, isTie, damageTaken) {
+  const [first, second] = scores;
+  const reason = isTie
+    ? `Breccia pari (${first.detail.breach}-${second.detail.breach}). Nessuno perde PV.`
+    : `${winner.player.name} supera ${winner.opponent.name} in Breccia (${winner.detail.breach}-${scores.find((score) => score.player.id === winner.opponent.id).detail.breach}) e infligge ${damageTaken.get(winner.opponent.id)} PV.`;
+
+  return {
+    reason,
+    damage: winner ? damageTaken.get(winner.opponent.id) : 0,
+    lines: scores.flatMap((score) => [
+      {
+        playerId: score.player.id,
+        text: `${score.player.name}: Breccia ${score.detail.breach}, cap ${score.detail.normalDamageCap}, danno potenziale ${score.detail.finalDamage}`
+      },
+      ...score.detail.attackLines.map((line) => ({
+        playerId: score.player.id,
+        stat: line.stat,
+        text: `${score.player.name} ${line.stat}: ${line.attackPoints} + ${line.attackerValerio} - ${line.defenderValerio} - ${line.defensePoints} = ${line.lineDamage}`
+      }))
+    ])
+  };
 }
 
 function broadcastAllStates() {
@@ -892,7 +1057,7 @@ function sendState(client) {
     type: "state",
     selfId: client.id,
     settings: SETTINGS,
-    specialLabels: SPECIAL_LABELS,
+    valerioLabels: VALERIO_LABELS,
     lobbies: serializeLobbyList(),
     lobby: lobby ? serializeLobby(lobby, client.id) : null
   });
@@ -918,66 +1083,127 @@ function serializeLobby(lobby, selfId) {
     hostId: lobby.hostId,
     phase: lobby.phase,
     round: lobby.round,
-    specialKeys: lobby.specialKeys,
     activePair: lobby.activePair,
     deadlineAt: lobby.deadlineAt,
-    draft: serializeDraft(lobby, currentDrafterId),
+    draft: serializeDraft(lobby, currentDrafterId, selfId),
     chat: lobby.chat,
     lastResult: lobby.lastResult,
     winnerId: lobby.winnerId,
-    players: [...lobby.players.values()].map((player) => ({
-      id: player.id,
-      name: player.name,
-      mana: player.mana,
-      deck: player.deck.map((cardId) => cardsById.get(cardId)).filter(Boolean),
-      deckCount: player.deck.length,
-      draftCount: player.deck.length,
-      alive: player.alive,
-      isActive: isActiveDuelist(lobby, player.id),
-      isCurrentDrafter: currentDrafterId === player.id,
-      hasSelected: Boolean(player.selected),
-      hasFightChoice: player.selected?.useActive !== null && player.selected?.useActive !== undefined,
-      selectedCard: shouldRevealSelectedCard(lobby, player) ? cardsById.get(player.selected.cardId) : null,
-      isHost: player.id === lobby.hostId
-    })),
-    self: self
-      ? {
-          id: self.id,
-          name: self.name,
-          mana: self.mana,
-          deck: self.deck.map((cardId) => cardsById.get(cardId)),
-          selected: self.selected,
-          isActive: isActiveDuelist(lobby, self.id),
-          isCurrentDrafter: currentDrafterId === self.id,
-          alive: self.alive
-        }
-      : null
+    players: [...lobby.players.values()].map((player) => serializePlayer(lobby, player, selfId, currentDrafterId)),
+    self: self ? serializeSelf(lobby, self, currentDrafterId) : null
   };
 }
 
-function serializeDraft(lobby, currentDrafterId) {
+function serializePlayer(lobby, player, viewerId, currentDrafterId) {
+  const selectedCard = shouldRevealSelectedCard(lobby, player, viewerId) ? cardsById.get(player.selected.cardId) : null;
+  const showPlan = shouldRevealPlan(lobby, player, viewerId);
+
+  return {
+    id: player.id,
+    name: player.name,
+    health: player.health,
+    maxHealth: SETTINGS.maxHealth,
+    mana: player.mana,
+    deck: player.deck.map((cardId) => cardsById.get(cardId)).filter(Boolean),
+    deckCount: player.deck.length,
+    draftCount: player.deck.length,
+    draftSpent: player.draftSpent,
+    draftBudget: SETTINGS.draftBudget,
+    draftBudgetRemaining: Math.max(0, SETTINGS.draftBudget - player.draftSpent),
+    cooldowns: player.cooldowns,
+    alive: player.alive,
+    isActive: isActiveDuelist(lobby, player.id),
+    isCurrentDrafter: currentDrafterId === player.id,
+    hasSelected: Boolean(player.selected?.cardId),
+    hasSubmittedPlan: hasSubmittedPlan(player),
+    selectedCard,
+    selected: selectedCard
+      ? {
+          cardId: player.selected.cardId,
+          attacks: showPlan ? player.selected.attacks : null,
+          defenses: showPlan ? player.selected.defenses : null,
+          useActive: showPlan ? player.selected.useActive : null,
+          attackPool: getAttackPool(selectedCard),
+          defensePool: getDefensePool(selectedCard)
+        }
+      : null,
+    isHost: player.id === lobby.hostId
+  };
+}
+
+function serializeSelf(lobby, self, currentDrafterId) {
+  const selectedCard = self.selected?.cardId ? cardsById.get(self.selected.cardId) : null;
+  return {
+    id: self.id,
+    name: self.name,
+    health: self.health,
+    maxHealth: SETTINGS.maxHealth,
+    mana: self.mana,
+    deck: self.deck.map((cardId) => cardsById.get(cardId)).filter(Boolean),
+    deckCount: self.deck.length,
+    draftSpent: self.draftSpent,
+    draftBudget: SETTINGS.draftBudget,
+    draftBudgetRemaining: Math.max(0, SETTINGS.draftBudget - self.draftSpent),
+    cooldowns: self.cooldowns,
+    selected: self.selected
+      ? {
+          ...self.selected,
+          selectedCard,
+          attackPool: selectedCard ? getAttackPool(selectedCard) : 0,
+          defensePool: selectedCard ? getDefensePool(selectedCard) : 0
+        }
+      : null,
+    isActive: isActiveDuelist(lobby, self.id),
+    isCurrentDrafter: currentDrafterId === self.id,
+    alive: self.alive
+  };
+}
+
+function serializeDraft(lobby, currentDrafterId, selfId) {
   if (!lobby.draft) {
     return null;
   }
 
+  const self = lobby.players.get(selfId);
   return {
     target: lobby.draft.target,
+    budget: SETTINGS.draftBudget,
     currentPlayerId: currentDrafterId,
     taken: lobby.draft.taken,
     pool: lobby.draft.pool.map((cardId) => {
+      const card = cardsById.get(cardId);
       const takenBy = [...lobby.players.values()].find((player) => player.deck.includes(cardId));
+      const cost = getDraftCost(card);
+      const canPick = Boolean(!takenBy && self && currentDrafterId === selfId && canPlayerDraftCard(lobby, self, card).ok);
       return {
-        card: cardsById.get(cardId),
+        card,
+        cost,
+        attackPool: getAttackPool(card),
+        defensePool: getDefensePool(card),
         takenBy: takenBy?.id ?? null,
         takenByName: takenBy?.name ?? null,
-        isAvailable: !takenBy
+        isAvailable: !takenBy,
+        canPick,
+        canAfford: Boolean(self && self.draftSpent + cost <= SETTINGS.draftBudget)
       };
     })
   };
 }
 
-function shouldRevealSelectedCard(lobby, player) {
-  return Boolean(player.selected?.cardId && ["fight", "reveal", "ended"].includes(lobby.phase));
+function shouldRevealSelectedCard(lobby, player, viewerId) {
+  if (!player.selected?.cardId) {
+    return false;
+  }
+
+  return player.id === viewerId || ["plan", "reveal", "ended"].includes(lobby.phase);
+}
+
+function shouldRevealPlan(lobby, player, viewerId) {
+  if (!hasSubmittedPlan(player)) {
+    return false;
+  }
+
+  return player.id === viewerId || ["reveal", "ended"].includes(lobby.phase);
 }
 
 function pushChat(lobby, entry) {

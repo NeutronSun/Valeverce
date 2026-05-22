@@ -1,3 +1,14 @@
+const VALERIO_KEYS = ["V", "A", "L", "E", "R", "I", "O"];
+const VALERIO_LABELS = {
+  V: "Vigore",
+  A: "Astuzia",
+  L: "Lucidita",
+  E: "Ego",
+  R: "Rigore",
+  I: "Istinto",
+  O: "Opportunismo"
+};
+
 const appState = {
   cardsById: new Map(),
   socket: null,
@@ -7,7 +18,12 @@ const appState = {
   lastError: "",
   playerName: localStorage.getItem("vtg:name") || "",
   selectedCardId: "",
-  useActive: false,
+  plan: {
+    cardId: "",
+    attacks: {},
+    defenses: {},
+    useActive: false
+  },
   handOrder: [],
   draggedCardId: "",
   justDraggedUntil: 0
@@ -15,7 +31,7 @@ const appState = {
 
 class GameApp extends HTMLElement {
   connectedCallback() {
-    this.clock = window.setInterval(() => this.updateTimers(), 2500000);
+    this.clock = window.setInterval(() => this.updateTimers(), 250);
     this.loadCards();
     this.connect();
     this.render();
@@ -85,34 +101,37 @@ class GameApp extends HTMLElement {
 
     if (!lobby) {
       appState.selectedCardId = "";
-      appState.useActive = false;
+      resetPlan();
       return;
     }
 
     if (lobby.phase === "select") {
       syncHandOrder(hand);
-      if (!hand.some((card) => card.id === appState.selectedCardId)) {
-        appState.selectedCardId = hand[0]?.id ?? "";
+      const available = hand.find((card) => !isCardCooling(lobby.self, card.id));
+      const selectedValid = hand.some((card) => card.id === appState.selectedCardId && !isCardCooling(lobby.self, card.id));
+      if (!selectedValid) {
+        appState.selectedCardId = available?.id ?? "";
       }
-      appState.useActive = false;
+      resetPlan();
       return;
     }
 
-    if (lobby.phase === "fight") {
-      const selectedCardId = lobby.self?.selected?.cardId;
+    if (lobby.phase === "plan") {
+      const selectedCardId = lobby.self?.selected?.cardId ?? "";
+      const card = getCardById(selectedCardId);
       if (selectedCardId) {
         appState.selectedCardId = selectedCardId;
       }
-
-      const selectedCard = getCardById(selectedCardId);
-      const activeCost = Number(selectedCard?.active?.cost ?? 0);
-      if (!selectedCard || lobby.self.mana < activeCost) {
-        appState.useActive = false;
+      if (card && appState.plan.cardId !== selectedCardId) {
+        appState.plan = makeDefaultPlan(card, lobby.self);
+      }
+      if (card && appState.plan.useActive && !canUseActive(card, lobby.self)) {
+        appState.plan.useActive = false;
       }
       return;
     }
 
-    appState.useActive = false;
+    resetPlan();
   }
 
   render() {
@@ -151,21 +170,19 @@ class GameApp extends HTMLElement {
     }
 
     if (active?.dataset?.action === "name-input") {
-      return {
-        kind: "name",
-        value: active.value,
-        start: active.selectionStart,
-        end: active.selectionEnd
-      };
+      return captureInputFocus(active, { kind: "name" });
     }
 
     if (active?.closest?.('[data-action="chat"]')) {
-      return {
-        kind: "chat",
-        value: active.value,
-        start: active.selectionStart,
-        end: active.selectionEnd
-      };
+      return captureInputFocus(active, { kind: "chat" });
+    }
+
+    if (active?.dataset?.action === "plan-points") {
+      return captureInputFocus(active, {
+        kind: "plan-points",
+        planKind: active.dataset.planKind,
+        planStat: active.dataset.planStat
+      });
     }
 
     return null;
@@ -176,10 +193,18 @@ class GameApp extends HTMLElement {
       return;
     }
 
-    const input =
-      focusState.kind === "name"
-        ? this.querySelector('[data-action="name-input"]')
-        : this.querySelector('[data-action="chat"] input');
+    let input = null;
+    if (focusState.kind === "name") {
+      input = this.querySelector('[data-action="name-input"]');
+    }
+    if (focusState.kind === "chat") {
+      input = this.querySelector('[data-action="chat"] input');
+    }
+    if (focusState.kind === "plan-points") {
+      input = this.querySelector(
+        `[data-action="plan-points"][data-plan-kind="${focusState.planKind}"][data-plan-stat="${focusState.planStat}"]`
+      );
+    }
 
     if (!input) {
       return;
@@ -271,7 +296,7 @@ class GameApp extends HTMLElement {
             <h2>${lobby.players.length}/${snapshot.settings.maxPlayers}</h2>
           </div>
           <div class="top-players">
-            ${lobby.players.map((player) => renderTopPlayer(player, lobby.phase)).join("")}
+            ${lobby.players.map((player) => renderTopPlayer(player, lobby.phase, snapshot.settings)).join("")}
           </div>
         </div>
         <div class="actions">
@@ -318,9 +343,7 @@ class GameApp extends HTMLElement {
     const activePlayers = getActivePlayers(lobby);
     const opponent = activePlayers.find((player) => player.id !== snapshot.selfId);
     const selectedCard =
-      lobby.phase === "select"
-        ? getCardById(appState.selectedCardId)
-        : getCardById(self?.selected?.cardId) ?? activePlayers.find((player) => player.id === snapshot.selfId)?.selectedCard;
+      lobby.phase === "select" ? getCardById(appState.selectedCardId) : getCardById(self?.selected?.cardId);
     const opponentCard = opponent?.selectedCard;
 
     if (lobby.phase === "draft") {
@@ -328,8 +351,10 @@ class GameApp extends HTMLElement {
         <div class="side-summary">
           <p class="eyebrow">Draft</p>
           <h2>${self?.isCurrentDrafter ? "Tocca a te" : "In attesa"}</h2>
-          <p>${escapeHtml(getPlayerName(lobby, lobby.draft?.currentPlayerId) ?? "Player")} sta scegliendo una carta.</p>
-          <div class="summary-line"><span>Le tue carte</span><strong>${self?.deck.length ?? 0}/${lobby.draft?.target ?? 6}</strong></div>
+          <p>${escapeHtml(getPlayerName(lobby, lobby.draft?.currentPlayerId) ?? "Player")} sta scegliendo.</p>
+          <div class="summary-line"><span>Carte</span><strong>${self?.deck.length ?? 0}/${lobby.draft?.target ?? 6}</strong></div>
+          <div class="summary-line"><span>Budget usato</span><strong>${self?.draftSpent ?? 0}/${self?.draftBudget ?? 20}</strong></div>
+          <div class="summary-line"><span>Rimanente</span><strong>${self?.draftBudgetRemaining ?? 0}</strong></div>
           <div class="summary-line"><span>Pool rimasto</span><strong>${(lobby.draft?.pool ?? []).filter((item) => item.isAvailable).length}</strong></div>
         </div>
       `;
@@ -338,34 +363,17 @@ class GameApp extends HTMLElement {
     if (lobby.phase === "select") {
       return `
         <div class="side-summary">
-          <p class="eyebrow">SPECIAL round</p>
-          <div class="specials">${lobby.specialKeys.map((key) => `<span>${key}</span>`).join("")}</div>
-          <h2>${self?.isActive ? "Scegli la carta" : "Sei spettatore"}</h2>
-          ${selectedCard ? renderCardMath(selectedCard, lobby.specialKeys, "La tua preview") : `<p class="empty">Seleziona una carta per vedere il calcolo base.</p>`}
+          <p class="eyebrow">Scelta carta</p>
+          <h2>${self?.isActive ? "La tua coperta" : "Spettatore"}</h2>
+          <div class="summary-line"><span>PV</span><strong>${self?.health ?? 0}/${self?.maxHealth ?? 50}</strong></div>
+          <div class="summary-line"><span>Mana</span><strong>${self?.mana ?? 0}</strong></div>
+          ${selectedCard ? renderCardMath(selectedCard, "Preview carta") : `<p class="empty">Seleziona una carta disponibile.</p>`}
         </div>
       `;
     }
 
-    if (lobby.phase === "fight") {
-      return `
-        <div class="side-summary">
-          <p class="eyebrow">${self?.isActive ? "La tua mossa" : "Duello in corso"}</p>
-          ${selectedCard ? renderFightMath(selectedCard, opponentCard, lobby, self, appState.useActive) : `<p class="empty">Stai guardando il fight.</p>`}
-          ${
-            selectedCard && self?.isActive
-              ? `
-                <label class="${canUseActive(selectedCard, self) ? "switch" : "switch muted"}">
-                  <input type="checkbox" data-action="toggle-active" ${appState.useActive && canUseActive(selectedCard, self) ? "checked" : ""} ${canUseActive(selectedCard, self) && self.selected?.useActive === null ? "" : "disabled"} />
-                  Usa attiva
-                </label>
-                <button type="button" data-action="submit-fight" ${self.selected?.useActive !== null ? "disabled" : ""}>
-                  ${self.selected?.useActive !== null ? "Fight confermato" : "Conferma fight"}
-                </button>
-              `
-              : ""
-          }
-        </div>
-      `;
+    if (lobby.phase === "plan") {
+      return renderPlanSummary(lobby, self, selectedCard, opponent, opponentCard);
     }
 
     if (lobby.phase === "reveal" || lobby.phase === "ended") {
@@ -399,8 +407,8 @@ class GameApp extends HTMLElement {
       return this.renderSelect(lobby);
     }
 
-    if (lobby.phase === "fight") {
-      return this.renderFight(lobby, snapshot);
+    if (lobby.phase === "plan") {
+      return this.renderPlan(lobby, snapshot);
     }
 
     if (lobby.phase === "reveal") {
@@ -426,14 +434,17 @@ class GameApp extends HTMLElement {
           <div class="draft-counter">${self?.deck.length ?? 0}/${lobby.draft?.target ?? 6}</div>
         </div>
       </div>
+      <div class="mana-line">
+        <span>Budget ${self?.draftSpent ?? 0}/${self?.draftBudget ?? 20}</span>
+        <span>Rimanente ${self?.draftBudgetRemaining ?? 0}</span>
+        <span class="muted">Costo carta rispettato dal server</span>
+      </div>
       <div class="draft-picked">
         <strong>Le tue carte draftate</strong>
         <div>${(self?.deck ?? []).map((card) => `<span>${escapeHtml(card.name)}</span>`).join("") || "<span>Nessuna</span>"}</div>
       </div>
       <div class="draft-pool">
-        ${(lobby.draft?.pool ?? [])
-          .map((item) => renderDraftCard(item, isMyTurn && item.isAvailable && (self?.deck.length ?? 0) < (lobby.draft?.target ?? 6)))
-          .join("")}
+        ${(lobby.draft?.pool ?? []).map((item) => renderDraftCard(item)).join("")}
       </div>
     `;
   }
@@ -441,10 +452,11 @@ class GameApp extends HTMLElement {
   renderSelect(lobby) {
     const self = lobby.self;
     const orderedDeck = orderCards(self.deck);
-    const selectedCard = orderedDeck.find((card) => card.id === appState.selectedCardId) ?? orderedDeck[0];
+    const selectedCard = orderedDeck.find((card) => card.id === appState.selectedCardId) ?? orderedDeck.find((card) => !isCardCooling(self, card.id));
     const alreadyPlayed = Boolean(self.selected?.cardId);
     const activePlayers = getActivePlayers(lobby);
     const pairLabel = activePlayers.map((player) => player.name).join(" vs ");
+    const selectableCount = orderedDeck.filter((card) => !isCardCooling(self, card.id)).length;
 
     return `
       <div class="turn-head">
@@ -454,16 +466,17 @@ class GameApp extends HTMLElement {
         </div>
         <div class="turn-tools">
           ${renderTimer(lobby)}
-          <div class="specials">${lobby.specialKeys.map((key) => `<span>${key}</span>`).join("")}</div>
+          <div class="draft-counter">${self.health} PV</div>
+          <div class="draft-counter">${self.mana} M</div>
         </div>
       </div>
       ${
         self.alive && self.isActive
           ? `
             <div class="mana-line">
-              <span>Mana ${self.mana}</span>
-              <span>${self.deck.length} carte disponibili</span>
-              <span class="muted">${alreadyPlayed ? "Carta bloccata" : "SPECIAL visibili"}</span>
+              <span>${selectableCount} carte disponibili</span>
+              <span>${Object.keys(self.cooldowns ?? {}).length} in cooldown</span>
+              <span class="muted">${alreadyPlayed ? "Carta coperta scelta" : "Scegli una carta coperta"}</span>
               <button type="button" data-action="submit-card" ${selectedCard && !alreadyPlayed ? "" : "disabled"}>
                 ${alreadyPlayed ? "Carta scelta" : "Conferma carta"}
               </button>
@@ -474,7 +487,17 @@ class GameApp extends HTMLElement {
                 <span>${self.deck.length}</span>
               </div>
               <div class="hand ${appState.draggedCardId ? "is-sorting" : ""}">
-                ${orderedDeck.map((card) => renderCardElement(card, [], card.id === selectedCard?.id, alreadyPlayed, !alreadyPlayed)).join("")}
+                ${orderedDeck
+                  .map((card) =>
+                    renderCardElement({
+                      card,
+                      selected: card.id === selectedCard?.id,
+                      disabled: alreadyPlayed || isCardCooling(self, card.id),
+                      draggable: !alreadyPlayed,
+                      cooldown: Number(self.cooldowns?.[card.id] ?? 0)
+                    })
+                  )
+                  .join("")}
               </div>
             </div>
           `
@@ -483,23 +506,33 @@ class GameApp extends HTMLElement {
     `;
   }
 
-  renderFight(lobby, snapshot) {
+  renderPlan(lobby, snapshot) {
     const self = lobby.self;
     const activePlayers = getActivePlayers(lobby);
     const selfPlayer = activePlayers.find((player) => player.id === snapshot.selfId);
     const opponents = activePlayers.filter((player) => player.id !== snapshot.selfId);
     const isParticipant = Boolean(selfPlayer);
-    const opponentNames = opponents.map((player) => player.name).join(" vs ");
+    const pairLabel = activePlayers.map((player) => player.name).join(" vs ");
+    const card = getCardById(self?.selected?.cardId);
+    const opponent = opponents[0];
 
     return `
       <div class="turn-head">
         <div>
           <p class="eyebrow">Fight ${lobby.round}</p>
-          <h2>${lobby.specialKeys.map((key) => snapshot.specialLabels[key]).join(" + ")}</h2>
+          <h2>${escapeHtml(pairLabel)}</h2>
         </div>
-        <div class="specials">${lobby.specialKeys.map((key) => `<span>${key}</span>`).join("")}</div>
+        <div class="turn-tools">
+          <div class="draft-counter">${self?.health ?? 0} PV</div>
+          <div class="draft-counter">${self?.mana ?? 0} M</div>
+        </div>
       </div>
-      <div class="fight-board ${isParticipant ? "" : "is-spectator"}">
+      <div class="fight-flow">
+        <div><strong>1</strong><span>Carte rivelate</span></div>
+        <div><strong>2</strong><span>Distribuisci attacco e difesa</span></div>
+        <div><strong>3</strong><span>Reveal Breccia e danno PV</span></div>
+      </div>
+      <div class="fight-board ${isParticipant ? "" : "is-spectator"} plan-board">
         ${
           isParticipant
             ? `
@@ -511,24 +544,75 @@ class GameApp extends HTMLElement {
                     <small>${escapeHtml(selfPlayer.name)}</small>
                   </div>
                 </div>
-                ${renderChosenCard(selfPlayer, lobby.specialKeys, snapshot.selfId)}
+                ${renderChosenCard(selfPlayer, snapshot.selfId)}
               </section>
             `
             : ""
         }
         <section class="fight-lane is-opponents">
           <div class="fight-lane-title">
-            <span class="role-pill is-opponent">${escapeHtml(isParticipant ? opponentNames : "DUELLO")}</span>
+            <span class="role-pill is-opponent">${escapeHtml(isParticipant ? opponent?.name ?? "Avversario" : "DUELLO")}</span>
             <div>
-              <strong>${isParticipant ? "Carta in campo" : "Carte in campo"}</strong>
-              <small>${escapeHtml(opponentNames)}</small>
+              <strong>Carte rivelate</strong>
+              <small>${escapeHtml(opponents.map((player) => player.name).join(" vs "))}</small>
             </div>
           </div>
           <div class="fighters">
-            ${opponents.map((player) => renderChosenCard(player, lobby.specialKeys, snapshot.selfId)).join("")}
+            ${opponents.map((player) => renderChosenCard(player, snapshot.selfId)).join("")}
           </div>
         </section>
       </div>
+      ${
+        isParticipant && self?.isActive && card
+          ? selfPlayer.hasSubmittedPlan
+            ? `<p class="notice">Piano confermato. In attesa dell'avversario.</p>`
+            : this.renderPlanControls(lobby, card, opponent?.selectedCard)
+          : `<div class="waiting"><h2>Lobby duello</h2><p>I player attivi stanno distribuendo attacchi e difese.</p></div>`
+      }
+    `;
+  }
+
+  renderPlanControls(lobby, card, opponentCard) {
+    const validation = getPlanValidation(lobby, card);
+    const attackPool = getAttackPool(card);
+    const defensePool = getDefensePool(card);
+    const activeCost = Number(card.active?.cost ?? 0);
+    const activeEnabled = canUseActive(card, lobby.self);
+
+    return `
+      <section class="plan-controls">
+        <div class="plan-grid">
+          ${renderPlanDistribution({
+            title: "Attacchi",
+            kind: "attacks",
+            card,
+            opponentCard,
+            distribution: appState.plan.attacks,
+            pool: attackPool,
+            slots: lobby.settings?.attackSlots ?? 3
+          })}
+          ${renderPlanDistribution({
+            title: "Difese",
+            kind: "defenses",
+            card,
+            opponentCard,
+            distribution: appState.plan.defenses,
+            pool: defensePool,
+            slots: lobby.settings?.defenseSlots ?? 3
+          })}
+        </div>
+        <div class="mana-line">
+          <label class="${activeEnabled ? "switch" : "switch muted"}">
+            <input type="checkbox" data-action="toggle-active" ${appState.plan.useActive && activeEnabled ? "checked" : ""} ${activeEnabled ? "" : "disabled"} />
+            Usa attiva (${activeCost} mana)
+          </label>
+          <span>${escapeHtml(card.active?.name ?? "Attiva")}</span>
+          <button type="button" data-action="submit-plan" ${validation.ok ? "" : "disabled"}>
+            Conferma piano
+          </button>
+        </div>
+        ${validation.ok ? "" : `<p class="notice">${escapeHtml(validation.error)}</p>`}
+      </section>
     `;
   }
 
@@ -552,15 +636,22 @@ class GameApp extends HTMLElement {
           <p class="eyebrow">${ended ? "Fine partita" : `Turno ${result.round}`}</p>
           <h2>${duelWinner ? `${escapeHtml(duelWinner.playerName)} vince` : "Pareggio"}</h2>
         </div>
-        <div class="specials">${result.specialKeys.map((key) => `<span>${key}</span>`).join("")}</div>
+        <div class="turn-tools">
+          <div class="draft-counter">${result.summary?.damage ?? 0} PV</div>
+        </div>
       </div>
-      ${result.tieBreak ? `<p class="notice">Pareggio: nessuno perde carte, prossimo round.</p>` : ""}
+      <div class="fight-flow is-reveal">
+        <div><strong>${result.plays[0]?.breach ?? 0}</strong><span>${escapeHtml(result.plays[0]?.playerName ?? "P1")} Breccia</span></div>
+        <div><strong>${result.plays[1]?.breach ?? 0}</strong><span>${escapeHtml(result.plays[1]?.playerName ?? "P2")} Breccia</span></div>
+        <div><strong>${result.summary?.damage ?? 0}</strong><span>Danno PV applicato</span></div>
+      </div>
+      ${result.isTie ? `<p class="notice">Pareggio: nessuno perde PV, entrambe le carte vanno in cooldown.</p>` : ""}
       <div class="result-list">
-        ${result.plays.map((play) => renderResultRow(play, result.specialKeys)).join("")}
+        ${result.plays.map((play) => renderResultRow(play)).join("")}
       </div>
       ${
         ended && winner
-          ? `<div class="winner-banner">${escapeHtml(winner.name)} resta con ${winner.deckCount} carte.</div>`
+          ? `<div class="winner-banner">${escapeHtml(winner.name)} vince la partita con ${winner.health} PV.</div>`
           : ""
       }
     `;
@@ -609,21 +700,38 @@ class GameApp extends HTMLElement {
             return;
           }
           appState.selectedCardId = element.dataset.cardId;
-          appState.useActive = false;
           this.render();
         }
         if (action === "submit-card") {
           send("selectCard", { cardId: appState.selectedCardId });
         }
-        if (action === "submit-fight") {
-          send("submitFight", { useActive: appState.useActive });
+        if (action === "submit-plan") {
+          send("submitPlan", {
+            attacks: appState.plan.attacks,
+            defenses: appState.plan.defenses,
+            useActive: appState.plan.useActive
+          });
         }
       });
     });
 
     this.querySelector('[data-action="toggle-active"]')?.addEventListener("change", (event) => {
-      appState.useActive = event.currentTarget.checked;
+      appState.plan.useActive = event.currentTarget.checked;
       this.render();
+    });
+
+    this.querySelectorAll('[data-action="plan-toggle"]').forEach((input) => {
+      input.addEventListener("change", (event) => {
+        updatePlanStat(input.dataset.planKind, input.dataset.planStat, event.currentTarget.checked);
+        this.render();
+      });
+    });
+
+    this.querySelectorAll('[data-action="plan-points"]').forEach((input) => {
+      input.addEventListener("input", (event) => {
+        updatePlanPoints(input.dataset.planKind, input.dataset.planStat, event.currentTarget.value);
+        this.render();
+      });
     });
 
     this.querySelectorAll("[data-draggable-card]").forEach((element) => {
@@ -667,7 +775,7 @@ class GameCard extends HTMLElement {
   }
 
   static get observedAttributes() {
-    return ["data-card-id", "data-action-name", "data-specials", "data-selected", "data-disabled"];
+    return ["data-card-id", "data-action-name", "data-selected", "data-disabled", "data-cooldown"];
   }
 
   attributeChangedCallback() {
@@ -680,8 +788,8 @@ class GameCard extends HTMLElement {
       return;
     }
 
-    const specials = (this.dataset.specials || "").split(",").filter(Boolean);
     const initials = getInitials(card.name);
+    const cooldown = Number(this.dataset.cooldown ?? 0);
 
     this.innerHTML = `
       <button type="button" data-action="${escapeAttr(this.dataset.actionName || "select-card")}" data-card-id="${escapeAttr(card.id)}" ${this.dataset.disabled === "true" ? "disabled" : ""}>
@@ -692,18 +800,20 @@ class GameCard extends HTMLElement {
         <div class="card-body card-overlay">
           <strong>${escapeHtml(card.name)}</strong>
           <small>${escapeHtml(card.id)}</small>
-          ${renderStats(card, specials)}
+          ${renderStats(card)}
+          ${renderCombat(card)}
           <div class="abilities">
             <div class="ability-list">
-              <span class="ability-name">${escapeHtml(card.active.name)}</span>
-              <span class="ability-text">${escapeHtml(card.active.text)}</span>
+              <span class="ability-name">${escapeHtml(card.active?.name ?? "Attiva")}</span>
+              <span class="ability-text">${escapeHtml(card.active?.text ?? "")}</span>
             </div>
             <div class="ability-list">
-              <span class="ability-name">${escapeHtml(card.passive.name)}</span>
-              <span class="ability-text">${escapeHtml(card.passive.text)}</span>
+              <span class="ability-name">${escapeHtml(card.passive?.name ?? "Tratto")}</span>
+              <span class="ability-text">${escapeHtml(card.passive?.text ?? "")}</span>
             </div>
           </div>
         </div>
+        ${cooldown > 0 ? `<span class="cooldown-badge">${cooldown}</span>` : ""}
       </button>
     `;
 
@@ -717,31 +827,33 @@ class GameCard extends HTMLElement {
 customElements.define("game-app", GameApp);
 customElements.define("game-card", GameCard);
 
-function renderPlayer(player, phase) {
+function renderTopPlayer(player, phase, settings) {
   const status = getPlayerStatus(player, phase);
+  const cards = player.deck ?? [];
+  const maxHealth = Number(player.maxHealth ?? settings?.maxHealth ?? 50);
+  const maxMana = Number(settings?.maxMana ?? 10);
+  const healthPct = percent(player.health, maxHealth);
+  const manaPct = percent(player.mana, maxMana);
   return `
-    <article class="player ${player.alive ? "" : "is-out"}">
-      <div>
+    <article class="top-player ${player.alive ? "" : "is-out"}">
+      <div class="top-player-head">
         <strong>${escapeHtml(player.name)}</strong>
         <small>${player.isHost ? `Host - ${status}` : status}</small>
       </div>
-      <div>
-        <span>${player.mana} mana</span>
-        <span>${player.deckCount} carte</span>
+      <div class="top-player-bars">
+        <div class="resource-bar is-health" title="PV ${player.health}/${maxHealth}">
+          <i style="width: ${healthPct}%"></i>
+          <span>PV ${player.health}/${maxHealth}</span>
+        </div>
+        <div class="resource-bar is-mana" title="Mana ${player.mana}/${maxMana}">
+          <i style="width: ${manaPct}%"></i>
+          <span>Mana ${player.mana}/${maxMana}</span>
+        </div>
       </div>
-    </article>
-  `;
-}
-
-function renderTopPlayer(player, phase) {
-  const status = getPlayerStatus(player, phase);
-  const cards = player.deck ?? [];
-  return `
-    <article class="top-player ${player.alive ? "" : "is-out"}">
-      <strong>${escapeHtml(player.name)}</strong>
-      <span>${player.mana}M</span>
-      <span>${player.deckCount}C</span>
-      <small>${player.isHost ? `Host - ${status}` : status}</small>
+      <div class="top-player-meta">
+        <span>${player.deckCount} carte</span>
+        <span>${Object.keys(player.cooldowns ?? {}).length} cd</span>
+      </div>
       <div class="top-card-strip">
         ${
           cards.length
@@ -759,7 +871,7 @@ function renderTopPlayer(player, phase) {
   `;
 }
 
-function renderCardElement(card, specialKeys, selected, disabled, draggable = false) {
+function renderCardElement({ card, selected, disabled, draggable = false, cooldown = 0 }) {
   const dragClass = appState.draggedCardId === card.id ? "is-dragging" : "";
   return `
     <div
@@ -770,33 +882,37 @@ function renderCardElement(card, specialKeys, selected, disabled, draggable = fa
       <game-card
         data-card-id="${escapeAttr(card.id)}"
         data-action-name="select-card"
-        data-specials="${escapeAttr(specialKeys.join(","))}"
         data-selected="${selected ? "true" : "false"}"
         data-disabled="${disabled ? "true" : "false"}"
+        data-cooldown="${cooldown}"
         class="${selected ? "is-selected" : ""}"
       ></game-card>
     </div>
   `;
 }
 
-function renderDraftCard(item, canPick) {
+function renderDraftCard(item) {
   const card = item.card;
   return `
     <div class="draft-card-wrap">
       <game-card
         data-card-id="${escapeAttr(card.id)}"
         data-action-name="draft-card"
-        data-specials=""
         data-selected="false"
-        data-disabled="${canPick ? "false" : "true"}"
+        data-disabled="${item.canPick ? "false" : "true"}"
         class="${item.isAvailable ? "" : "is-taken"}"
       ></game-card>
-      ${item.isAvailable ? "" : `<span class="taken-label">Presa da ${escapeHtml(item.takenByName)}</span>`}
+      <div class="draft-card-meta">
+        <span>Costo ${item.cost}</span>
+        <span>ATT ${card.combat?.attackPower ?? 0}% (${item.attackPool})</span>
+        <span>DIF ${card.combat?.defensePower ?? 0}% (${item.defensePool})</span>
+      </div>
+      ${item.isAvailable ? (item.canAfford ? "" : `<span class="taken-label">Troppo costosa</span>`) : `<span class="taken-label">Presa da ${escapeHtml(item.takenByName)}</span>`}
     </div>
   `;
 }
 
-function renderChosenCard(player, specialKeys, selfId) {
+function renderChosenCard(player, selfId) {
   const isSelf = player?.id === selfId;
   const roleText = isSelf ? "TU" : player?.name ?? "Player";
   const card = player?.selectedCard;
@@ -804,7 +920,7 @@ function renderChosenCard(player, specialKeys, selfId) {
   if (!card) {
     return `
       <article class="fight-card ${isSelf ? "is-self" : "is-opponent"} is-empty">
-        <span class="fight-role-tag ${isSelf ? "is-you" : "is-opponent"}">${roleText}</span>
+        <span class="fight-role-tag ${isSelf ? "is-you" : "is-opponent"}">${escapeHtml(roleText)}</span>
         <strong>${escapeHtml(player?.name ?? "Player")}</strong>
         <p>${player?.alive ? "Carta coperta" : "Fuori"}</p>
       </article>
@@ -813,7 +929,7 @@ function renderChosenCard(player, specialKeys, selfId) {
 
   return `
     <article class="fight-card ${isSelf ? "is-self" : "is-opponent"}">
-      <span class="fight-role-tag ${isSelf ? "is-you" : "is-opponent"}">${roleText}</span>
+      <span class="fight-role-tag ${isSelf ? "is-you" : "is-opponent"}">${escapeHtml(roleText)}</span>
       <div class="card-image-fallback">
         <span>${escapeHtml(getInitials(card.name))}</span>
       </div>
@@ -821,17 +937,71 @@ function renderChosenCard(player, specialKeys, selfId) {
       <div class="fight-body card-overlay">
         <p class="eyebrow">${isSelf ? "La tua carta" : `Carta di ${escapeHtml(player.name)}`}</p>
         <h3>${escapeHtml(card.name)}</h3>
-        ${renderStats(card, specialKeys)}
+        ${renderStats(card)}
+        ${renderCombat(card)}
         <div class="mini-abilities">
-          <p><strong>${escapeHtml(card.active.name)}</strong> ${escapeHtml(card.active.text)}</p>
-          <p><strong>${escapeHtml(card.passive.name)}</strong> ${escapeHtml(card.passive.text)}</p>
+          <p><strong>${escapeHtml(card.active?.name ?? "Attiva")}</strong> ${escapeHtml(card.active?.text ?? "")}</p>
+          <p><strong>${escapeHtml(card.passive?.name ?? "Tratto")}</strong> ${escapeHtml(card.passive?.text ?? "")}</p>
         </div>
       </div>
     </article>
   `;
 }
 
-function renderResultRow(play, specialKeys) {
+function renderPlanDistribution({ title, kind, card, opponentCard, distribution, pool, slots }) {
+  const selectedStats = Object.keys(distribution);
+  const used = sumDistribution(distribution);
+  const remaining = Math.max(0, pool - used);
+  const isPoolFull = remaining <= 0;
+  return `
+    <div class="choice-panel">
+      <div class="section-title">
+        <h2>${escapeHtml(title)}</h2>
+        <span>${selectedStats.length}/${slots} - ${used}/${pool}</span>
+      </div>
+      <div class="pool-meter ${isPoolFull ? "is-full" : ""}">
+        <i style="width: ${percent(used, pool)}%"></i>
+        <span>${isPoolFull ? "Pool massimo raggiunto" : `${remaining} punti rimasti`}</span>
+      </div>
+      <div class="plan-stat-list">
+        ${VALERIO_KEYS.map((stat) => {
+          const selected = Object.hasOwn(distribution, stat);
+          const locked = !selected && (selectedStats.length >= slots || isPoolFull);
+          const value = Number(distribution[stat] ?? 0);
+          const pointLimit = value + remaining;
+          const pointsLocked = !selected || isPoolFull;
+          return `
+            <label class="plan-stat ${selected ? "is-selected" : ""} ${locked || pointsLocked ? "is-locked" : ""}">
+              <input
+                type="checkbox"
+                data-action="plan-toggle"
+                data-plan-kind="${escapeAttr(kind)}"
+                data-plan-stat="${escapeAttr(stat)}"
+                ${selected ? "checked" : ""}
+                ${locked ? "disabled" : ""}
+              />
+              <span>${stat}</span>
+              <strong>${escapeHtml(VALERIO_LABELS[stat])}</strong>
+              <small>${Number(getCardValerio(card)[stat] ?? 0)}${opponentCard ? ` vs ${Number(getCardValerio(opponentCard)[stat] ?? 0)}` : ""}</small>
+              <input
+                type="number"
+                min="0"
+                max="${pointLimit}"
+                value="${value}"
+                data-action="plan-points"
+                data-plan-kind="${escapeAttr(kind)}"
+                data-plan-stat="${escapeAttr(stat)}"
+                ${pointsLocked ? "disabled" : ""}
+              />
+            </label>
+          `;
+        }).join("")}
+      </div>
+    </div>
+  `;
+}
+
+function renderResultRow(play) {
   return `
     <article class="result-row ${play.outcome === "win" ? "is-win" : play.outcome === "tie" ? "is-tie" : "is-lose"}">
       <div class="result-card-art">
@@ -840,21 +1010,58 @@ function renderResultRow(play, specialKeys) {
       </div>
       <div>
         <strong>${escapeHtml(play.playerName)}</strong>
-        <small>${escapeHtml(play.cardName)}${play.eliminated ? " - eliminato" : ""}</small>
-        ${play.card ? renderStats(play.card, specialKeys) : ""}
+        <small>${escapeHtml(play.cardName)}</small>
+        ${play.card ? renderStats(play.card, Object.keys(play.attacks ?? {}), Object.keys(play.defenses ?? {})) : ""}
       </div>
-      <div class="result-score">${play.score}</div>
-      <p>${play.notes.map(escapeHtml).join(" / ")}${play.useActive ? " / Attiva usata" : " / Attiva non usata"}</p>
+      <div class="result-score">${play.breach}</div>
+      <div class="result-detail">
+        <div class="summary-line"><span>Danno finale</span><strong>${play.finalDamage}</strong></div>
+        <div class="summary-line"><span>PV</span><strong>${play.healthBefore} -> ${play.healthAfter}</strong></div>
+        <div class="summary-line"><span>Mana</span><strong>${play.manaBefore} -> ${play.manaAfter}</strong></div>
+        <div class="summary-line"><span>Cap</span><strong>${play.normalDamageCap}</strong></div>
+      </div>
+      <div class="line-list">
+        ${play.attackLines.map((line) => renderAttackLine(line)).join("")}
+      </div>
+      <p>${[
+        play.useActive ? `Attiva ${play.activeApplied ? "usata" : "non applicata"}` : "Attiva non usata",
+        play.traitNotes?.join(" / "),
+        play.activeNotes?.join(" / "),
+        play.defenseTraitNotes?.join(" / ")
+      ].filter(Boolean).map(escapeHtml).join(" / ")}</p>
     </article>
   `;
 }
 
-function renderStats(card, specialKeys) {
+function renderAttackLine(line) {
+  return `
+    <div class="attack-line ${line.lineDamage > 0 ? "is-hit" : ""}">
+      <strong>${line.stat}</strong>
+      <span>${line.attackPoints} + ${line.attackerValerio} - ${line.defenderValerio} - ${line.defensePoints}</span>
+      <b>${line.lineDamage}</b>
+      ${line.defenseIgnored ? `<em>difesa ignorata</em>` : ""}
+    </div>
+  `;
+}
+
+function renderStats(card, attackKeys = [], defenseKeys = []) {
+  const valerio = getCardValerio(card);
   return `
     <div class="stats">
-      ${Object.entries(card.special)
-        .map(([key, value]) => `<span class="${specialKeys.includes(key) ? "is-hot" : ""}">${value}</span>`)
-        .join("")}
+      ${VALERIO_KEYS.map((key) => {
+        const hotClass = attackKeys.includes(key) ? "is-hot" : defenseKeys.includes(key) ? "is-cool" : "";
+        return `<span class="${hotClass}" title="${escapeAttr(VALERIO_LABELS[key])}">${key}${Number(valerio[key] ?? 0)}</span>`;
+      }).join("")}
+    </div>
+  `;
+}
+
+function renderCombat(card) {
+  return `
+    <div class="combat-stats">
+      <span>ATT ${Number(card.combat?.attackPower ?? 0)}%</span>
+      <span>DIF ${Number(card.combat?.defensePower ?? 0)}%</span>
+      <span>Costo ${getDraftCost(card)}</span>
     </div>
   `;
 }
@@ -867,6 +1074,113 @@ function renderTimer(lobby) {
   const deadlineAt = Number(lobby.deadlineAt);
   const seconds = Math.max(0, Math.ceil((deadlineAt - Date.now()) / 1000));
   return `<div class="timer-pill ${seconds <= 5 ? "is-low" : ""}" data-deadline-at="${deadlineAt}"><span>Timer</span><strong>${seconds}s</strong></div>`;
+}
+
+function renderChatMessage(message) {
+  return `
+    <div class="chat-message ${message.kind === "system" ? "is-system" : ""}">
+      <strong>${message.kind === "system" ? "Sistema" : escapeHtml(message.name ?? "Player")}</strong>
+      <p>${escapeHtml(message.text)}</p>
+    </div>
+  `;
+}
+
+function renderCardMath(card, title) {
+  return `
+    <div class="math-box">
+      <h3>${escapeHtml(title)}</h3>
+      <strong>${escapeHtml(card.name)}</strong>
+      ${renderStats(card)}
+      <div class="summary-line"><span>Pool attacco</span><strong>${getAttackPool(card)}</strong></div>
+      <div class="summary-line"><span>Pool difesa</span><strong>${getDefensePool(card)}</strong></div>
+      <div class="ability-box">
+        <span>Attiva - ${Number(card.active?.cost ?? 0)} mana</span>
+        <strong>${escapeHtml(card.active?.name ?? "Attiva")}</strong>
+        <p>${escapeHtml(card.active?.text ?? "")}</p>
+      </div>
+      <div class="ability-box">
+        <span>Tratto - sempre attivo</span>
+        <strong>${escapeHtml(card.passive?.name ?? "Tratto")}</strong>
+        <p>${escapeHtml(card.passive?.text ?? "")}</p>
+      </div>
+    </div>
+  `;
+}
+
+function renderPlanSummary(lobby, self, selectedCard, opponent, opponentCard) {
+  if (!self?.isActive || !selectedCard) {
+    return `
+      <div class="side-summary">
+        <p class="eyebrow">Piano</p>
+        <h2>Lobby duello</h2>
+        <p>Le carte sono rivelate ai partecipanti. Attacchi e difese restano coperti fino al reveal.</p>
+      </div>
+    `;
+  }
+
+  const attackPool = getAttackPool(selectedCard);
+  const defensePool = getDefensePool(selectedCard);
+  const attacksUsed = sumDistribution(appState.plan.attacks);
+  const defensesUsed = sumDistribution(appState.plan.defenses);
+  const previewLines = opponentCard
+    ? Object.entries(appState.plan.attacks).map(([stat, points]) => {
+        const mine = Number(getCardValerio(selectedCard)[stat] ?? 0);
+        const enemy = Number(getCardValerio(opponentCard)[stat] ?? 0);
+        const raw = Number(points) + mine - enemy;
+        return `${stat}: ${points} + ${mine} - ${enemy} = ${Math.max(0, raw)} prima delle difese`;
+      })
+    : [];
+
+  return `
+    <div class="side-summary">
+      <p class="eyebrow">Piano</p>
+      <h2>${escapeHtml(selectedCard.name)}</h2>
+      <div class="summary-line"><span>Attacco</span><strong>${attacksUsed}/${attackPool}</strong></div>
+      <div class="summary-line"><span>Difesa</span><strong>${defensesUsed}/${defensePool}</strong></div>
+      <div class="summary-line"><span>Mana dopo attiva</span><strong>${appState.plan.useActive ? Math.max(0, self.mana - Number(selectedCard.active?.cost ?? 0)) : self.mana}</strong></div>
+      ${opponentCard ? `<div class="summary-line is-compare"><span>Avversario</span><strong>${escapeHtml(opponent?.name ?? "Player")}</strong></div>` : ""}
+      ${previewLines.map((line) => `<p class="math-line">${escapeHtml(line)}</p>`).join("")}
+      <div class="ability-box">
+        <span>Attiva - opzionale</span>
+        <strong>${escapeHtml(selectedCard.active?.name ?? "Attiva")}</strong>
+        <p>${escapeHtml(selectedCard.active?.text ?? "")}</p>
+      </div>
+      <div class="ability-box">
+        <span>Tratto - sempre attivo</span>
+        <strong>${escapeHtml(selectedCard.passive?.name ?? "Tratto")}</strong>
+        <p>${escapeHtml(selectedCard.passive?.text ?? "")}</p>
+      </div>
+    </div>
+  `;
+}
+
+function renderResultSummary(result, selfId) {
+  if (!result) {
+    return `<div class="side-summary"><h2>Nessun risultato</h2></div>`;
+  }
+
+  const selfPlay = result.plays.find((play) => play.playerId === selfId);
+  const opponentPlay = result.plays.find((play) => play.playerId !== selfId);
+  const winnerPlay = result.winnerId ? result.plays.find((play) => play.playerId === result.winnerId) : null;
+  return `
+    <div class="side-summary">
+      <p class="eyebrow">${selfPlay ? result.winnerId ? `Perche ${selfPlay.outcome === "win" ? "hai vinto" : "hai perso"}` : "Perche e pari" : "Risultato duello"}</p>
+      <h2>${winnerPlay ? escapeHtml(winnerPlay.playerName) : "Pareggio"}</h2>
+      <p>${escapeHtml(result.summary?.reason ?? "")}</p>
+      ${
+        selfPlay && opponentPlay
+          ? `
+            <div class="summary-line"><span>La tua Breccia</span><strong>${selfPlay.breach}</strong></div>
+            <div class="summary-line"><span>Breccia avversaria</span><strong>${opponentPlay.breach}</strong></div>
+            <div class="summary-line"><span>Danno subito</span><strong>${selfPlay.damageTaken}</strong></div>
+            <div class="summary-line"><span>PV</span><strong>${selfPlay.healthBefore} -> ${selfPlay.healthAfter}</strong></div>
+            <div class="summary-line"><span>Mana</span><strong>${selfPlay.manaBefore} -> ${selfPlay.manaAfter}</strong></div>
+          `
+          : ""
+      }
+      ${(result.summary?.lines ?? []).slice(0, 6).map((line) => `<p class="math-line">${escapeHtml(line.text)}</p>`).join("")}
+    </div>
+  `;
 }
 
 function syncHandOrder(hand) {
@@ -904,131 +1218,94 @@ function moveHandCard(draggedCardId, targetCardId) {
   return true;
 }
 
-function renderChatMessage(message) {
-  return `
-    <div class="chat-message ${message.kind === "system" ? "is-system" : ""}">
-      <strong>${message.kind === "system" ? "Sistema" : escapeHtml(message.name ?? "Player")}</strong>
-      <p>${escapeHtml(message.text)}</p>
-    </div>
-  `;
-}
+function updatePlanStat(kind, stat, checked) {
+  const distribution = appState.plan[kind];
+  if (!distribution || !VALERIO_KEYS.includes(stat)) {
+    return;
+  }
 
-function renderCardMath(card, specialKeys, title) {
-  return `
-    <div class="math-box">
-      <h3>${escapeHtml(title)}</h3>
-      <strong>${escapeHtml(card.name)}</strong>
-      <div class="summary-line"><span>Base SPECIAL</span><strong>${scoreBase(card, specialKeys)}</strong></div>
-      ${specialKeys
-        .map((key) => `<div class="summary-line"><span>${key}</span><strong>${Number(card.special[key] ?? 0)}</strong></div>`)
-        .join("")}
-      <div class="ability-box">
-        <span>Attiva - ${Number(card.active.cost ?? 0)} mana</span>
-        <strong>${escapeHtml(card.active.name)}</strong>
-        <p>${escapeHtml(card.active.text)}</p>
-      </div>
-      <div class="ability-box">
-        <span>Passiva - solo con attiva</span>
-        <strong>${escapeHtml(card.passive.name)}</strong>
-        <p>${escapeHtml(card.passive.text)}</p>
-      </div>
-    </div>
-  `;
-}
-
-function renderFightMath(card, opponentCard, lobby, self, useActive) {
-  const preview = scorePreview(card, lobby.specialKeys, useActive, self.mana, self.deck.length);
-  const opponentBase = opponentCard ? scoreBase(opponentCard, lobby.specialKeys) : null;
-  return `
-    <h2>${escapeHtml(card.name)}</h2>
-    <div class="score-preview">
-      <strong>${preview.score}</strong>
-      <span>${useActive ? "con attiva" : "senza attiva"}</span>
-    </div>
-    <div class="summary-line"><span>Base</span><strong>${preview.baseScore}</strong></div>
-    <div class="summary-line"><span>Attiva</span><strong>${formatSigned(preview.activeScore)}</strong></div>
-    <div class="summary-line"><span>Passiva ${useActive ? "" : "(spenta)"}</span><strong>${formatSigned(preview.passiveScore)}</strong></div>
-    <div class="summary-line"><span>Mana dopo scelta</span><strong>${Math.max(0, self.mana - preview.manaCost)}</strong></div>
-    ${
-      opponentCard
-        ? `<div class="summary-line is-compare"><span>Avversario base</span><strong>${opponentBase}</strong></div>
-           <p class="notice">${preview.score >= opponentBase ? "Se l'avversario non usa bonus, sei sopra o pari." : "Senza bonus extra sei sotto la base avversaria."}</p>`
-        : ""
+  if (checked) {
+    const maxSlots = kind === "attacks" ? 3 : 3;
+    if (!Object.hasOwn(distribution, stat) && Object.keys(distribution).length < maxSlots) {
+      distribution[stat] = 0;
     }
-    <div class="ability-box">
-      <span>Attiva - ${Number(card.active.cost ?? 0)} mana</span>
-      <strong>${escapeHtml(card.active.name)}</strong>
-      <p>${escapeHtml(card.active.text)}</p>
-    </div>
-    <div class="ability-box">
-      <span>Passiva - solo con attiva</span>
-      <strong>${escapeHtml(card.passive.name)}</strong>
-      <p>${escapeHtml(card.passive.text)}</p>
-    </div>
-  `;
+  } else {
+    delete distribution[stat];
+  }
 }
 
-function renderResultSummary(result, selfId) {
-  if (!result) {
-    return `<div class="side-summary"><h2>Nessun risultato</h2></div>`;
+function updatePlanPoints(kind, stat, rawValue) {
+  const lobby = appState.snapshot?.lobby;
+  const card = getCardById(lobby?.self?.selected?.cardId);
+  const distribution = appState.plan[kind];
+  if (!card || !distribution || !Object.hasOwn(distribution, stat)) {
+    return;
   }
 
-  const selfPlay = result.plays.find((play) => play.playerId === selfId);
-  const opponentPlay = result.plays.find((play) => play.playerId !== selfId);
-  const winnerPlay = result.winnerId ? result.plays.find((play) => play.playerId === result.winnerId) : null;
-  return `
-    <div class="side-summary">
-      <p class="eyebrow">${selfPlay ? result.winnerId ? `Perche ${selfPlay.outcome === "win" ? "hai vinto" : "hai perso"}` : "Perche e pari" : "Risultato duello"}</p>
-      <h2>${winnerPlay ? escapeHtml(winnerPlay.playerName) : "Pareggio"}</h2>
-      <p>${escapeHtml(result.summary?.reason ?? "")}</p>
-      ${(result.summary?.lines ?? []).map((line) => `<p class="math-line">${escapeHtml(line.text)}</p>`).join("")}
-      ${
-        selfPlay && opponentPlay
-          ? `
-            <div class="summary-line"><span>Tu</span><strong>${selfPlay.score}</strong></div>
-            <div class="summary-line"><span>Avversario</span><strong>${opponentPlay.score}</strong></div>
-            <div class="summary-line"><span>Mana speso</span><strong>${selfPlay.manaCost}</strong></div>
-            <div class="summary-line"><span>Mana round</span><strong>+${selfPlay.manaStartGain} / +${selfPlay.manaOutcomeGain}</strong></div>
-          `
-          : ""
-      }
-    </div>
-  `;
+  const pool = kind === "attacks" ? getAttackPool(card) : getDefensePool(card);
+  const others = Object.entries(distribution)
+    .filter(([key]) => key !== stat)
+    .reduce((total, [, value]) => total + Number(value ?? 0), 0);
+  const value = clamp(Math.floor(Number(rawValue || 0)), 0, Math.max(0, pool - others));
+  distribution[stat] = value;
 }
 
-function scorePreview(card, specialKeys, useActive, mana, deckSize) {
-  const selectedStats = specialKeys.map((key) => Number(card.special[key] ?? 0));
-  const baseScore = selectedStats.reduce((total, value) => total + value, 0);
-  let activeScore = 0;
-  let passiveScore = 0;
-  let manaCost = 0;
+function getPlanValidation(lobby, card) {
+  const attackCount = Object.keys(appState.plan.attacks).length;
+  const defenseCount = Object.keys(appState.plan.defenses).length;
+  const attackTotal = sumDistribution(appState.plan.attacks);
+  const defenseTotal = sumDistribution(appState.plan.defenses);
+  const attackPool = getAttackPool(card);
+  const defensePool = getDefensePool(card);
 
-  if (useActive && mana >= Number(card.active?.cost ?? 0)) {
-    manaCost = Number(card.active.cost ?? 0);
-    activeScore = resolveEffect(card.active.effect, { card, specialKeys, selectedStats, mana, deckSize });
-    passiveScore = resolveEffect(card.passive.effect, { card, specialKeys, selectedStats, mana, deckSize });
+  if (attackCount !== 3) {
+    return { ok: false, error: "Scegli esattamente 3 statistiche di attacco." };
+  }
+  if (defenseCount !== 3) {
+    return { ok: false, error: "Scegli esattamente 3 statistiche di difesa." };
+  }
+  if (attackTotal > attackPool) {
+    return { ok: false, error: `Attacco oltre pool: ${attackTotal}/${attackPool}.` };
+  }
+  if (defenseTotal > defensePool) {
+    return { ok: false, error: `Difesa oltre pool: ${defenseTotal}/${defensePool}.` };
+  }
+  if (appState.plan.useActive && !canUseActive(card, lobby.self)) {
+    return { ok: false, error: "Mana insufficiente per l'attiva." };
   }
 
+  return { ok: true, error: "" };
+}
+
+function makeDefaultPlan(card, self) {
   return {
-    score: baseScore + activeScore + passiveScore,
-    baseScore,
-    activeScore,
-    passiveScore,
-    manaCost
+    cardId: card.id,
+    attacks: makeDefaultDistribution(getAttackPool(card)),
+    defenses: makeDefaultDistribution(getDefensePool(card)),
+    useActive: false && canUseActive(card, self)
   };
 }
 
-function resolveEffect(effect, context) {
-  if (!effect) return 0;
-  if (effect.type === "score") return Number(effect.value ?? 0);
-  if (effect.type === "selected-stat") return context.specialKeys.includes(effect.stat) ? Number(context.card.special[effect.stat] ?? 0) : 0;
-  if (effect.type === "highest-selected") return Math.max(...context.selectedStats);
-  if (effect.type === "lowest-selected") return Math.min(...context.selectedStats);
-  if (effect.type === "contains") return context.specialKeys.includes(effect.stat) ? Number(effect.value ?? 0) : 0;
-  if (effect.type === "missing") return context.specialKeys.includes(effect.stat) ? 0 : Number(effect.value ?? 0);
-  if (effect.type === "deck-low") return context.deckSize <= Number(effect.count ?? 0) ? Number(effect.value ?? 0) : 0;
-  if (effect.type === "mana-low") return context.mana <= Number(effect.mana ?? 0) ? Number(effect.value ?? 0) : 0;
-  return 0;
+function makeDefaultDistribution(pool) {
+  return Object.fromEntries(VALERIO_KEYS.slice(0, 3).map((key) => [key, 0]));
+}
+
+function resetPlan() {
+  appState.plan = {
+    cardId: "",
+    attacks: {},
+    defenses: {},
+    useActive: false
+  };
+}
+
+function captureInputFocus(input, extra) {
+  return {
+    ...extra,
+    value: input.value,
+    start: input.selectionStart,
+    end: input.selectionEnd
+  };
 }
 
 function getActivePlayers(lobby) {
@@ -1043,12 +1320,8 @@ function canUseActive(card, self) {
   return Boolean(card && self && self.mana >= Number(card.active?.cost ?? 0));
 }
 
-function formatSigned(value) {
-  return value >= 0 ? `+${value}` : String(value);
-}
-
-function readCards(data) {
-  return Array.isArray(data) ? data : data.cards ?? [];
+function isCardCooling(player, cardId) {
+  return Number(player?.cooldowns?.[cardId] ?? 0) > 0;
 }
 
 function getPlayerStatus(player, phase) {
@@ -1064,8 +1337,8 @@ function getPlayerStatus(player, phase) {
     return player.isCurrentDrafter ? "Sta draftando" : `${player.draftCount} carte`;
   }
 
-  if (phase === "fight") {
-    return player.hasFightChoice ? "Fight pronto" : "Decide attiva";
+  if (phase === "plan") {
+    return player.hasSubmittedPlan ? "Piano pronto" : "Prepara piano";
   }
 
   return "In gioco";
@@ -1076,18 +1349,64 @@ function phaseLabel(phase) {
     lobby: "Codice",
     draft: "Draft",
     select: "Scelta carta",
-    fight: "Fight",
+    plan: "Fight",
     reveal: "Risultato",
     ended: "Fine"
   }[phase] ?? "Codice";
 }
 
-function scoreBase(card, specialKeys) {
-  return specialKeys.reduce((total, key) => total + Number(card.special[key] ?? 0), 0);
-}
-
 function getCardById(cardId) {
   return cardId ? appState.cardsById.get(cardId) : null;
+}
+
+function readCards(data) {
+  return Array.isArray(data) ? data : data.cards ?? [];
+}
+
+function getCardValerio(card) {
+  return card?.valerio ?? card?.special ?? {};
+}
+
+function getCardCombat(card) {
+  return card?.combat ?? {};
+}
+
+function getAttackPool(card) {
+  return Math.floor((20 * Number(getCardCombat(card).attackPower ?? 0)) / 100);
+}
+
+function getDefensePool(card) {
+  return Math.floor((20 * Number(getCardCombat(card).defensePower ?? 0)) / 100);
+}
+
+function getDraftCost(card) {
+  const combat = getCardCombat(card);
+  if (Number.isInteger(combat.draftCost)) {
+    return combat.draftCost;
+  }
+
+  const totalPower = Number(combat.attackPower ?? 0) + Number(combat.defensePower ?? 0);
+  if (totalPower <= 100) return 2;
+  if (totalPower <= 130) return 3;
+  if (totalPower <= 160) return 4;
+  if (totalPower <= 180) return 5;
+  return 6;
+}
+
+function sumDistribution(distribution) {
+  return Object.values(distribution ?? {}).reduce((total, value) => total + Number(value ?? 0), 0);
+}
+
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, Number.isFinite(value) ? value : min));
+}
+
+function percent(value, max) {
+  if (!max || max <= 0) {
+    return 0;
+  }
+
+  return clamp(Math.round((Number(value ?? 0) / max) * 100), 0, 100);
 }
 
 function cardImageSrc(card) {
@@ -1095,7 +1414,7 @@ function cardImageSrc(card) {
 }
 
 function getInitials(name) {
-  return name
+  return String(name)
     .split(" ")
     .map((part) => part[0])
     .join("")

@@ -1,6 +1,6 @@
 # valeverce
 
-Gioco di carte locale per 2-4 player sulla stessa rete. Il server Node serve la pagina e gestisce lobby, WebSocket, mazzi, mana e turni.
+Gioco di carte locale per 2-4 player sulla stessa rete. Il server Node serve la pagina e gestisce lobby, WebSocket, draft, PV, mana, cooldown e turni.
 
 ## Avvio
 
@@ -12,37 +12,46 @@ Apri `http://localhost:3000` sul computer host. Gli altri player entrano usando 
 
 ## Regole
 
-- A inizio partita si fa un draft: ogni player sceglie 6 carte dal pool comune.
-- Il draft e a turni: player 1 prende una carta, poi player 2, e cosi via. Le carte gia prese non sono piu disponibili.
+- A inizio partita si fa un draft da pool comune con budget 20 e massimo 6 carte.
+- Ogni carta ha statistiche VALERIO, potenza attacco, potenza difesa e costo draft.
 - Ogni round e un duello 1v1. Con 3/4 player la rotazione e 1 vs 2, 2 vs 3, 3 vs 4, 4 vs 1.
-- All'inizio del duello vedi subito i 3 SPECIAL del round.
-- Solo i due duellanti scelgono una carta; gli altri guardano il duello e la chat/event log.
-- Nel fight ogni duellante decide se attivare la carta spendendo mana.
-- Se usi l'attiva, per quel turno viene calcolata anche la passiva della carta.
-- Vince il turno chi ha la somma piu alta sui 3 SPECIAL, inclusi bonus attivi/passivi.
-- A inizio duello i duellanti recuperano 1 mana. Chi vince recupera 2 mana, chi perde recupera 1 mana, fino a un massimo di 10.
-- Chi perde scarta la carta giocata.
-- Chi resta senza carte esce. Vince l'ultimo player rimasto.
-
-In caso di pari sul punteggio, lo spareggio usa Luck della carta, poi mana rimasto.
+- In `select` i duellanti scelgono una carta coperta; le carte in cooldown non sono selezionabili.
+- In `plan` le carte vengono rivelate e ogni duellante sceglie 3 attacchi, 3 difese e la distribuzione punti.
+- La Breccia di ogni linea e `attackPoints + attackerValerio - defenderValerio - defensePoints`, mai sotto 0.
+- Vince il fight chi ha Breccia maggiore. In pareggio nessuno perde PV.
+- Solo il vincitore infligge danno ai PV; il danno normale e cappato, l'attiva puo superare il cap.
+- Il Tratto/passiva e sempre attivo se la condizione e vera, senza mana.
+- A fine round entrambi i duellanti guadagnano +1 mana, fino a 10.
+- La carta usata va in cooldown. Vince chi porta gli avversari a 0 PV.
 
 ## Carte
 
 I dati sono in `public/data/cards.json`. Ogni entry usa come `id` il nome del PNG in `public/cards/`.
 
-Le immagini sono opzionali e vanno messe in `public/cards/` usando l'ID della carta:
+Struttura minima carta:
 
-```text
-public/cards/vault-boy.png
-public/cards/courier.png
+```json
+{
+  "id": "Magister",
+  "name": "Il Magister",
+  "valerio": { "V": 3, "A": 7, "L": 9, "E": 8, "R": 6, "I": 4, "O": 3 },
+  "combat": { "attackPower": 80, "defensePower": 60, "draftCost": 4 },
+  "active": { "name": "Attiva", "cost": 2, "text": "...", "effect": { "type": "damage", "value": 4 } },
+  "passive": { "name": "Tratto", "text": "...", "effect": { "type": "flat-damage", "value": 2 } }
+}
 ```
 
-Se manca l'immagine, la UI mostra un placeholder.
+Le immagini vanno messe in `public/cards/` usando l'ID della carta:
+
+```text
+public/cards/Magister.png
+public/cards/Athene.png
+```
 
 ## Comandi
 
 ```bash
 npm run check
-npm run smoke
 npm run validate:cards
+npm run smoke
 ```

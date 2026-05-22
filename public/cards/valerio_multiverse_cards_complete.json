@@ -4,27 +4,42 @@
     "id": "valerio_multiverse",
     "name": "Valerio Multiverse Cards",
     "language": "it",
-    "description": "Set completo e più creativo/divertente delle carte Valerio, con SPECIAL, abilità attiva, passiva, tema grafico, rarità e flavor.",
-    "stats_legend": {
-      "S": "Strength",
-      "P": "Perception",
-      "E": "Endurance",
-      "C": "Charisma",
-      "I": "Intelligence",
-      "A": "Agility",
-      "L": "Luck"
-    },
+    "description": "Set completo delle carte Valerio aggiornato al sistema VALERIO con combat power, costo draft e rarità coerente con la forza/costo della carta.",
     "effect_types_supported": [
-      "score",
-      "selected-stat",
-      "highest-selected",
-      "lowest-selected",
-      "contains",
-      "missing",
-      "deck-low"
+      "damage",
+      "break-cap",
+      "ignore-defense",
+      "attack-stat-bonus",
+      "defense-stat-bonus",
+      "flat-damage",
+      "defense-hit-bonus"
     ],
-    "design_note": "I campi extra come subtitle, rarity, archetype, theme, frame, quote e tags servono per UI, card renderer, filtri, tooltip e restyling grafico. Il blocco active/passive resta compatibile con la logica del JSON originale. In questa revisione nomi, testi descrittivi e flavor di active/passive sono stati riscritti per essere più aderenti al tema storico, pop, videoludico o anime della card, mantenendo invariati costi ed effect.",
-    "name_revision": "v4_lore_active_passive"
+    "design_note": "Carte convertite dal vecchio sistema SPECIAL al nuovo sistema VALERIO. Ogni carta ha valerio con totale massimo 40, combat.attackPower, combat.defensePower e combat.draftCost. I valori sono generati in modo pseudo-casuale/coerente e vanno rifiniti manualmente per il bilanciamento finale.",
+    "name_revision": "v6_valerio_combat_draft_rarity",
+    "valerio_legend": {
+      "V": "Vigore",
+      "A": "Astuzia",
+      "L": "Lucidità",
+      "E": "Ego",
+      "R": "Rigore",
+      "I": "Istinto",
+      "O": "Opportunismo"
+    },
+    "draft_rules": {
+      "draftBudget": 20,
+      "cardsPerPlayer": 6,
+      "maxCardCost": 6,
+      "note": "Con 6 carte e budget 20, una carta da 6 è una scelta premium che obbliga a prendere carte più economiche."
+    },
+    "rarity_rules": {
+      "draftCost_1_2": "comune",
+      "draftCost_3": "rara",
+      "draftCost_4": "epica",
+      "draftCost_5": "leggendaria",
+      "draftCost_6": "mitica",
+      "speciale": "mantenuta per carte uniche come Valerio Prime",
+      "policy": "la rarità viene alzata quando il costo draft richiede una rarità minima più alta; non viene abbassata se era già più rara"
+    }
   },
   "cards": [
     {
@@ -40,31 +55,22 @@
         "accent": "#d6a94f",
         "icon": "owl"
       },
-      "special": {
-        "S": 3,
-        "P": 8,
-        "E": 5,
-        "C": 7,
-        "I": 10,
-        "A": 5,
-        "L": 6
-      },
       "active": {
         "name": "Egida di Pallade",
         "cost": 2,
-        "text": "Aggiungi Intelligence se è tra gli SPECIAL scelti.",
+        "text": "+4 danni oltre il cap.",
         "effect": {
-          "type": "selected-stat",
-          "stat": "I"
+          "type": "damage",
+          "value": 4
         },
         "flavor": "Prima protegge il piano, poi lo rende inevitabile."
       },
       "passive": {
         "name": "Occhio della Civetta",
-        "text": "+2 se Perception è tra gli SPECIAL del turno.",
+        "text": "+2 danni se attacchi con Istinto.",
         "effect": {
-          "type": "contains",
-          "stat": "P",
+          "type": "attack-stat-bonus",
+          "stat": "I",
           "value": 2
         },
         "flavor": "Vede il rischio quando gli altri stanno ancora scegliendo il tempio."
@@ -74,7 +80,22 @@
         "strategia",
         "olimpico",
         "controllo"
-      ]
+      ],
+      "valerio": {
+        "V": 3,
+        "A": 5,
+        "L": 7,
+        "E": 7,
+        "R": 5,
+        "I": 7,
+        "O": 6
+      },
+      "combat": {
+        "attackPower": 60,
+        "defensePower": 90,
+        "draftCost": 4
+      },
+      "rarityRule": "minimo epica per draftCost 4; rarità originale mantenuta se più alta"
     },
     {
       "id": "Magister",
@@ -89,31 +110,22 @@
         "accent": "#b7934e",
         "icon": "laurel"
       },
-      "special": {
-        "S": 3,
-        "P": 7,
-        "E": 4,
-        "C": 8,
-        "I": 10,
-        "A": 3,
-        "L": 5
-      },
       "active": {
         "name": "Editto dell'Imperatore",
         "cost": 2,
-        "text": "+4 al punteggio: il Senato approva, la classe obbedisce.",
+        "text": "+4 danni oltre il cap.",
         "effect": {
-          "type": "score",
+          "type": "damage",
           "value": 4
         },
         "flavor": "Non interroga: emana decreti con voto in calce."
       },
       "passive": {
         "name": "Senatus Consultum Ultimum",
-        "text": "+2 se Intelligence è tra gli SPECIAL del turno.",
+        "text": "+2 danni se attacchi con Lucidità.",
         "effect": {
-          "type": "contains",
-          "stat": "I",
+          "type": "attack-stat-bonus",
+          "stat": "L",
           "value": 2
         },
         "flavor": "Quando cita il latino, il backlog si mette sull'attenti."
@@ -123,7 +135,22 @@
         "sapienza",
         "latino",
         "pressione psicologica"
-      ]
+      ],
+      "valerio": {
+        "V": 3,
+        "A": 3,
+        "L": 10,
+        "E": 8,
+        "R": 4,
+        "I": 7,
+        "O": 5
+      },
+      "combat": {
+        "attackPower": 45,
+        "defensePower": 65,
+        "draftCost": 3
+      },
+      "rarityRule": "minimo rara per draftCost 3; rarità originale mantenuta se più alta"
     },
     {
       "id": "Nasus",
@@ -138,29 +165,21 @@
         "accent": "#d9a441",
         "icon": "ankh"
       },
-      "special": {
-        "S": 8,
-        "P": 5,
-        "E": 8,
-        "C": 3,
-        "I": 6,
-        "A": 3,
-        "L": 4
-      },
       "active": {
         "name": "Q: Colpo Sifonante",
         "cost": 2,
-        "text": "Aggiungi il valore più alto tra gli SPECIAL scelti.",
+        "text": "+5 danni oltre il cap.",
         "effect": {
-          "type": "highest-selected"
+          "type": "damage",
+          "value": 5
         },
         "flavor": "Ogni ticket chiuso diventa una stack eterna."
       },
       "passive": {
         "name": "Sabbie di Shurima",
-        "text": "+3 se ti restano 2 carte o meno.",
+        "text": "+3 danni se almeno 2 tue difese vengono colpite.",
         "effect": {
-          "type": "deck-low",
+          "type": "defense-hit-bonus",
           "count": 2,
           "value": 3
         },
@@ -171,7 +190,22 @@
         "late-game",
         "tank",
         "sabbie"
-      ]
+      ],
+      "valerio": {
+        "V": 8,
+        "A": 3,
+        "L": 6,
+        "E": 3,
+        "R": 8,
+        "I": 5,
+        "O": 4
+      },
+      "combat": {
+        "attackPower": 85,
+        "defensePower": 95,
+        "draftCost": 5
+      },
+      "rarityRule": "minimo leggendaria per draftCost 5; rarità originale mantenuta se più alta"
     },
     {
       "id": "Samurai",
@@ -186,31 +220,22 @@
         "accent": "#c99958",
         "icon": "katana"
       },
-      "special": {
-        "S": 7,
-        "P": 6,
-        "E": 6,
-        "C": 4,
-        "I": 5,
-        "A": 10,
-        "L": 4
-      },
       "active": {
         "name": "Iaijutsu del Sottoscala",
         "cost": 2,
-        "text": "Aggiungi Agility se è tra gli SPECIAL scelti.",
+        "text": "+4 danni oltre il cap.",
         "effect": {
-          "type": "selected-stat",
-          "stat": "A"
+          "type": "damage",
+          "value": 4
         },
         "flavor": "La lama esce prima del dubbio e rientra prima della call."
       },
       "passive": {
         "name": "Onore del Ronin",
-        "text": "+2 se Strength è tra gli SPECIAL del turno.",
+        "text": "+2 danni se attacchi con Vigore.",
         "effect": {
-          "type": "contains",
-          "stat": "S",
+          "type": "attack-stat-bonus",
+          "stat": "V",
           "value": 2
         },
         "flavor": "Non ha padrone, ma ha una deadline da vendicare."
@@ -220,14 +245,29 @@
         "agilità",
         "duello",
         "sakura"
-      ]
+      ],
+      "valerio": {
+        "V": 7,
+        "A": 8,
+        "L": 5,
+        "E": 4,
+        "R": 6,
+        "I": 6,
+        "O": 4
+      },
+      "combat": {
+        "attackPower": 90,
+        "defensePower": 55,
+        "draftCost": 4
+      },
+      "rarityRule": "minimo epica per draftCost 4; rarità originale mantenuta se più alta"
     },
     {
       "id": "Sir",
       "image": "Sir.png",
       "name": "Sir Monocolo",
       "subtitle": "Gentilezza armata di sprint review.",
-      "rarity": "rara",
+      "rarity": "epica",
       "archetype": "diplomatico",
       "theme": "cavaliere • codice • salotto blu",
       "frame": {
@@ -235,40 +275,47 @@
         "accent": "#1f4c85",
         "icon": "lion"
       },
-      "special": {
-        "S": 4,
-        "P": 7,
-        "E": 5,
-        "C": 10,
-        "I": 7,
-        "A": 4,
-        "L": 6
-      },
       "active": {
         "name": "Duello all'Alba",
         "cost": 1,
-        "text": "Aggiungi il valore più basso tra gli SPECIAL scelti.",
+        "text": "+3 danni oltre il cap.",
         "effect": {
-          "type": "lowest-selected"
+          "type": "damage",
+          "value": 3
         },
         "flavor": "Trasforma il punto debole in una questione d'onore."
       },
       "passive": {
         "name": "Sigillo Reale",
-        "text": "+2 se Charisma è tra gli SPECIAL del turno.",
+        "text": "+2 danni se attacchi con Ego.",
         "effect": {
-          "type": "contains",
-          "stat": "C",
+          "type": "attack-stat-bonus",
+          "stat": "E",
           "value": 2
         },
         "flavor": "Una firma elegante e anche il caos chiede permesso."
       },
       "quote": "Propongo una resa elegante.",
       "tags": [
-        "charisma",
+        "ego",
         "nobiltà",
         "diplomazia"
-      ]
+      ],
+      "valerio": {
+        "V": 4,
+        "A": 4,
+        "L": 7,
+        "E": 7,
+        "R": 5,
+        "I": 7,
+        "O": 6
+      },
+      "combat": {
+        "attackPower": 70,
+        "defensePower": 80,
+        "draftCost": 4
+      },
+      "rarityRule": "minimo epica per draftCost 4; rarità originale mantenuta se più alta"
     },
     {
       "id": "auditore",
@@ -283,31 +330,22 @@
         "accent": "#6b5b42",
         "icon": "hidden-blade"
       },
-      "special": {
-        "S": 5,
-        "P": 8,
-        "E": 5,
-        "C": 6,
-        "I": 7,
-        "A": 10,
-        "L": 6
-      },
       "active": {
         "name": "Salto della Fede",
         "cost": 3,
-        "text": "Aggiungi Agility se è tra gli SPECIAL scelti.",
+        "text": "+5 danni oltre il cap.",
         "effect": {
-          "type": "selected-stat",
-          "stat": "A"
+          "type": "damage",
+          "value": 5
         },
         "flavor": "Si lancia nel vuoto e atterra esattamente sulla milestone."
       },
       "passive": {
         "name": "Vista dell'Aquila",
-        "text": "+2 se Perception è tra gli SPECIAL del turno.",
+        "text": "+2 danni se attacchi con Istinto.",
         "effect": {
-          "type": "contains",
-          "stat": "P",
+          "type": "attack-stat-bonus",
+          "stat": "I",
           "value": 2
         },
         "flavor": "Individua il bersaglio anche se si nasconde in un requisito ambiguo."
@@ -315,16 +353,31 @@
       "quote": "Nulla è vero, tutto è backlog.",
       "tags": [
         "stealth",
-        "agility",
+        "astuzia",
         "rinascimento"
-      ]
+      ],
+      "valerio": {
+        "V": 5,
+        "A": 6,
+        "L": 6,
+        "E": 6,
+        "R": 5,
+        "I": 6,
+        "O": 6
+      },
+      "combat": {
+        "attackPower": 90,
+        "defensePower": 90,
+        "draftCost": 5
+      },
+      "rarityRule": "minimo leggendaria per draftCost 5; rarità originale mantenuta se più alta"
     },
     {
       "id": "cave",
       "image": "cave.png",
       "name": "Cavernicolo Premium",
       "subtitle": "La user story è incisa sulla parete.",
-      "rarity": "comune",
+      "rarity": "rara",
       "archetype": "bruto",
       "theme": "pietra • fuoco • bonk",
       "frame": {
@@ -332,41 +385,47 @@
         "accent": "#9c7a4a",
         "icon": "club"
       },
-      "special": {
-        "S": 10,
-        "P": 3,
-        "E": 8,
-        "C": 2,
-        "I": 2,
-        "A": 5,
-        "L": 5
-      },
       "active": {
         "name": "Bonk Paleolitico",
         "cost": 1,
-        "text": "+3 al punteggio.",
+        "text": "+3 danni oltre il cap.",
         "effect": {
-          "type": "score",
+          "type": "damage",
           "value": 3
         },
         "flavor": "Niente raffinazioni: il problema prende una clava e tace."
       },
       "passive": {
         "name": "Istinto Primordiale",
-        "text": "+2 se Strength è tra gli SPECIAL del turno.",
+        "text": "+2 danni se attacchi con Vigore.",
         "effect": {
-          "type": "contains",
-          "stat": "S",
+          "type": "attack-stat-bonus",
+          "stat": "V",
           "value": 2
         },
         "flavor": "Non capisce il diagramma, ma sente dove va spaccato."
       },
       "quote": "Ugh. Deploy.",
       "tags": [
-        "strength",
+        "vigore",
         "primitivo",
         "bonk"
-      ]
+      ],
+      "valerio": {
+        "V": 10,
+        "A": 5,
+        "L": 2,
+        "E": 2,
+        "R": 8,
+        "I": 3,
+        "O": 5
+      },
+      "combat": {
+        "attackPower": 60,
+        "defensePower": 65,
+        "draftCost": 3
+      },
+      "rarityRule": "minimo rara per draftCost 3; rarità originale mantenuta se più alta"
     },
     {
       "id": "doom",
@@ -381,31 +440,22 @@
         "accent": "#0c6f3c",
         "icon": "helmet"
       },
-      "special": {
-        "S": 10,
-        "P": 6,
-        "E": 9,
-        "C": 2,
-        "I": 4,
-        "A": 7,
-        "L": 3
-      },
       "active": {
         "name": "Editto di Latveria",
         "cost": 3,
-        "text": "Aggiungi Strength se è tra gli SPECIAL scelti.",
+        "text": "+5 danni oltre il cap.",
         "effect": {
-          "type": "selected-stat",
-          "stat": "S"
+          "type": "damage",
+          "value": 5
         },
         "flavor": "Doom non propone una soluzione. La impone."
       },
       "passive": {
         "name": "Armatura del Dottor Destino",
-        "text": "+3 se Endurance è tra gli SPECIAL del turno.",
+        "text": "+3 danni se attacchi con Rigore.",
         "effect": {
-          "type": "contains",
-          "stat": "E",
+          "type": "attack-stat-bonus",
+          "stat": "R",
           "value": 3
         },
         "flavor": "Ogni critica rimbalza sul metallo e torna come action item."
@@ -413,16 +463,31 @@
       "quote": "Non ho bug. Ho demoni da ottimizzare.",
       "tags": [
         "boss",
-        "strength",
-        "endurance"
-      ]
+        "vigore",
+        "rigore"
+      ],
+      "valerio": {
+        "V": 9,
+        "A": 7,
+        "L": 4,
+        "E": 2,
+        "R": 9,
+        "I": 6,
+        "O": 3
+      },
+      "combat": {
+        "attackPower": 95,
+        "defensePower": 85,
+        "draftCost": 5
+      },
+      "rarityRule": "minimo leggendaria per draftCost 5; rarità originale mantenuta se più alta"
     },
     {
       "id": "genshis",
       "image": "genshis.png",
       "name": "Genshis del Pull Singolo",
       "subtitle": "Ha trovato una 5★ nel deploy del venerdì.",
-      "rarity": "rara",
+      "rarity": "epica",
       "archetype": "gacha",
       "theme": "anime • fortuna • banner limitato",
       "frame": {
@@ -430,48 +495,54 @@
         "accent": "#8ac7ff",
         "icon": "wish"
       },
-      "special": {
-        "S": 4,
-        "P": 6,
-        "E": 5,
-        "C": 8,
-        "I": 6,
-        "A": 7,
-        "L": 10
-      },
       "active": {
         "name": "Wish sul Banner Limitato",
         "cost": 2,
-        "text": "+4 al punteggio.",
+        "text": "+4 danni oltre il cap.",
         "effect": {
-          "type": "score",
+          "type": "damage",
           "value": 4
         },
         "flavor": "Un pull, una speranza, una soluzione glitterata."
       },
       "passive": {
         "name": "Pity a 90",
-        "text": "+2 se Luck è tra gli SPECIAL del turno.",
+        "text": "+2 danni se attacchi con Opportunismo.",
         "effect": {
-          "type": "contains",
-          "stat": "L",
+          "type": "attack-stat-bonus",
+          "stat": "O",
           "value": 2
         },
         "flavor": "La fortuna non arriva subito, ma arriva con ricevuta fiscale."
       },
       "quote": "Non è gambling, è resource planning.",
       "tags": [
-        "luck",
+        "opportunismo",
         "gacha",
         "anime"
-      ]
+      ],
+      "valerio": {
+        "V": 4,
+        "A": 6,
+        "L": 6,
+        "E": 6,
+        "R": 5,
+        "I": 6,
+        "O": 7
+      },
+      "combat": {
+        "attackPower": 80,
+        "defensePower": 65,
+        "draftCost": 4
+      },
+      "rarityRule": "minimo epica per draftCost 4; rarità originale mantenuta se più alta"
     },
     {
       "id": "gta",
       "image": "gta.png",
       "name": "Los Santos Valerio",
       "subtitle": "Parcheggia il task dove capita.",
-      "rarity": "epica",
+      "rarity": "leggendaria",
       "archetype": "caos urbano",
       "theme": "neon • crime • radio anni 80",
       "frame": {
@@ -479,30 +550,21 @@
         "accent": "#ff39c9",
         "icon": "palm"
       },
-      "special": {
-        "S": 6,
-        "P": 6,
-        "E": 6,
-        "C": 5,
-        "I": 4,
-        "A": 10,
-        "L": 7
-      },
       "active": {
         "name": "Colpo a Los Santos",
         "cost": 3,
-        "text": "+5 al punteggio.",
+        "text": "+5 danni oltre il cap.",
         "effect": {
-          "type": "score",
+          "type": "damage",
           "value": 5
         },
         "flavor": "Il piano era semplice: entrare, consegnare, rubare un elicottero."
       },
       "passive": {
         "name": "Tre Stelle Ricercato",
-        "text": "+2 se Agility è tra gli SPECIAL del turno.",
+        "text": "+2 danni se attacchi con Astuzia.",
         "effect": {
-          "type": "contains",
+          "type": "attack-stat-bonus",
           "stat": "A",
           "value": 2
         },
@@ -511,9 +573,24 @@
       "quote": "Mission passed. Respect +3.",
       "tags": [
         "neon",
-        "agility",
+        "astuzia",
         "caos"
-      ]
+      ],
+      "valerio": {
+        "V": 6,
+        "A": 6,
+        "L": 4,
+        "E": 5,
+        "R": 6,
+        "I": 6,
+        "O": 7
+      },
+      "combat": {
+        "attackPower": 100,
+        "defensePower": 80,
+        "draftCost": 5
+      },
+      "rarityRule": "minimo leggendaria per draftCost 5; rarità originale mantenuta se più alta"
     },
     {
       "id": "malenia",
@@ -528,29 +605,21 @@
         "accent": "#b13b2e",
         "icon": "winged-helm"
       },
-      "special": {
-        "S": 7,
-        "P": 6,
-        "E": 8,
-        "C": 4,
-        "I": 6,
-        "A": 10,
-        "L": 3
-      },
       "active": {
         "name": "Danza degli Uccelli Acquatici",
         "cost": 3,
-        "text": "Aggiungi il valore più alto tra gli SPECIAL scelti.",
+        "text": "+5 danni oltre il cap.",
         "effect": {
-          "type": "highest-selected"
+          "type": "damage",
+          "value": 5
         },
         "flavor": "Un passo, due tagli, tre revisioni cancellate."
       },
       "passive": {
         "name": "Dea della Marcescenza",
-        "text": "+3 se Agility è tra gli SPECIAL del turno.",
+        "text": "+3 danni se attacchi con Astuzia.",
         "effect": {
-          "type": "contains",
+          "type": "attack-stat-bonus",
           "stat": "A",
           "value": 3
         },
@@ -559,16 +628,31 @@
       "quote": "Witness me merge.",
       "tags": [
         "boss",
-        "agility",
+        "astuzia",
         "precisione"
-      ]
+      ],
+      "valerio": {
+        "V": 7,
+        "A": 7,
+        "L": 6,
+        "E": 4,
+        "R": 7,
+        "I": 6,
+        "O": 3
+      },
+      "combat": {
+        "attackPower": 100,
+        "defensePower": 85,
+        "draftCost": 6
+      },
+      "rarityRule": "minimo mitica per draftCost 6; rarità originale mantenuta se più alta"
     },
     {
       "id": "nazi",
       "image": "nazi.png",
       "name": "Il Burocrate Inquadrato",
       "subtitle": "Molto rigido, sorprendentemente in ritardo.",
-      "rarity": "rara",
+      "rarity": "epica",
       "archetype": "ordine e controllo",
       "theme": "grigio • ufficio • calendario ostile",
       "frame": {
@@ -576,31 +660,22 @@
         "accent": "#626262",
         "icon": "folder"
       },
-      "special": {
-        "S": 7,
-        "P": 8,
-        "E": 6,
-        "C": 3,
-        "I": 6,
-        "A": 7,
-        "L": 2
-      },
       "active": {
         "name": "Guerra Lampo",
         "cost": 2,
-        "text": "+4 al punteggio con una manovra brutale e immediata.",
+        "text": "+4 danni oltre il cap.",
         "effect": {
-          "type": "score",
+          "type": "damage",
           "value": 4
         },
         "flavor": "Non apre un fronte: apre direttamente il calendario degli altri."
       },
       "passive": {
         "name": "Gerarchia di Ferro",
-        "text": "+2 se Perception è tra gli SPECIAL del turno.",
+        "text": "+2 danni se attacchi con Istinto.",
         "effect": {
-          "type": "contains",
-          "stat": "P",
+          "type": "attack-stat-bonus",
+          "stat": "I",
           "value": 2
         },
         "flavor": "Ogni dettaglio viene controllato, timbrato e messo in riga."
@@ -608,16 +683,31 @@
       "quote": "Il processo è il processo, anche quando nessuno sa quale.",
       "tags": [
         "ordine",
-        "perception",
+        "istinto",
         "burocrazia"
-      ]
+      ],
+      "valerio": {
+        "V": 7,
+        "A": 7,
+        "L": 6,
+        "E": 3,
+        "R": 6,
+        "I": 8,
+        "O": 2
+      },
+      "combat": {
+        "attackPower": 65,
+        "defensePower": 90,
+        "draftCost": 4
+      },
+      "rarityRule": "minimo epica per draftCost 4; rarità originale mantenuta se più alta"
     },
     {
       "id": "pirate",
       "image": "pirate.png",
       "name": "Capitan Sottocoperta",
       "subtitle": "Saccheggia il backlog, poi chiede ferie.",
-      "rarity": "epica",
+      "rarity": "leggendaria",
       "archetype": "corsaro",
       "theme": "pirati • legno • teschi",
       "frame": {
@@ -625,48 +715,54 @@
         "accent": "#8a642b",
         "icon": "skull"
       },
-      "special": {
-        "S": 7,
-        "P": 6,
-        "E": 6,
-        "C": 7,
-        "I": 4,
-        "A": 6,
-        "L": 8
-      },
       "active": {
         "name": "Bordata di Tribordo",
         "cost": 2,
-        "text": "+4 al punteggio.",
+        "text": "+4 danni oltre il cap.",
         "effect": {
-          "type": "score",
+          "type": "damage",
           "value": 4
         },
         "flavor": "Non negozia lo scope: lo abborda."
       },
       "passive": {
         "name": "Mappa del Tesoro",
-        "text": "+2 se Luck è tra gli SPECIAL del turno.",
+        "text": "+2 danni se attacchi con Opportunismo.",
         "effect": {
-          "type": "contains",
-          "stat": "L",
+          "type": "attack-stat-bonus",
+          "stat": "O",
           "value": 2
         },
         "flavor": "La X segna il punto esatto in cui qualcuno ha lasciato il brief."
       },
       "quote": "Arrr, chi ha spostato la deadline?",
       "tags": [
-        "luck",
+        "opportunismo",
         "pirata",
         "caos controllato"
-      ]
+      ],
+      "valerio": {
+        "V": 6,
+        "A": 6,
+        "L": 4,
+        "E": 6,
+        "R": 6,
+        "I": 6,
+        "O": 6
+      },
+      "combat": {
+        "attackPower": 80,
+        "defensePower": 85,
+        "draftCost": 5
+      },
+      "rarityRule": "minimo leggendaria per draftCost 5; rarità originale mantenuta se più alta"
     },
     {
       "id": "reddead",
       "image": "reddead.png",
       "name": "Fuorilegge Red Deadline",
       "subtitle": "Dead Eye sul ticket critico.",
-      "rarity": "epica",
+      "rarity": "leggendaria",
       "archetype": "tiratore",
       "theme": "western • tramonto • polvere",
       "frame": {
@@ -674,31 +770,22 @@
         "accent": "#b5492a",
         "icon": "revolver"
       },
-      "special": {
-        "S": 6,
-        "P": 10,
-        "E": 7,
-        "C": 5,
-        "I": 5,
-        "A": 7,
-        "L": 6
-      },
       "active": {
         "name": "Dead Eye sul Ticket",
         "cost": 3,
-        "text": "Aggiungi Perception se è tra gli SPECIAL scelti.",
+        "text": "+5 danni oltre il cap.",
         "effect": {
-          "type": "selected-stat",
-          "stat": "P"
+          "type": "damage",
+          "value": 5
         },
         "flavor": "Rallenta il tempo, mira al blocker e spara una risposta secca."
       },
       "passive": {
         "name": "Wanted: Vivo o in Ritardo",
-        "text": "+2 se Luck è tra gli SPECIAL del turno.",
+        "text": "+2 danni se attacchi con Opportunismo.",
         "effect": {
-          "type": "contains",
-          "stat": "L",
+          "type": "attack-stat-bonus",
+          "stat": "O",
           "value": 2
         },
         "flavor": "Arriva coperto di polvere, ma con il task vivo."
@@ -706,9 +793,24 @@
       "quote": "This town ain't big enough for two PM.",
       "tags": [
         "western",
-        "perception",
+        "istinto",
         "deadline"
-      ]
+      ],
+      "valerio": {
+        "V": 6,
+        "A": 6,
+        "L": 5,
+        "E": 5,
+        "R": 6,
+        "I": 6,
+        "O": 6
+      },
+      "combat": {
+        "attackPower": 95,
+        "defensePower": 75,
+        "draftCost": 5
+      },
+      "rarityRule": "minimo leggendaria per draftCost 5; rarità originale mantenuta se più alta"
     },
     {
       "id": "shaman",
@@ -723,30 +825,21 @@
         "accent": "#b6783b",
         "icon": "totem"
       },
-      "special": {
-        "S": 4,
-        "P": 8,
-        "E": 6,
-        "C": 8,
-        "I": 5,
-        "A": 5,
-        "L": 7
-      },
       "active": {
         "name": "Rito del Totem",
         "cost": 2,
-        "text": "Aggiungi il valore più basso tra gli SPECIAL scelti.",
+        "text": "+4 danni oltre il cap.",
         "effect": {
-          "type": "lowest-selected"
+          "type": "damage",
+          "value": 4
         },
         "flavor": "Anche lo spirito più scarso diventa utile se balli abbastanza."
       },
       "passive": {
         "name": "Visione degli Spiriti",
-        "text": "+2 se Intelligence non è tra gli SPECIAL del turno.",
+        "text": "+2 danni sempre attivi.",
         "effect": {
-          "type": "missing",
-          "stat": "I",
+          "type": "flat-damage",
           "value": 2
         },
         "flavor": "Quando manca la logica, consulta gli antenati e il router."
@@ -754,9 +847,24 @@
       "quote": "Ho consultato gli antenati: serve riavviare.",
       "tags": [
         "support",
-        "luck",
+        "opportunismo",
         "misticismo"
-      ]
+      ],
+      "valerio": {
+        "V": 4,
+        "A": 5,
+        "L": 5,
+        "E": 6,
+        "R": 6,
+        "I": 7,
+        "O": 7
+      },
+      "combat": {
+        "attackPower": 55,
+        "defensePower": 70,
+        "draftCost": 3
+      },
+      "rarityRule": "minimo rara per draftCost 3; rarità originale mantenuta se più alta"
     },
     {
       "id": "stark",
@@ -771,31 +879,22 @@
         "accent": "#38bdf8",
         "icon": "reactor"
       },
-      "special": {
-        "S": 5,
-        "P": 7,
-        "E": 5,
-        "C": 10,
-        "I": 10,
-        "A": 6,
-        "L": 5
-      },
       "active": {
         "name": "Reattore Arc",
         "cost": 3,
-        "text": "Aggiungi Intelligence se è tra gli SPECIAL scelti.",
+        "text": "+5 danni oltre il cap.",
         "effect": {
-          "type": "selected-stat",
-          "stat": "I"
+          "type": "damage",
+          "value": 5
         },
         "flavor": "Alimenta il piano con una brillantezza leggermente irresponsabile."
       },
       "passive": {
         "name": "Genio in Conferenza Stampa",
-        "text": "+2 se Charisma è tra gli SPECIAL del turno.",
+        "text": "+2 danni se attacchi con Ego.",
         "effect": {
-          "type": "contains",
-          "stat": "C",
+          "type": "attack-stat-bonus",
+          "stat": "E",
           "value": 2
         },
         "flavor": "Spiega il disastro così bene che sembra una feature premium."
@@ -803,9 +902,24 @@
       "quote": "Genius, billionaire, playboy, project manager.",
       "tags": [
         "tech",
-        "intelligence",
-        "charisma"
-      ]
+        "lucidità",
+        "ego"
+      ],
+      "valerio": {
+        "V": 5,
+        "A": 6,
+        "L": 6,
+        "E": 6,
+        "R": 5,
+        "I": 7,
+        "O": 5
+      },
+      "combat": {
+        "attackPower": 85,
+        "defensePower": 100,
+        "draftCost": 6
+      },
+      "rarityRule": "minimo mitica per draftCost 6; rarità originale mantenuta se più alta"
     },
     {
       "id": "strano",
@@ -820,30 +934,22 @@
         "accent": "#f59e0b",
         "icon": "sigil"
       },
-      "special": {
-        "S": 3,
-        "P": 8,
-        "E": 5,
-        "C": 6,
-        "I": 10,
-        "A": 5,
-        "L": 8
-      },
       "active": {
         "name": "Occhio di Agamotto",
         "cost": 2,
-        "text": "Aggiungi il valore più alto tra gli SPECIAL scelti.",
+        "text": "+5 danni oltre il cap.",
         "effect": {
-          "type": "highest-selected"
+          "type": "damage",
+          "value": 5
         },
         "flavor": "Riavvolge la call finché qualcuno non dice la cosa giusta."
       },
       "passive": {
         "name": "Una Build su 14.000.605",
-        "text": "+2 se Intelligence è tra gli SPECIAL del turno.",
+        "text": "+2 danni se attacchi con Lucidità.",
         "effect": {
-          "type": "contains",
-          "stat": "I",
+          "type": "attack-stat-bonus",
+          "stat": "L",
           "value": 2
         },
         "flavor": "Ha visto tutti i futuri: in uno solo il deploy non rompe nulla."
@@ -851,16 +957,31 @@
       "quote": "Dormammu, sono venuto a contrattare lo scope.",
       "tags": [
         "arcano",
-        "intelligence",
+        "lucidità",
         "controllo"
-      ]
+      ],
+      "valerio": {
+        "V": 3,
+        "A": 5,
+        "L": 7,
+        "E": 6,
+        "R": 5,
+        "I": 7,
+        "O": 7
+      },
+      "combat": {
+        "attackPower": 75,
+        "defensePower": 95,
+        "draftCost": 5
+      },
+      "rarityRule": "minimo leggendaria per draftCost 5; rarità originale mantenuta se più alta"
     },
     {
       "id": "urss",
       "image": "urss.png",
       "name": "Compagno Borscht",
       "subtitle": "La burn‑down chart è collettiva.",
-      "rarity": "rara",
+      "rarity": "epica",
       "archetype": "resiliente",
       "theme": "grigio • rosso • piano quinquennale",
       "frame": {
@@ -868,41 +989,47 @@
         "accent": "#7f1d1d",
         "icon": "gear"
       },
-      "special": {
-        "S": 7,
-        "P": 5,
-        "E": 10,
-        "C": 6,
-        "I": 5,
-        "A": 4,
-        "L": 4
-      },
       "active": {
         "name": "Piano Quinquennale",
         "cost": 2,
-        "text": "+4 al punteggio.",
+        "text": "+4 danni oltre il cap.",
         "effect": {
-          "type": "score",
+          "type": "damage",
           "value": 4
         },
         "flavor": "Cinque anni di pianificazione compressi in una daily obbligatoria."
       },
       "passive": {
         "name": "Resistenza Sovietica",
-        "text": "+2 se Endurance è tra gli SPECIAL del turno.",
+        "text": "+2 danni se attacchi con Rigore.",
         "effect": {
-          "type": "contains",
-          "stat": "E",
+          "type": "attack-stat-bonus",
+          "stat": "R",
           "value": 2
         },
         "flavor": "La stanchezza è individuale, la consegna è collettiva."
       },
       "quote": "Nostro task. Nostro merge.",
       "tags": [
-        "endurance",
+        "rigore",
         "resistenza",
         "piano"
-      ]
+      ],
+      "valerio": {
+        "V": 7,
+        "A": 4,
+        "L": 5,
+        "E": 6,
+        "R": 9,
+        "I": 5,
+        "O": 4
+      },
+      "combat": {
+        "attackPower": 75,
+        "defensePower": 60,
+        "draftCost": 4
+      },
+      "rarityRule": "minimo epica per draftCost 4; rarità originale mantenuta se più alta"
     },
     {
       "id": "v",
@@ -917,41 +1044,47 @@
         "accent": "#991b1b",
         "icon": "mask"
       },
-      "special": {
-        "S": 5,
-        "P": 8,
-        "E": 5,
-        "C": 10,
-        "I": 8,
-        "A": 7,
-        "L": 6
-      },
       "active": {
         "name": "Congiura delle Polveri",
         "cost": 2,
-        "text": "Aggiungi Charisma se è tra gli SPECIAL scelti.",
+        "text": "+4 danni oltre il cap.",
         "effect": {
-          "type": "selected-stat",
-          "stat": "C"
+          "type": "damage",
+          "value": 4
         },
         "flavor": "Accende la miccia del discorso e fa saltare il silenzio."
       },
       "passive": {
         "name": "Ricorda il 5 Novembre",
-        "text": "+2 se Luck è tra gli SPECIAL del turno.",
+        "text": "+2 danni se attacchi con Opportunismo.",
         "effect": {
-          "type": "contains",
-          "stat": "L",
+          "type": "attack-stat-bonus",
+          "stat": "O",
           "value": 2
         },
         "flavor": "Quando la maschera appare, anche la probabilità sceglie la rivoluzione."
       },
       "quote": "Ricorda, ricorda, la deadline di novembre.",
       "tags": [
-        "charisma",
+        "ego",
         "gothic",
         "vendetta"
-      ]
+      ],
+      "valerio": {
+        "V": 5,
+        "A": 6,
+        "L": 6,
+        "E": 6,
+        "R": 5,
+        "I": 6,
+        "O": 6
+      },
+      "combat": {
+        "attackPower": 85,
+        "defensePower": 75,
+        "draftCost": 4
+      },
+      "rarityRule": "minimo epica per draftCost 4; rarità originale mantenuta se più alta"
     },
     {
       "id": "valcraft",
@@ -966,29 +1099,21 @@
         "accent": "#22d3ee",
         "icon": "pickaxe"
       },
-      "special": {
-        "S": 7,
-        "P": 5,
-        "E": 7,
-        "C": 4,
-        "I": 6,
-        "A": 5,
-        "L": 8
-      },
       "active": {
         "name": "Banco da Lavoro",
         "cost": 1,
-        "text": "Aggiungi il valore più basso tra gli SPECIAL scelti.",
+        "text": "+3 danni oltre il cap.",
         "effect": {
-          "type": "lowest-selected"
+          "type": "damage",
+          "value": 3
         },
         "flavor": "Con due assi e una mezza idea crafta comunque una soluzione."
       },
       "passive": {
         "name": "Redstone d'Emergenza",
-        "text": "+3 se ti restano 2 carte o meno.",
+        "text": "+3 danni se almeno 2 tue difese vengono colpite.",
         "effect": {
-          "type": "deck-low",
+          "type": "defense-hit-bonus",
           "count": 2,
           "value": 3
         },
@@ -997,9 +1122,24 @@
       "quote": "Non è un bug, è un blocco invisibile.",
       "tags": [
         "craft",
-        "luck",
+        "opportunismo",
         "voxel"
-      ]
+      ],
+      "valerio": {
+        "V": 6,
+        "A": 5,
+        "L": 6,
+        "E": 4,
+        "R": 7,
+        "I": 5,
+        "O": 7
+      },
+      "combat": {
+        "attackPower": 70,
+        "defensePower": 85,
+        "draftCost": 4
+      },
+      "rarityRule": "minimo epica per draftCost 4; rarità originale mantenuta se più alta"
     },
     {
       "id": "valdemort",
@@ -1014,31 +1154,22 @@
         "accent": "#10b981",
         "icon": "serpent"
       },
-      "special": {
-        "S": 4,
-        "P": 7,
-        "E": 5,
-        "C": 8,
-        "I": 10,
-        "A": 5,
-        "L": 3
-      },
       "active": {
         "name": "Maledizione Senza Nome",
         "cost": 3,
-        "text": "Aggiungi Intelligence se è tra gli SPECIAL scelti.",
+        "text": "+5 danni oltre il cap.",
         "effect": {
-          "type": "selected-stat",
-          "stat": "I"
+          "type": "damage",
+          "value": 5
         },
         "flavor": "Non la pronuncia nessuno, ma il ticket sparisce lo stesso."
       },
       "passive": {
         "name": "Sette Horcrux",
-        "text": "+2 se Charisma è tra gli SPECIAL del turno.",
+        "text": "+2 danni se attacchi con Ego.",
         "effect": {
-          "type": "contains",
-          "stat": "C",
+          "type": "attack-stat-bonus",
+          "stat": "E",
           "value": 2
         },
         "flavor": "Ha frammentato la responsabilità in repository apparentemente innocenti."
@@ -1046,9 +1177,24 @@
       "quote": "Avada Kedavra al ticket duplicato.",
       "tags": [
         "dark",
-        "intelligence",
+        "lucidità",
         "serpente"
-      ]
+      ],
+      "valerio": {
+        "V": 4,
+        "A": 5,
+        "L": 8,
+        "E": 8,
+        "R": 5,
+        "I": 7,
+        "O": 3
+      },
+      "combat": {
+        "attackPower": 80,
+        "defensePower": 80,
+        "draftCost": 4
+      },
+      "rarityRule": "minimo epica per draftCost 4; rarità originale mantenuta se più alta"
     },
     {
       "id": "valerio",
@@ -1063,31 +1209,22 @@
         "accent": "#1e3a8a",
         "icon": "compass"
       },
-      "special": {
-        "S": 6,
-        "P": 7,
-        "E": 6,
-        "C": 8,
-        "I": 7,
-        "A": 6,
-        "L": 10
-      },
       "active": {
         "name": "Viaggio dell'Eroe",
         "cost": 2,
-        "text": "+5 al punteggio.",
+        "text": "+5 danni oltre il cap.",
         "effect": {
-          "type": "score",
+          "type": "damage",
           "value": 5
         },
         "flavor": "Parte senza mappa e torna con la roadmap completata."
       },
       "passive": {
         "name": "Plot Armor del Protagonista",
-        "text": "+3 se Luck è tra gli SPECIAL del turno.",
+        "text": "+3 danni se attacchi con Opportunismo.",
         "effect": {
-          "type": "contains",
-          "stat": "L",
+          "type": "attack-stat-bonus",
+          "stat": "O",
           "value": 3
         },
         "flavor": "Quando tutto sembra perso, la scena taglia su di lui."
@@ -1095,16 +1232,31 @@
       "quote": "Semplicemente Valerio.",
       "tags": [
         "base",
-        "luck",
+        "opportunismo",
         "protagonista"
-      ]
+      ],
+      "valerio": {
+        "V": 5,
+        "A": 5,
+        "L": 6,
+        "E": 6,
+        "R": 6,
+        "I": 6,
+        "O": 6
+      },
+      "combat": {
+        "attackPower": 95,
+        "defensePower": 90,
+        "draftCost": 6
+      },
+      "rarityRule": "speciale: rarità unica mantenuta; costo draft comunque alto"
     },
     {
       "id": "vally",
       "image": "vally.png",
       "name": "Vally Allen",
       "subtitle": "Il PM più veloce vivo, almeno in stand‑up.",
-      "rarity": "epica",
+      "rarity": "leggendaria",
       "archetype": "speedster",
       "theme": "fulmine • rosso • speed force",
       "frame": {
@@ -1112,31 +1264,22 @@
         "accent": "#f59e0b",
         "icon": "lightning"
       },
-      "special": {
-        "S": 4,
-        "P": 7,
-        "E": 5,
-        "C": 9,
-        "I": 7,
-        "A": 10,
-        "L": 7
-      },
       "active": {
         "name": "Corsa nella Speed Force",
         "cost": 1,
-        "text": "+3 al punteggio.",
+        "text": "+3 danni oltre il cap.",
         "effect": {
-          "type": "score",
+          "type": "damage",
           "value": 3
         },
         "flavor": "Risolve così in fretta che il problema deve ancora rendersene conto."
       },
       "passive": {
         "name": "Paradosso Flashpoint",
-        "text": "+2 se Charisma è tra gli SPECIAL del turno.",
+        "text": "+2 danni se attacchi con Ego.",
         "effect": {
-          "type": "contains",
-          "stat": "C",
+          "type": "attack-stat-bonus",
+          "stat": "E",
           "value": 2
         },
         "flavor": "Cambia una virgola e riscrive la timeline della riunione."
@@ -1144,9 +1287,24 @@
       "quote": "Corro perché la call è già iniziata.",
       "tags": [
         "speed",
-        "charisma",
+        "ego",
         "fulmine"
-      ]
+      ],
+      "valerio": {
+        "V": 4,
+        "A": 6,
+        "L": 6,
+        "E": 6,
+        "R": 5,
+        "I": 6,
+        "O": 7
+      },
+      "combat": {
+        "attackPower": 95,
+        "defensePower": 70,
+        "draftCost": 5
+      },
+      "rarityRule": "minimo leggendaria per draftCost 5; rarità originale mantenuta se più alta"
     },
     {
       "id": "vratos",
@@ -1161,41 +1319,47 @@
         "accent": "#c2410c",
         "icon": "omega"
       },
-      "special": {
-        "S": 10,
-        "P": 5,
-        "E": 10,
-        "C": 3,
-        "I": 5,
-        "A": 6,
-        "L": 4
-      },
       "active": {
         "name": "Ascia del Leviatano",
         "cost": 3,
-        "text": "Aggiungi Strength se è tra gli SPECIAL scelti.",
+        "text": "+5 danni oltre il cap.",
         "effect": {
-          "type": "selected-stat",
-          "stat": "S"
+          "type": "damage",
+          "value": 5
         },
         "flavor": "Lancia la soluzione, la richiama e colpisce due volte."
       },
       "passive": {
         "name": "Rabbia di Sparta",
-        "text": "+2 se Endurance è tra gli SPECIAL del turno.",
+        "text": "+2 danni se attacchi con Rigore.",
         "effect": {
-          "type": "contains",
-          "stat": "E",
+          "type": "attack-stat-bonus",
+          "stat": "R",
           "value": 2
         },
         "flavor": "Più la call si allunga, più il suo silenzio fa danni."
       },
       "quote": "Non urlare. Prioritizza.",
       "tags": [
-        "strength",
-        "endurance",
+        "vigore",
+        "rigore",
         "mitico"
-      ]
+      ],
+      "valerio": {
+        "V": 8,
+        "A": 6,
+        "L": 5,
+        "E": 3,
+        "R": 9,
+        "I": 5,
+        "O": 4
+      },
+      "combat": {
+        "attackPower": 100,
+        "defensePower": 95,
+        "draftCost": 6
+      },
+      "rarityRule": "minimo mitica per draftCost 6; rarità originale mantenuta se più alta"
     },
     {
       "id": "vatriota",
@@ -1210,31 +1374,22 @@
         "accent": "#1d4ed8",
         "icon": "winged-v"
       },
-      "special": {
-        "S": 8,
-        "P": 7,
-        "E": 8,
-        "C": 9,
-        "I": 6,
-        "A": 6,
-        "L": 5
-      },
       "active": {
         "name": "Scudo della Patria",
         "cost": 2,
-        "text": "+4 al punteggio.",
+        "text": "+4 danni oltre il cap.",
         "effect": {
-          "type": "score",
+          "type": "damage",
           "value": 4
         },
         "flavor": "Si mette davanti al team e para anche le richieste non stimate."
       },
       "passive": {
         "name": "Giuramento Patriottico",
-        "text": "+2 se Charisma è tra gli SPECIAL del turno.",
+        "text": "+2 danni se attacchi con Ego.",
         "effect": {
-          "type": "contains",
-          "stat": "C",
+          "type": "attack-stat-bonus",
+          "stat": "E",
           "value": 2
         },
         "flavor": "Alza il morale come una bandiera sopra il project plan."
@@ -1242,9 +1397,24 @@
       "quote": "Per la patria, per il project plan.",
       "tags": [
         "eroe",
-        "charisma",
+        "ego",
         "leadership"
-      ]
+      ],
+      "valerio": {
+        "V": 5,
+        "A": 6,
+        "L": 6,
+        "E": 6,
+        "R": 6,
+        "I": 6,
+        "O": 5
+      },
+      "combat": {
+        "attackPower": 95,
+        "defensePower": 75,
+        "draftCost": 5
+      },
+      "rarityRule": "minimo leggendaria per draftCost 5; rarità originale mantenuta se più alta"
     },
     {
       "id": "the_veep",
@@ -1259,31 +1429,22 @@
         "accent": "#0f766e",
         "icon": "anchor"
       },
-      "special": {
-        "S": 8,
-        "P": 7,
-        "E": 9,
-        "C": 6,
-        "I": 5,
-        "A": 5,
-        "L": 5
-      },
       "active": {
         "name": "Marea del Re",
         "cost": 2,
-        "text": "Aggiungi Endurance se è tra gli SPECIAL scelti.",
+        "text": "+4 danni oltre il cap.",
         "effect": {
-          "type": "selected-stat",
-          "stat": "E"
+          "type": "damage",
+          "value": 4
         },
         "flavor": "Quando la pressione sale, lui risponde con un'onda più alta."
       },
       "passive": {
         "name": "Sentinella degli Abissi",
-        "text": "+2 se Perception è tra gli SPECIAL del turno.",
+        "text": "+2 danni se attacchi con Istinto.",
         "effect": {
-          "type": "contains",
-          "stat": "P",
+          "type": "attack-stat-bonus",
+          "stat": "I",
           "value": 2
         },
         "flavor": "Vede arrivare l'escalation molto prima che tocchi riva."
@@ -1291,9 +1452,24 @@
       "quote": "Non è mare mosso. È stakeholder alignment.",
       "tags": [
         "oceano",
-        "endurance",
+        "rigore",
         "controllo"
-      ]
+      ],
+      "valerio": {
+        "V": 6,
+        "A": 5,
+        "L": 5,
+        "E": 6,
+        "R": 6,
+        "I": 7,
+        "O": 5
+      },
+      "combat": {
+        "attackPower": 70,
+        "defensePower": 80,
+        "draftCost": 4
+      },
+      "rarityRule": "minimo epica per draftCost 4; rarità originale mantenuta se più alta"
     },
     {
       "id": "v_train",
@@ -1308,31 +1484,22 @@
         "accent": "#38bdf8",
         "icon": "v"
       },
-      "special": {
-        "S": 8,
-        "P": 6,
-        "E": 8,
-        "C": 6,
-        "I": 6,
-        "A": 7,
-        "L": 5
-      },
       "active": {
         "name": "Sprint da Record",
         "cost": 2,
-        "text": "Aggiungi Strength se è tra gli SPECIAL scelti.",
+        "text": "+4 danni oltre il cap.",
         "effect": {
-          "type": "selected-stat",
-          "stat": "S"
+          "type": "damage",
+          "value": 4
         },
         "flavor": "Carica il task come fosse l'ultima ripetizione della serie."
       },
       "passive": {
         "name": "Fiato da Maratoneta",
-        "text": "+2 se Endurance è tra gli SPECIAL del turno.",
+        "text": "+2 danni se attacchi con Rigore.",
         "effect": {
-          "type": "contains",
-          "stat": "E",
+          "type": "attack-stat-bonus",
+          "stat": "R",
           "value": 2
         },
         "flavor": "Gli altri chiedono pausa, lui aumenta l'inclinazione del tapis roulant."
@@ -1340,16 +1507,31 @@
       "quote": "No pain, no sprint.",
       "tags": [
         "sport",
-        "strength",
-        "endurance"
-      ]
+        "vigore",
+        "rigore"
+      ],
+      "valerio": {
+        "V": 5,
+        "A": 6,
+        "L": 6,
+        "E": 6,
+        "R": 6,
+        "I": 6,
+        "O": 5
+      },
+      "combat": {
+        "attackPower": 70,
+        "defensePower": 75,
+        "draftCost": 4
+      },
+      "rarityRule": "minimo epica per draftCost 4; rarità originale mantenuta se più alta"
     },
     {
       "id": "fire_project",
       "image": "ChatGPT Image 21 mag 2026, 16_59_16.png",
       "name": "Fire Project",
       "subtitle": "Quando il progetto brucia, lui posa.",
-      "rarity": "rara",
+      "rarity": "epica",
       "archetype": "piromane gestionale",
       "theme": "rosso • fuoco • city disaster",
       "frame": {
@@ -1357,31 +1539,22 @@
         "accent": "#dc2626",
         "icon": "flame"
       },
-      "special": {
-        "S": 7,
-        "P": 5,
-        "E": 8,
-        "C": 7,
-        "I": 4,
-        "A": 6,
-        "L": 5
-      },
       "active": {
         "name": "Incendio Controllato",
         "cost": 2,
-        "text": "+4 al punteggio.",
+        "text": "+4 danni oltre il cap.",
         "effect": {
-          "type": "score",
+          "type": "damage",
           "value": 4
         },
         "flavor": "Il progetto brucia, ma almeno lo fa seguendo una strategia."
       },
       "passive": {
         "name": "Sorriso tra le Fiamme",
-        "text": "+2 se Charisma è tra gli SPECIAL del turno.",
+        "text": "+2 danni se attacchi con Ego.",
         "effect": {
-          "type": "contains",
-          "stat": "C",
+          "type": "attack-stat-bonus",
+          "stat": "E",
           "value": 2
         },
         "flavor": "Rassicura tutti mentre il Gantt diventa cenere."
@@ -1389,9 +1562,24 @@
       "quote": "Non è in fiamme. È in fase di trasformazione.",
       "tags": [
         "fuoco",
-        "charisma",
+        "ego",
         "crisi"
-      ]
+      ],
+      "valerio": {
+        "V": 6,
+        "A": 6,
+        "L": 4,
+        "E": 7,
+        "R": 7,
+        "I": 5,
+        "O": 5
+      },
+      "combat": {
+        "attackPower": 85,
+        "defensePower": 65,
+        "draftCost": 4
+      },
+      "rarityRule": "minimo epica per draftCost 4; rarità originale mantenuta se più alta"
     },
     {
       "id": "project_boy",
@@ -1406,31 +1594,22 @@
         "accent": "#334155",
         "icon": "shield"
       },
-      "special": {
-        "S": 6,
-        "P": 7,
-        "E": 9,
-        "C": 5,
-        "I": 6,
-        "A": 5,
-        "L": 4
-      },
       "active": {
         "name": "Scudo del Wasteland",
         "cost": 2,
-        "text": "Aggiungi Endurance se è tra gli SPECIAL scelti.",
+        "text": "+4 danni oltre il cap.",
         "effect": {
-          "type": "selected-stat",
-          "stat": "E"
+          "type": "damage",
+          "value": 4
         },
         "flavor": "Blocca radiazioni, bug e richieste arrivate dopo la fine del mondo."
       },
       "passive": {
         "name": "Sopravvissuto del Vault",
-        "text": "+2 se Perception è tra gli SPECIAL del turno.",
+        "text": "+2 danni se attacchi con Istinto.",
         "effect": {
-          "type": "contains",
-          "stat": "P",
+          "type": "attack-stat-bonus",
+          "stat": "I",
           "value": 2
         },
         "flavor": "Nel silenzio delle rovine sente ancora vibrare un rischio."
@@ -1438,9 +1617,24 @@
       "quote": "Project boy, but make it endgame.",
       "tags": [
         "tank",
-        "endurance",
+        "rigore",
         "wasteland"
-      ]
+      ],
+      "valerio": {
+        "V": 6,
+        "A": 5,
+        "L": 6,
+        "E": 5,
+        "R": 7,
+        "I": 7,
+        "O": 4
+      },
+      "combat": {
+        "attackPower": 55,
+        "defensePower": 70,
+        "draftCost": 3
+      },
+      "rarityRule": "minimo rara per draftCost 3; rarità originale mantenuta se più alta"
     },
     {
       "id": "starproject",
@@ -1455,31 +1649,22 @@
         "accent": "#facc15",
         "icon": "star"
       },
-      "special": {
-        "S": 8,
-        "P": 6,
-        "E": 8,
-        "C": 9,
-        "I": 7,
-        "A": 5,
-        "L": 6
-      },
       "active": {
         "name": "Supernova del Project Plan",
         "cost": 3,
-        "text": "+5 al punteggio.",
+        "text": "+5 danni oltre il cap.",
         "effect": {
-          "type": "score",
+          "type": "damage",
           "value": 5
         },
         "flavor": "Quando esplode, illumina roadmap, stakeholder e responsabilità nascoste."
       },
       "passive": {
         "name": "Aura Solare",
-        "text": "+2 se Charisma è tra gli SPECIAL del turno.",
+        "text": "+2 danni se attacchi con Ego.",
         "effect": {
-          "type": "contains",
-          "stat": "C",
+          "type": "attack-stat-bonus",
+          "stat": "E",
           "value": 2
         },
         "flavor": "Brilla abbastanza da far sembrare possibile anche la deadline."
@@ -1487,9 +1672,24 @@
       "quote": "Brilla. Consegnare è opzionale, ma consigliato.",
       "tags": [
         "luce",
-        "charisma",
+        "ego",
         "eroe"
-      ]
+      ],
+      "valerio": {
+        "V": 5,
+        "A": 5,
+        "L": 6,
+        "E": 6,
+        "R": 6,
+        "I": 6,
+        "O": 6
+      },
+      "combat": {
+        "attackPower": 80,
+        "defensePower": 90,
+        "draftCost": 5
+      },
+      "rarityRule": "minimo leggendaria per draftCost 5; rarità originale mantenuta se più alta"
     },
     {
       "id": "black_val",
@@ -1504,31 +1704,22 @@
         "accent": "#7f1d1d",
         "icon": "v"
       },
-      "special": {
-        "S": 8,
-        "P": 7,
-        "E": 7,
-        "C": 5,
-        "I": 6,
-        "A": 7,
-        "L": 4
-      },
       "active": {
         "name": "Operazione Blackout",
         "cost": 3,
-        "text": "Aggiungi Strength se è tra gli SPECIAL scelti.",
+        "text": "+5 danni oltre il cap.",
         "effect": {
-          "type": "selected-stat",
-          "stat": "S"
+          "type": "damage",
+          "value": 5
         },
         "flavor": "Spegne le luci, chiude il problema, lascia solo il risultato."
       },
       "passive": {
         "name": "Protocollo da War Room",
-        "text": "+2 se Endurance è tra gli SPECIAL del turno.",
+        "text": "+2 danni se attacchi con Rigore.",
         "effect": {
-          "type": "contains",
-          "stat": "E",
+          "type": "attack-stat-bonus",
+          "stat": "R",
           "value": 2
         },
         "flavor": "Resta in piedi finché anche il piano C chiede rinforzi."
@@ -1536,9 +1727,24 @@
       "quote": "Non sono il piano B. Sono il piano finale.",
       "tags": [
         "dark",
-        "strength",
+        "vigore",
         "antihero"
-      ]
+      ],
+      "valerio": {
+        "V": 6,
+        "A": 6,
+        "L": 6,
+        "E": 5,
+        "R": 6,
+        "I": 7,
+        "O": 4
+      },
+      "combat": {
+        "attackPower": 80,
+        "defensePower": 90,
+        "draftCost": 5
+      },
+      "rarityRule": "minimo leggendaria per draftCost 5; rarità originale mantenuta se più alta"
     },
     {
       "id": "valarot",
@@ -1553,30 +1759,21 @@
         "accent": "#f59e0b",
         "icon": "dragonball"
       },
-      "special": {
-        "S": 9,
-        "P": 7,
-        "E": 9,
-        "C": 6,
-        "I": 5,
-        "A": 8,
-        "L": 6
-      },
       "active": {
         "name": "Kamehameha del Backlog",
         "cost": 3,
-        "text": "Aggiungi Strength se è tra gli SPECIAL scelti.",
+        "text": "+5 danni oltre il cap.",
         "effect": {
-          "type": "selected-stat",
-          "stat": "S"
+          "type": "damage",
+          "value": 5
         },
         "flavor": "Carica energia per tre episodi e cancella il blocker in uno."
       },
       "passive": {
         "name": "Zenkai Deadline",
-        "text": "+3 se ti restano 2 carte o meno.",
+        "text": "+3 danni se almeno 2 tue difese vengono colpite.",
         "effect": {
-          "type": "deck-low",
+          "type": "defense-hit-bonus",
           "count": 2,
           "value": 3
         },
@@ -1585,9 +1782,24 @@
       "quote": "Il mio livello di priorità è oltre 9000.",
       "tags": [
         "saiyan",
-        "strength",
+        "vigore",
         "late-game"
-      ]
+      ],
+      "valerio": {
+        "V": 5,
+        "A": 6,
+        "L": 5,
+        "E": 6,
+        "R": 6,
+        "I": 6,
+        "O": 6
+      },
+      "combat": {
+        "attackPower": 95,
+        "defensePower": 85,
+        "draftCost": 5
+      },
+      "rarityRule": "minimo leggendaria per draftCost 5; rarità originale mantenuta se più alta"
     },
     {
       "id": "buulerio",
@@ -1602,31 +1814,22 @@
         "accent": "#ec4899",
         "icon": "majin"
       },
-      "special": {
-        "S": 8,
-        "P": 4,
-        "E": 10,
-        "C": 8,
-        "I": 4,
-        "A": 4,
-        "L": 8
-      },
       "active": {
         "name": "Raggio Caramella",
         "cost": 2,
-        "text": "+4 al punteggio.",
+        "text": "+4 danni oltre il cap.",
         "effect": {
-          "type": "score",
+          "type": "damage",
           "value": 4
         },
         "flavor": "Trasforma il problema in dolce e lo assorbe senza aprire Jira."
       },
       "passive": {
         "name": "Rigenerazione Majin",
-        "text": "+2 se Endurance è tra gli SPECIAL del turno.",
+        "text": "+2 danni se attacchi con Rigore.",
         "effect": {
-          "type": "contains",
-          "stat": "E",
+          "type": "attack-stat-bonus",
+          "stat": "R",
           "value": 2
         },
         "flavor": "Lo buttano giù in call, torna rosa e più pericoloso."
@@ -1634,9 +1837,24 @@
       "quote": "Buu vuole approvazione.",
       "tags": [
         "majin",
-        "endurance",
+        "rigore",
         "meme"
-      ]
+      ],
+      "valerio": {
+        "V": 7,
+        "A": 4,
+        "L": 4,
+        "E": 7,
+        "R": 7,
+        "I": 4,
+        "O": 7
+      },
+      "combat": {
+        "attackPower": 85,
+        "defensePower": 70,
+        "draftCost": 4
+      },
+      "rarityRule": "minimo epica per draftCost 4; rarità originale mantenuta se più alta"
     },
     {
       "id": "valinyu_squad",
@@ -1651,30 +1869,21 @@
         "accent": "#65a30d",
         "icon": "pose"
       },
-      "special": {
-        "S": 7,
-        "P": 7,
-        "E": 7,
-        "C": 10,
-        "I": 5,
-        "A": 8,
-        "L": 6
-      },
       "active": {
         "name": "Posa Speciale Valinyu",
         "cost": 3,
-        "text": "Aggiungi Charisma se è tra gli SPECIAL scelti.",
+        "text": "+5 danni oltre il cap.",
         "effect": {
-          "type": "selected-stat",
-          "stat": "C"
+          "type": "damage",
+          "value": 5
         },
         "flavor": "La posa dura troppo, ma nessuno osa interromperla."
       },
       "passive": {
         "name": "Coreografia da Squadra",
-        "text": "+2 se Agility è tra gli SPECIAL del turno.",
+        "text": "+2 danni se attacchi con Astuzia.",
         "effect": {
-          "type": "contains",
+          "type": "attack-stat-bonus",
           "stat": "A",
           "value": 2
         },
@@ -1683,9 +1892,24 @@
       "quote": "Squad, non force. Rispetto per il naming.",
       "tags": [
         "team",
-        "charisma",
+        "ego",
         "namek"
-      ]
+      ],
+      "valerio": {
+        "V": 5,
+        "A": 6,
+        "L": 5,
+        "E": 6,
+        "R": 6,
+        "I": 6,
+        "O": 6
+      },
+      "combat": {
+        "attackPower": 80,
+        "defensePower": 100,
+        "draftCost": 5
+      },
+      "rarityRule": "minimo leggendaria per draftCost 5; rarità originale mantenuta se più alta"
     },
     {
       "id": "cellerio",
@@ -1700,31 +1924,22 @@
         "accent": "#84cc16",
         "icon": "bio-core"
       },
-      "special": {
-        "S": 8,
-        "P": 8,
-        "E": 8,
-        "C": 5,
-        "I": 9,
-        "A": 7,
-        "L": 4
-      },
       "active": {
         "name": "Assorbimento Perfetto",
         "cost": 3,
-        "text": "Aggiungi Intelligence se è tra gli SPECIAL scelti.",
+        "text": "+5 danni oltre il cap.",
         "effect": {
-          "type": "selected-stat",
-          "stat": "I"
+          "type": "damage",
+          "value": 5
         },
         "flavor": "Incorpora feedback, bug e persone troppo lente a rispondere."
       },
       "passive": {
         "name": "Adattamento Bio-Android",
-        "text": "+2 se Perception è tra gli SPECIAL del turno.",
+        "text": "+2 danni se attacchi con Istinto.",
         "effect": {
-          "type": "contains",
-          "stat": "P",
+          "type": "attack-stat-bonus",
+          "stat": "I",
           "value": 2
         },
         "flavor": "Capisce il pattern, evolve e ti spiega perché era previsto."
@@ -1732,9 +1947,24 @@
       "quote": "La perfezione richiede solo un ultimo fix.",
       "tags": [
         "cell",
-        "intelligence",
+        "lucidità",
         "perfection"
-      ]
+      ],
+      "valerio": {
+        "V": 6,
+        "A": 6,
+        "L": 6,
+        "E": 5,
+        "R": 6,
+        "I": 7,
+        "O": 4
+      },
+      "combat": {
+        "attackPower": 90,
+        "defensePower": 100,
+        "draftCost": 6
+      },
+      "rarityRule": "minimo mitica per draftCost 6; rarità originale mantenuta se più alta"
     },
     {
       "id": "vallicolo",
@@ -1749,31 +1979,22 @@
         "accent": "#22c55e",
         "icon": "dragon"
       },
-      "special": {
-        "S": 6,
-        "P": 9,
-        "E": 8,
-        "C": 5,
-        "I": 8,
-        "A": 6,
-        "L": 4
-      },
       "active": {
         "name": "Makankosappo Mentale",
         "cost": 2,
-        "text": "Aggiungi Perception se è tra gli SPECIAL scelti.",
+        "text": "+4 danni oltre il cap.",
         "effect": {
-          "type": "selected-stat",
-          "stat": "P"
+          "type": "damage",
+          "value": 4
         },
         "flavor": "Concentra tutto in un punto e buca il requisito ambiguo."
       },
       "passive": {
         "name": "Meditazione Namecciana",
-        "text": "+2 se Endurance è tra gli SPECIAL del turno.",
+        "text": "+2 danni se attacchi con Rigore.",
         "effect": {
-          "type": "contains",
-          "stat": "E",
+          "type": "attack-stat-bonus",
+          "stat": "R",
           "value": 2
         },
         "flavor": "Resta immobile, ma intanto regge metà dello scope."
@@ -1781,9 +2002,24 @@
       "quote": "Parlo poco. Reviewo tutto.",
       "tags": [
         "namek",
-        "perception",
+        "istinto",
         "mentor"
-      ]
+      ],
+      "valerio": {
+        "V": 6,
+        "A": 6,
+        "L": 6,
+        "E": 5,
+        "R": 6,
+        "I": 7,
+        "O": 4
+      },
+      "combat": {
+        "attackPower": 70,
+        "defensePower": 80,
+        "draftCost": 4
+      },
+      "rarityRule": "minimo epica per draftCost 4; rarità originale mantenuta se più alta"
     },
     {
       "id": "gogerio",
@@ -1798,31 +2034,22 @@
         "accent": "#ef4444",
         "icon": "fusion"
       },
-      "special": {
-        "S": 10,
-        "P": 7,
-        "E": 8,
-        "C": 7,
-        "I": 6,
-        "A": 10,
-        "L": 5
-      },
       "active": {
         "name": "Big Bang Kamehameha",
         "cost": 3,
-        "text": "Aggiungi Agility se è tra gli SPECIAL scelti.",
+        "text": "+5 danni oltre il cap.",
         "effect": {
-          "type": "selected-stat",
-          "stat": "A"
+          "type": "damage",
+          "value": 5
         },
         "flavor": "Troppo veloce per essere stimato, troppo potente per essere ignorato."
       },
       "passive": {
         "name": "Danza della Fusione",
-        "text": "+3 se Strength è tra gli SPECIAL del turno.",
+        "text": "+3 danni se attacchi con Vigore.",
         "effect": {
-          "type": "contains",
-          "stat": "S",
+          "type": "attack-stat-bonus",
+          "stat": "V",
           "value": 3
         },
         "flavor": "Due problemi entrano, un'unica soluzione arrogante esce."
@@ -1830,9 +2057,24 @@
       "quote": "Non sono due persone. Sono due deadline fuse male.",
       "tags": [
         "fusion",
-        "strength",
-        "agility"
-      ]
+        "vigore",
+        "astuzia"
+      ],
+      "valerio": {
+        "V": 5,
+        "A": 6,
+        "L": 6,
+        "E": 6,
+        "R": 6,
+        "I": 6,
+        "O": 5
+      },
+      "combat": {
+        "attackPower": 100,
+        "defensePower": 75,
+        "draftCost": 5
+      },
+      "rarityRule": "minimo leggendaria per draftCost 5; rarità originale mantenuta se più alta"
     }
   ]
 }

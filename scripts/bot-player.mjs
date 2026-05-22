@@ -1,6 +1,7 @@
 const lobbyId = process.argv[2];
 const holdMs = Number(process.argv[3] ?? 15000);
 const url = process.env.BOT_URL ?? "ws://localhost:3000";
+const valerioKeys = ["V", "A", "L", "E", "R", "I", "O"];
 
 if (!lobbyId) {
   console.error("Usage: node scripts/bot-player.mjs <LOBBY_ID> [holdMs]");
@@ -14,15 +15,17 @@ await runDraft(bot);
 
 const selectState = await waitFor(bot, (state) => state.lobby?.phase === "select", 30000);
 if (selectState.lobby.self.isActive) {
-  send(bot, "selectCard", { cardId: selectState.lobby.self.deck[0].id });
+  const card = firstSelectableCard(selectState);
+  send(bot, "selectCard", { cardId: card.id });
 }
 
-const fightState = await waitFor(bot, (state) => state.lobby?.phase === "fight", 30000);
-console.log(`bot ready in ${fightState.lobby.id}`);
+const planState = await waitFor(bot, (state) => state.lobby?.phase === "plan", 30000);
+console.log(`bot ready in ${planState.lobby.id}`);
 
 await new Promise((resolve) => setTimeout(resolve, holdMs));
-if (fightState.lobby.self.isActive) {
-  send(bot, "submitFight", { useActive: false });
+const latest = bot.states.at(-1);
+if (latest?.lobby?.phase === "plan" && latest.lobby.self.isActive && !latest.lobby.self.selected?.attacks) {
+  send(bot, "submitPlan", makePlanPayload(latest.lobby.self.selected.selectedCard));
 }
 await new Promise((resolve) => setTimeout(resolve, 500));
 bot.ws.close();
@@ -70,7 +73,7 @@ async function runDraft(client) {
     }
 
     if (state.lobby.self.isCurrentDrafter) {
-      const pick = state.lobby.draft.pool.find((item) => item.isAvailable)?.card.id;
+      const pick = state.lobby.draft.pool.find((item) => item.canPick)?.card.id;
       if (pick) {
         send(client, "draftCard", { cardId: pick });
         await new Promise((resolve) => setTimeout(resolve, 25));
@@ -79,6 +82,54 @@ async function runDraft(client) {
       await new Promise((resolve) => setTimeout(resolve, 80));
     }
   }
+}
+
+function firstSelectableCard(state) {
+  const self = state.lobby.self;
+  const card = self.deck.find((candidate) => Number(self.cooldowns?.[candidate.id] ?? 0) <= 0);
+  if (!card) {
+    throw new Error("No selectable card");
+  }
+  return card;
+}
+
+function makePlanPayload(card) {
+  return {
+    attacks: distribute(topStats(card, ["V", "A", "I", "O"]), attackPool(card)),
+    defenses: distribute(topStats(card, ["L", "E", "R", "V"]), defensePool(card)),
+    useActive: false
+  };
+}
+
+function topStats(card, preferred) {
+  const valerio = card.valerio ?? {};
+  return [...valerioKeys]
+    .sort((left, right) => {
+      const diff = Number(valerio[right] ?? 0) - Number(valerio[left] ?? 0);
+      if (diff !== 0) return diff;
+      return preferred.indexOf(left) - preferred.indexOf(right);
+    })
+    .slice(0, 3);
+}
+
+function distribute(stats, pool) {
+  const base = Math.floor(pool / stats.length);
+  let rest = pool - base * stats.length;
+  return Object.fromEntries(
+    stats.map((stat) => {
+      const value = base + (rest > 0 ? 1 : 0);
+      rest -= 1;
+      return [stat, value];
+    })
+  );
+}
+
+function attackPool(card) {
+  return Math.floor((20 * Number(card.combat?.attackPower ?? 0)) / 100);
+}
+
+function defensePool(card) {
+  return Math.floor((20 * Number(card.combat?.defensePower ?? 0)) / 100);
 }
 
 async function waitFor(client, predicate, timeoutMs = 5000) {

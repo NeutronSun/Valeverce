@@ -1,4 +1,5 @@
 const url = process.env.SMOKE_URL ?? "ws://localhost:3000";
+const valerioKeys = ["V", "A", "L", "E", "R", "I", "O"];
 
 const playerOne = await connectPlayer("Smoke One");
 const playerTwo = await connectPlayer("Smoke Two");
@@ -15,19 +16,23 @@ await runDraft(playerOne, playerTwo);
 const stateOne = await waitFor(playerOne, (state) => state.lobby?.phase === "select");
 const stateTwo = await waitFor(playerTwo, (state) => state.lobby?.phase === "select");
 
-send(playerOne, "selectCard", { cardId: stateOne.lobby.self.deck[0].id });
-send(playerTwo, "selectCard", { cardId: stateTwo.lobby.self.deck[0].id });
+send(playerOne, "selectCard", { cardId: firstSelectableCard(stateOne).id });
+send(playerTwo, "selectCard", { cardId: firstSelectableCard(stateTwo).id });
 
-await waitFor(playerOne, (state) => state.lobby?.phase === "fight" && state.lobby.players.every((player) => player.selectedCard));
-await waitFor(playerTwo, (state) => state.lobby?.phase === "fight" && state.lobby.players.every((player) => player.selectedCard));
+const planOne = await waitFor(playerOne, (state) => state.lobby?.phase === "plan");
+const planTwo = await waitFor(playerTwo, (state) => state.lobby?.phase === "plan");
 
-send(playerOne, "submitFight", { useActive: false });
-send(playerTwo, "submitFight", { useActive: false });
+send(playerOne, "submitPlan", makePlanPayload(planOne.lobby.self.selected.selectedCard));
+send(playerTwo, "submitPlan", makePlanPayload(planTwo.lobby.self.selected.selectedCard));
 
 const reveal = await waitFor(playerOne, (state) => ["reveal", "ended"].includes(state.lobby?.phase));
 
 if (!reveal.lobby.lastResult) {
   throw new Error("Missing result in reveal state");
+}
+
+if (!reveal.lobby.lastResult.plays.every((play) => play.attackLines?.length === 3)) {
+  throw new Error("Missing attack line details");
 }
 
 console.log(`ok lobby=${lobbyId} phase=${reveal.lobby.phase} winner=${reveal.lobby.lastResult.winnerId ?? "tie"}`);
@@ -87,9 +92,10 @@ async function runDraft(...players) {
       (nextState) => nextState.lobby?.phase === "draft" && nextState.lobby.draft.currentPlayerId === currentPlayerId,
       10000
     );
-    const pick = playerState.lobby.draft.pool.find((item) => item.isAvailable)?.card.id;
+    const pick = playerState.lobby.draft.pool.find((item) => item.canPick)?.card.id;
     if (!pick) {
-      throw new Error("No draft pick available");
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      continue;
     }
     send(player, "draftCard", { cardId: pick });
     const takenCount = state.lobby.draft.taken.length;
@@ -101,6 +107,54 @@ async function runDraft(...players) {
       10000
     );
   }
+}
+
+function firstSelectableCard(state) {
+  const self = state.lobby.self;
+  const card = self.deck.find((candidate) => Number(self.cooldowns?.[candidate.id] ?? 0) <= 0);
+  if (!card) {
+    throw new Error("No selectable card");
+  }
+  return card;
+}
+
+function makePlanPayload(card) {
+  return {
+    attacks: distribute(topStats(card, ["V", "A", "I", "O"]), attackPool(card)),
+    defenses: distribute(topStats(card, ["L", "E", "R", "V"]), defensePool(card)),
+    useActive: false
+  };
+}
+
+function topStats(card, preferred) {
+  const valerio = card.valerio ?? {};
+  return [...valerioKeys]
+    .sort((left, right) => {
+      const diff = Number(valerio[right] ?? 0) - Number(valerio[left] ?? 0);
+      if (diff !== 0) return diff;
+      return preferred.indexOf(left) - preferred.indexOf(right);
+    })
+    .slice(0, 3);
+}
+
+function distribute(stats, pool) {
+  const base = Math.floor(pool / stats.length);
+  let rest = pool - base * stats.length;
+  return Object.fromEntries(
+    stats.map((stat) => {
+      const value = base + (rest > 0 ? 1 : 0);
+      rest -= 1;
+      return [stat, value];
+    })
+  );
+}
+
+function attackPool(card) {
+  return Math.floor((20 * Number(card.combat?.attackPower ?? 0)) / 100);
+}
+
+function defensePool(card) {
+  return Math.floor((20 * Number(card.combat?.defensePower ?? 0)) / 100);
 }
 
 async function waitFor(client, predicate, timeoutMs = 5000) {

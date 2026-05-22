@@ -18,6 +18,7 @@ const appState = {
   lastError: "",
   playerName: localStorage.getItem("vtg:name") || "",
   selectedCardId: "",
+  draftPreviewCardId: "",
   plan: {
     cardId: "",
     attacks: {},
@@ -101,6 +102,19 @@ class GameApp extends HTMLElement {
 
     if (!lobby) {
       appState.selectedCardId = "";
+      appState.draftPreviewCardId = "";
+      resetPlan();
+      return;
+    }
+
+    if (lobby.phase === "draft") {
+      const pool = lobby.draft?.pool ?? [];
+      const firstVisible = pool.find((item) => item.canPick)?.card?.id ?? pool.find((item) => item.isAvailable)?.card?.id ?? pool[0]?.card?.id ?? "";
+      const previewItem = pool.find((item) => item.card?.id === appState.draftPreviewCardId);
+      if (!previewItem || !previewItem.isAvailable) {
+        appState.draftPreviewCardId = firstVisible;
+      }
+      appState.selectedCardId = "";
       resetPlan();
       return;
     }
@@ -177,9 +191,9 @@ class GameApp extends HTMLElement {
       return captureInputFocus(active, { kind: "chat" });
     }
 
-    if (active?.dataset?.action === "plan-points") {
+    if (active?.dataset?.action === "plan-slider") {
       return captureInputFocus(active, {
-        kind: "plan-points",
+        kind: "plan-slider",
         planKind: active.dataset.planKind,
         planStat: active.dataset.planStat
       });
@@ -200,9 +214,9 @@ class GameApp extends HTMLElement {
     if (focusState.kind === "chat") {
       input = this.querySelector('[data-action="chat"] input');
     }
-    if (focusState.kind === "plan-points") {
+    if (focusState.kind === "plan-slider") {
       input = this.querySelector(
-        `[data-action="plan-points"][data-plan-kind="${focusState.planKind}"][data-plan-stat="${focusState.planStat}"]`
+        `[data-action="plan-slider"][data-plan-kind="${focusState.planKind}"][data-plan-stat="${focusState.planStat}"]`
       );
     }
 
@@ -212,7 +226,7 @@ class GameApp extends HTMLElement {
 
     input.value = focusState.value;
     input.focus();
-    if (typeof focusState.start === "number" && typeof focusState.end === "number") {
+    if (typeof focusState.start === "number" && typeof focusState.end === "number" && input.type !== "range") {
       input.setSelectionRange(focusState.start, focusState.end);
     }
   }
@@ -289,25 +303,18 @@ class GameApp extends HTMLElement {
   renderLobby(lobby, snapshot) {
     const isHost = lobby.hostId === snapshot.selfId;
     return `
-      <section class="panel lobby-head">
-        <div class="lobby-player-summary">
-          <div>
-            <p class="eyebrow">Player</p>
-            <h2>${lobby.players.length}/${snapshot.settings.maxPlayers}</h2>
-          </div>
-          <div class="top-players">
-            ${lobby.players.map((player) => renderTopPlayer(player, lobby.phase, snapshot.settings)).join("")}
-          </div>
+      <section class="panel match-head">
+        <div>
+          <p class="eyebrow">${escapeHtml(phaseLabel(lobby.phase))}</p>
+          <h2>${lobby.players.length}/${snapshot.settings.maxPlayers} player</h2>
         </div>
         <div class="actions">
-          ${isHost && lobby.phase === "lobby" ? `<button type="button" data-action="start">Inizia</button>` : ""}
-          ${isHost && lobby.phase === "reveal" ? `<button type="button" data-action="next-round">Prossimo turno</button>` : ""}
-          ${isHost && lobby.phase === "ended" ? `<button type="button" data-action="restart">Reset</button>` : ""}
           <button type="button" class="ghost" data-action="leave">Esci</button>
         </div>
       </section>
       <section class="layout">
         <aside class="panel left-rail">
+          ${this.renderPlayerBoard(lobby, snapshot)}
           ${this.renderChat(lobby)}
         </aside>
         <section class="panel table">
@@ -317,15 +324,35 @@ class GameApp extends HTMLElement {
           ${this.renderSidePanel(lobby, snapshot)}
         </aside>
       </section>
+      ${this.renderActionDock(lobby, snapshot, isHost)}
+    `;
+  }
+
+  renderPlayerBoard(lobby, snapshot) {
+    return `
+      <div class="player-board">
+        <div class="terminal-title">
+          <span>avversari</span>
+          <strong>${Math.max(0, lobby.players.length - 1)}</strong>
+        </div>
+        <div class="top-players">
+          ${
+            lobby.players
+              .filter((player) => player.id !== snapshot.selfId)
+              .map((player) => renderTopPlayer(player, lobby.phase, snapshot.settings))
+              .join("") || `<p class="empty compact">Nessun avversario.</p>`
+          }
+        </div>
+      </div>
     `;
   }
 
   renderChat(lobby) {
     return `
       <div class="chat">
-        <div class="section-title">
-          <h2>Chat</h2>
-          <span>${lobby.chat?.length ?? 0}</span>
+        <div class="chat-head">
+          <span>chat</span>
+          <strong>${lobby.chat?.length ?? 0}</strong>
         </div>
         <div class="chat-log">
           ${(lobby.chat ?? []).map((message) => renderChatMessage(message)).join("")}
@@ -338,6 +365,29 @@ class GameApp extends HTMLElement {
     `;
   }
 
+  renderActionDock(lobby, snapshot, isHost) {
+    const self = lobby.self;
+    const action = getDockAction(lobby, snapshot, isHost);
+    return `
+      <section class="action-dock">
+        <div class="dock-player">
+          <strong>${escapeHtml(self?.name ?? "Player")}</strong>
+          <div class="dock-bars">
+            ${renderMiniResource("PV", self?.health ?? 0, self?.maxHealth ?? snapshot.settings.maxHealth, "health")}
+            ${renderMiniResource("Mana", self?.mana ?? 0, snapshot.settings.maxMana, "mana")}
+          </div>
+        </div>
+        <div class="dock-state">
+          <span>${escapeHtml(action.state)}</span>
+          <small>${escapeHtml(action.detail)}</small>
+        </div>
+        <button type="button" data-action="${escapeAttr(action.action)}" data-card-id="${escapeAttr(action.cardId ?? "")}" ${action.enabled ? "" : "disabled"}>
+          ${escapeHtml(action.label)}
+        </button>
+      </section>
+    `;
+  }
+
   renderSidePanel(lobby, snapshot) {
     const self = lobby.self;
     const activePlayers = getActivePlayers(lobby);
@@ -347,15 +397,14 @@ class GameApp extends HTMLElement {
     const opponentCard = opponent?.selectedCard;
 
     if (lobby.phase === "draft") {
+      const previewCard = getDraftPreviewCard(lobby);
       return `
-        <div class="side-summary">
-          <p class="eyebrow">Draft</p>
-          <h2>${self?.isCurrentDrafter ? "Tocca a te" : "In attesa"}</h2>
-          <p>${escapeHtml(getPlayerName(lobby, lobby.draft?.currentPlayerId) ?? "Player")} sta scegliendo.</p>
-          <div class="summary-line"><span>Carte</span><strong>${self?.deck.length ?? 0}/${lobby.draft?.target ?? 6}</strong></div>
-          <div class="summary-line"><span>Budget usato</span><strong>${self?.draftSpent ?? 0}/${self?.draftBudget ?? 20}</strong></div>
+        <div class="side-summary card-inspector">
+          <p class="eyebrow">Inspector</p>
+          ${previewCard ? renderInspectorCard(previewCard, "Carta draft") : `<p class="empty">Seleziona una carta.</p>`}
+          <div class="summary-line"><span>Turno</span><strong>${escapeHtml(getPlayerName(lobby, lobby.draft?.currentPlayerId) ?? "Player")}</strong></div>
+          <div class="summary-line"><span>Budget</span><strong>${self?.draftSpent ?? 0}/${self?.draftBudget ?? 20}</strong></div>
           <div class="summary-line"><span>Rimanente</span><strong>${self?.draftBudgetRemaining ?? 0}</strong></div>
-          <div class="summary-line"><span>Pool rimasto</span><strong>${(lobby.draft?.pool ?? []).filter((item) => item.isAvailable).length}</strong></div>
         </div>
       `;
     }
@@ -437,14 +486,14 @@ class GameApp extends HTMLElement {
       <div class="mana-line">
         <span>Budget ${self?.draftSpent ?? 0}/${self?.draftBudget ?? 20}</span>
         <span>Rimanente ${self?.draftBudgetRemaining ?? 0}</span>
-        <span class="muted">Costo carta rispettato dal server</span>
+        <span class="muted">Clicca una carta per leggerla a destra, poi drafta.</span>
       </div>
       <div class="draft-picked">
         <strong>Le tue carte draftate</strong>
         <div>${(self?.deck ?? []).map((card) => `<span>${escapeHtml(card.name)}</span>`).join("") || "<span>Nessuna</span>"}</div>
       </div>
       <div class="draft-pool">
-        ${(lobby.draft?.pool ?? []).map((item) => renderDraftCard(item)).join("")}
+        ${(lobby.draft?.pool ?? []).map((item) => renderDraftCard(item, item.card?.id === appState.draftPreviewCardId)).join("")}
       </div>
     `;
   }
@@ -477,9 +526,6 @@ class GameApp extends HTMLElement {
               <span>${selectableCount} carte disponibili</span>
               <span>${Object.keys(self.cooldowns ?? {}).length} in cooldown</span>
               <span class="muted">${alreadyPlayed ? "Carta coperta scelta" : "Scegli una carta coperta"}</span>
-              <button type="button" data-action="submit-card" ${selectedCard && !alreadyPlayed ? "" : "disabled"}>
-                ${alreadyPlayed ? "Carta scelta" : "Conferma carta"}
-              </button>
             </div>
             <div class="hand-section">
               <div class="section-title">
@@ -515,6 +561,7 @@ class GameApp extends HTMLElement {
     const pairLabel = activePlayers.map((player) => player.name).join(" vs ");
     const card = getCardById(self?.selected?.cardId);
     const opponent = opponents[0];
+    const opponentCard = opponent?.selectedCard;
 
     return `
       <div class="turn-head">
@@ -529,50 +576,20 @@ class GameApp extends HTMLElement {
       </div>
       <div class="fight-flow">
         <div><strong>1</strong><span>Carte rivelate</span></div>
-        <div><strong>2</strong><span>Distribuisci attacco e difesa</span></div>
+        <div><strong>2</strong><span>Attacca sopra, difendi sotto</span></div>
         <div><strong>3</strong><span>Reveal Breccia e danno PV</span></div>
-      </div>
-      <div class="fight-board ${isParticipant ? "" : "is-spectator"} plan-board">
-        ${
-          isParticipant
-            ? `
-              <section class="fight-lane is-you">
-                <div class="fight-lane-title">
-                  <span class="role-pill is-you">TU</span>
-                  <div>
-                    <strong>La tua carta</strong>
-                    <small>${escapeHtml(selfPlayer.name)}</small>
-                  </div>
-                </div>
-                ${renderChosenCard(selfPlayer, snapshot.selfId)}
-              </section>
-            `
-            : ""
-        }
-        <section class="fight-lane is-opponents">
-          <div class="fight-lane-title">
-            <span class="role-pill is-opponent">${escapeHtml(isParticipant ? opponent?.name ?? "Avversario" : "DUELLO")}</span>
-            <div>
-              <strong>Carte rivelate</strong>
-              <small>${escapeHtml(opponents.map((player) => player.name).join(" vs "))}</small>
-            </div>
-          </div>
-          <div class="fighters">
-            ${opponents.map((player) => renderChosenCard(player, snapshot.selfId)).join("")}
-          </div>
-        </section>
       </div>
       ${
         isParticipant && self?.isActive && card
           ? selfPlayer.hasSubmittedPlan
             ? `<p class="notice">Piano confermato. In attesa dell'avversario.</p>`
-            : this.renderPlanControls(lobby, card, opponent?.selectedCard)
+            : this.renderPlanControls(lobby, card, opponent, opponentCard, selfPlayer, snapshot.selfId)
           : `<div class="waiting"><h2>Lobby duello</h2><p>I player attivi stanno distribuendo attacchi e difese.</p></div>`
       }
     `;
   }
 
-  renderPlanControls(lobby, card, opponentCard) {
+  renderPlanControls(lobby, card, opponent, opponentCard, selfPlayer, selfId) {
     const validation = getPlanValidation(lobby, card);
     const attackPool = getAttackPool(card);
     const defensePool = getDefensePool(card);
@@ -581,25 +598,49 @@ class GameApp extends HTMLElement {
 
     return `
       <section class="plan-controls">
-        <div class="plan-grid">
-          ${renderPlanDistribution({
-            title: "Attacchi",
-            kind: "attacks",
-            card,
-            opponentCard,
-            distribution: appState.plan.attacks,
-            pool: attackPool,
-            slots: lobby.settings?.attackSlots ?? 3
-          })}
-          ${renderPlanDistribution({
-            title: "Difese",
-            kind: "defenses",
-            card,
-            opponentCard,
-            distribution: appState.plan.defenses,
-            pool: defensePool,
-            slots: lobby.settings?.defenseSlots ?? 3
-          })}
+        <div class="duel-planner">
+          <section class="duel-zone enemy-zone">
+            <div class="duel-card-slot">
+              <div class="fight-lane-title">
+                <span class="role-pill is-opponent">TARGET</span>
+                <div>
+                  <strong>${escapeHtml(opponent?.name ?? "Avversario")}</strong>
+                  <small>stat avversarie visibili, piano nascosto</small>
+                </div>
+              </div>
+              ${opponent ? renderChosenCard(opponent, selfId) : `<p class="empty">Avversario non disponibile.</p>`}
+            </div>
+            ${renderPlanDistribution({
+              title: "Attacca questa carta",
+              kind: "attacks",
+              card,
+              opponentCard,
+              distribution: appState.plan.attacks,
+              pool: attackPool,
+              slots: lobby.settings?.attackSlots ?? 3
+            })}
+          </section>
+          <section class="duel-zone own-zone">
+            <div class="duel-card-slot">
+              <div class="fight-lane-title">
+                <span class="role-pill is-you">TU</span>
+                <div>
+                  <strong>${escapeHtml(selfPlayer.name)}</strong>
+                  <small>scegli dove proteggerti</small>
+                </div>
+              </div>
+              ${renderChosenCard(selfPlayer, selfId)}
+            </div>
+            ${renderPlanDistribution({
+              title: "Difendi la tua carta",
+              kind: "defenses",
+              card,
+              opponentCard,
+              distribution: appState.plan.defenses,
+              pool: defensePool,
+              slots: lobby.settings?.defenseSlots ?? 3
+            })}
+          </section>
         </div>
         <div class="mana-line">
           <label class="${activeEnabled ? "switch" : "switch muted"}">
@@ -607,9 +648,6 @@ class GameApp extends HTMLElement {
             Usa attiva (${activeCost} mana)
           </label>
           <span>${escapeHtml(card.active?.name ?? "Attiva")}</span>
-          <button type="button" data-action="submit-plan" ${validation.ok ? "" : "disabled"}>
-            Conferma piano
-          </button>
         </div>
         ${validation.ok ? "" : `<p class="notice">${escapeHtml(validation.error)}</p>`}
       </section>
@@ -695,6 +733,13 @@ class GameApp extends HTMLElement {
         if (action === "draft-card" && !element.hasAttribute("disabled")) {
           send("draftCard", { cardId: element.dataset.cardId });
         }
+        if (action === "preview-draft-card") {
+          appState.draftPreviewCardId = element.dataset.cardId;
+          this.render();
+        }
+        if (action === "draft-selected-card" && !element.hasAttribute("disabled")) {
+          send("draftCard", { cardId: element.dataset.cardId });
+        }
         if (action === "select-card" && !element.hasAttribute("disabled")) {
           if (Date.now() < appState.justDraggedUntil) {
             return;
@@ -720,14 +765,7 @@ class GameApp extends HTMLElement {
       this.render();
     });
 
-    this.querySelectorAll('[data-action="plan-toggle"]').forEach((input) => {
-      input.addEventListener("change", (event) => {
-        updatePlanStat(input.dataset.planKind, input.dataset.planStat, event.currentTarget.checked);
-        this.render();
-      });
-    });
-
-    this.querySelectorAll('[data-action="plan-points"]').forEach((input) => {
+    this.querySelectorAll('[data-action="plan-slider"]').forEach((input) => {
       input.addEventListener("input", (event) => {
         updatePlanPoints(input.dataset.planKind, input.dataset.planStat, event.currentTarget.value);
         this.render();
@@ -850,24 +888,36 @@ function renderTopPlayer(player, phase, settings) {
           <span>Mana ${player.mana}/${maxMana}</span>
         </div>
       </div>
-      <div class="top-player-meta">
-        <span>${player.deckCount} carte</span>
-        <span>${Object.keys(player.cooldowns ?? {}).length} cd</span>
-      </div>
       <div class="top-card-strip">
         ${
           cards.length
             ? cards
                 .map(
-                  (card) => `
-                    <img data-card-image src="${escapeAttr(cardImageSrc(card))}" alt="${escapeAttr(card.name ?? card.id)}" title="${escapeAttr(card.name ?? card.id)}" />
-                  `
+                  (card) => {
+                    const cooldown = Number(player.cooldowns?.[card.id] ?? 0);
+                    return `
+                    <span class="top-card-thumb ${cooldown > 0 ? "is-cooling" : ""}">
+                      <img data-card-image src="${escapeAttr(cardImageSrc(card))}" alt="${escapeAttr(card.name ?? card.id)}" title="${escapeAttr(card.name ?? card.id)}" />
+                      ${cooldown > 0 ? `<b>${cooldown}</b>` : ""}
+                    </span>
+                  `;
+                  }
                 )
                 .join("")
             : `<i></i>`
         }
       </div>
     </article>
+  `;
+}
+
+function renderMiniResource(label, value, max, kind) {
+  const pct = percent(value, max);
+  return `
+    <div class="resource-bar is-${escapeAttr(kind)}" title="${escapeAttr(`${label} ${value}/${max}`)}">
+      <i style="width: ${pct}%"></i>
+      <span>${escapeHtml(label)} ${value}/${max}</span>
+    </div>
   `;
 }
 
@@ -891,16 +941,16 @@ function renderCardElement({ card, selected, disabled, draggable = false, cooldo
   `;
 }
 
-function renderDraftCard(item) {
+function renderDraftCard(item, selected = false) {
   const card = item.card;
   return `
-    <div class="draft-card-wrap">
+    <div class="draft-card-wrap ${selected ? "is-previewed" : ""}">
       <game-card
         data-card-id="${escapeAttr(card.id)}"
-        data-action-name="draft-card"
+        data-action-name="preview-draft-card"
         data-selected="false"
-        data-disabled="${item.canPick ? "false" : "true"}"
-        class="${item.isAvailable ? "" : "is-taken"}"
+        data-disabled="false"
+        class="is-draft-mini ${item.isAvailable ? "" : "is-taken"}"
       ></game-card>
       <div class="draft-card-meta">
         <span>Costo ${item.cost}</span>
@@ -949,7 +999,9 @@ function renderChosenCard(player, selfId) {
 }
 
 function renderPlanDistribution({ title, kind, card, opponentCard, distribution, pool, slots }) {
-  const selectedStats = Object.keys(distribution);
+  const selectedStats = Object.entries(distribution)
+    .filter(([, value]) => Number(value ?? 0) > 0)
+    .map(([stat]) => stat);
   const used = sumDistribution(distribution);
   const remaining = Math.max(0, pool - used);
   const isPoolFull = remaining <= 0;
@@ -965,34 +1017,27 @@ function renderPlanDistribution({ title, kind, card, opponentCard, distribution,
       </div>
       <div class="plan-stat-list">
         ${VALERIO_KEYS.map((stat) => {
-          const selected = Object.hasOwn(distribution, stat);
-          const locked = !selected && (selectedStats.length >= slots || isPoolFull);
           const value = Number(distribution[stat] ?? 0);
+          const selected = value > 0;
+          const locked = !selected && (selectedStats.length >= slots || isPoolFull);
           const pointLimit = value + remaining;
-          const pointsLocked = !selected || isPoolFull;
+          const pointsLocked = locked;
           return `
             <label class="plan-stat ${selected ? "is-selected" : ""} ${locked || pointsLocked ? "is-locked" : ""}">
-              <input
-                type="checkbox"
-                data-action="plan-toggle"
-                data-plan-kind="${escapeAttr(kind)}"
-                data-plan-stat="${escapeAttr(stat)}"
-                ${selected ? "checked" : ""}
-                ${locked ? "disabled" : ""}
-              />
               <span>${stat}</span>
               <strong>${escapeHtml(VALERIO_LABELS[stat])}</strong>
               <small>${Number(getCardValerio(card)[stat] ?? 0)}${opponentCard ? ` vs ${Number(getCardValerio(opponentCard)[stat] ?? 0)}` : ""}</small>
               <input
-                type="number"
+                type="range"
                 min="0"
                 max="${pointLimit}"
                 value="${value}"
-                data-action="plan-points"
+                data-action="plan-slider"
                 data-plan-kind="${escapeAttr(kind)}"
                 data-plan-stat="${escapeAttr(stat)}"
                 ${pointsLocked ? "disabled" : ""}
               />
+              <b>${value}</b>
             </label>
           `;
         }).join("")}
@@ -1037,7 +1082,15 @@ function renderAttackLine(line) {
   return `
     <div class="attack-line ${line.lineDamage > 0 ? "is-hit" : ""}">
       <strong>${line.stat}</strong>
-      <span>${line.attackPoints} + ${line.attackerValerio} - ${line.defenderValerio} - ${line.defensePoints}</span>
+      <span class="calc-strip">
+        <i class="calc-atk" title="Punti attacco">ATK ${line.attackPoints}</i>
+        <i class="calc-plus">+</i>
+        <i class="calc-own" title="Tuo VALERIO">${line.attackerValerio}</i>
+        <i class="calc-minus">-</i>
+        <i class="calc-enemy" title="VALERIO avversario">OPP ${line.defenderValerio}</i>
+        <i class="calc-minus">-</i>
+        <i class="calc-def" title="Difesa avversaria">DEF ${line.defensePoints}</i>
+      </span>
       <b>${line.lineDamage}</b>
       ${line.defenseIgnored ? `<em>difesa ignorata</em>` : ""}
     </div>
@@ -1077,10 +1130,37 @@ function renderTimer(lobby) {
 }
 
 function renderChatMessage(message) {
+  const speaker = message.kind === "system" ? "sys" : message.name ?? "player";
   return `
     <div class="chat-message ${message.kind === "system" ? "is-system" : ""}">
-      <strong>${message.kind === "system" ? "Sistema" : escapeHtml(message.name ?? "Player")}</strong>
+      <strong>${escapeHtml(speaker)}</strong>
       <p>${escapeHtml(message.text)}</p>
+    </div>
+  `;
+}
+
+function renderInspectorCard(card, title) {
+  return `
+    <div class="inspector-card">
+      <div class="inspector-art">
+        <img data-card-image src="${escapeAttr(cardImageSrc(card))}" alt="" />
+      </div>
+      <div class="inspector-body">
+        <p class="eyebrow">${escapeHtml(title)}</p>
+        <h2>${escapeHtml(card.name)}</h2>
+        ${renderStats(card)}
+        ${renderCombat(card)}
+        <div class="ability-box">
+          <span>Attiva - ${Number(card.active?.cost ?? 0)} mana</span>
+          <strong>${escapeHtml(card.active?.name ?? "Attiva")}</strong>
+          <p>${escapeHtml(card.active?.text ?? "")}</p>
+        </div>
+        <div class="ability-box">
+          <span>Tratto</span>
+          <strong>${escapeHtml(card.passive?.name ?? "Tratto")}</strong>
+          <p>${escapeHtml(card.passive?.text ?? "")}</p>
+        </div>
+      </div>
     </div>
   `;
 }
@@ -1123,11 +1203,13 @@ function renderPlanSummary(lobby, self, selectedCard, opponent, opponentCard) {
   const attacksUsed = sumDistribution(appState.plan.attacks);
   const defensesUsed = sumDistribution(appState.plan.defenses);
   const previewLines = opponentCard
-    ? Object.entries(appState.plan.attacks).map(([stat, points]) => {
+    ? Object.entries(appState.plan.attacks)
+      .filter(([, points]) => Number(points ?? 0) > 0)
+      .map(([stat, points]) => {
         const mine = Number(getCardValerio(selectedCard)[stat] ?? 0);
         const enemy = Number(getCardValerio(opponentCard)[stat] ?? 0);
         const raw = Number(points) + mine - enemy;
-        return `${stat}: ${points} + ${mine} - ${enemy} = ${Math.max(0, raw)} prima delle difese`;
+        return { stat, points: Number(points), mine, enemy, result: Math.max(0, raw) };
       })
     : [];
 
@@ -1139,7 +1221,7 @@ function renderPlanSummary(lobby, self, selectedCard, opponent, opponentCard) {
       <div class="summary-line"><span>Difesa</span><strong>${defensesUsed}/${defensePool}</strong></div>
       <div class="summary-line"><span>Mana dopo attiva</span><strong>${appState.plan.useActive ? Math.max(0, self.mana - Number(selectedCard.active?.cost ?? 0)) : self.mana}</strong></div>
       ${opponentCard ? `<div class="summary-line is-compare"><span>Avversario</span><strong>${escapeHtml(opponent?.name ?? "Player")}</strong></div>` : ""}
-      ${previewLines.map((line) => `<p class="math-line">${escapeHtml(line)}</p>`).join("")}
+      ${previewLines.map((line) => renderPreviewLine(line)).join("")}
       <div class="ability-box">
         <span>Attiva - opzionale</span>
         <strong>${escapeHtml(selectedCard.active?.name ?? "Attiva")}</strong>
@@ -1150,6 +1232,24 @@ function renderPlanSummary(lobby, self, selectedCard, opponent, opponentCard) {
         <strong>${escapeHtml(selectedCard.passive?.name ?? "Tratto")}</strong>
         <p>${escapeHtml(selectedCard.passive?.text ?? "")}</p>
       </div>
+    </div>
+  `;
+}
+
+function renderPreviewLine(line) {
+  return `
+    <div class="preview-line">
+      <strong>${escapeHtml(line.stat)}</strong>
+      <span class="calc-strip">
+        <i class="calc-atk" title="Punti attacco investiti">ATK ${line.points}</i>
+        <i class="calc-plus">+</i>
+        <i class="calc-own" title="VALERIO tuo">TU ${line.mine}</i>
+        <i class="calc-minus">-</i>
+        <i class="calc-enemy" title="VALERIO avversario">OPP ${line.enemy}</i>
+        <i class="calc-equals">=</i>
+        <i class="calc-result" title="Breccia prima della difesa">${line.result}</i>
+      </span>
+      <small>prima della difesa</small>
     </div>
   `;
 }
@@ -1218,41 +1318,35 @@ function moveHandCard(draggedCardId, targetCardId) {
   return true;
 }
 
-function updatePlanStat(kind, stat, checked) {
-  const distribution = appState.plan[kind];
-  if (!distribution || !VALERIO_KEYS.includes(stat)) {
-    return;
-  }
-
-  if (checked) {
-    const maxSlots = kind === "attacks" ? 3 : 3;
-    if (!Object.hasOwn(distribution, stat) && Object.keys(distribution).length < maxSlots) {
-      distribution[stat] = 0;
-    }
-  } else {
-    delete distribution[stat];
-  }
-}
-
 function updatePlanPoints(kind, stat, rawValue) {
   const lobby = appState.snapshot?.lobby;
   const card = getCardById(lobby?.self?.selected?.cardId);
   const distribution = appState.plan[kind];
-  if (!card || !distribution || !Object.hasOwn(distribution, stat)) {
+  if (!card || !distribution || !VALERIO_KEYS.includes(stat)) {
     return;
   }
 
   const pool = kind === "attacks" ? getAttackPool(card) : getDefensePool(card);
+  const positiveStats = Object.entries(distribution).filter(([, value]) => Number(value ?? 0) > 0);
+  const isNewPositive = Number(distribution[stat] ?? 0) <= 0 && Number(rawValue || 0) > 0;
+  if (isNewPositive && positiveStats.length >= 3) {
+    return;
+  }
+
   const others = Object.entries(distribution)
     .filter(([key]) => key !== stat)
     .reduce((total, [, value]) => total + Number(value ?? 0), 0);
   const value = clamp(Math.floor(Number(rawValue || 0)), 0, Math.max(0, pool - others));
-  distribution[stat] = value;
+  if (value <= 0) {
+    delete distribution[stat];
+  } else {
+    distribution[stat] = value;
+  }
 }
 
 function getPlanValidation(lobby, card) {
-  const attackCount = Object.keys(appState.plan.attacks).length;
-  const defenseCount = Object.keys(appState.plan.defenses).length;
+  const attackCount = Object.values(appState.plan.attacks).filter((value) => Number(value ?? 0) > 0).length;
+  const defenseCount = Object.values(appState.plan.defenses).filter((value) => Number(value ?? 0) > 0).length;
   const attackTotal = sumDistribution(appState.plan.attacks);
   const defenseTotal = sumDistribution(appState.plan.defenses);
   const attackPool = getAttackPool(card);
@@ -1287,7 +1381,7 @@ function makeDefaultPlan(card, self) {
 }
 
 function makeDefaultDistribution(pool) {
-  return Object.fromEntries(VALERIO_KEYS.slice(0, 3).map((key) => [key, 0]));
+  return {};
 }
 
 function resetPlan() {
@@ -1300,11 +1394,21 @@ function resetPlan() {
 }
 
 function captureInputFocus(input, extra) {
+  let start = null;
+  let end = null;
+  try {
+    start = input.selectionStart;
+    end = input.selectionEnd;
+  } catch {
+    start = null;
+    end = null;
+  }
+
   return {
     ...extra,
     value: input.value,
-    start: input.selectionStart,
-    end: input.selectionEnd
+    start,
+    end
   };
 }
 
@@ -1314,6 +1418,109 @@ function getActivePlayers(lobby) {
 
 function getPlayerName(lobby, playerId) {
   return lobby.players.find((player) => player.id === playerId)?.name;
+}
+
+function getDockAction(lobby, snapshot, isHost) {
+  const self = lobby.self;
+  if (!self) {
+    return { state: "Fuori lobby", detail: "", action: "noop", label: "Aspetta", enabled: false };
+  }
+
+  if (lobby.phase === "lobby") {
+    const canStart = isHost && lobby.players.length >= snapshot.settings.minPlayers;
+    return {
+      state: isHost ? "Host lobby" : "In lobby",
+      detail: canStart ? "Puoi iniziare la partita." : `Servono ${snapshot.settings.minPlayers} player.`,
+      action: "start",
+      label: isHost ? "Inizia" : "Aspetta host",
+      enabled: canStart
+    };
+  }
+
+  if (lobby.phase === "draft") {
+    const previewCard = getDraftPreviewCard(lobby);
+    const currentName = getPlayerName(lobby, lobby.draft?.currentPlayerId) ?? "Player";
+    return {
+      state: self.isCurrentDrafter ? "Tocca a te" : `Draft: ${currentName}`,
+      detail: self.isCurrentDrafter
+        ? `${previewCard?.name ?? "Seleziona una carta"} - budget ${self.draftBudgetRemaining}`
+        : "Aspetta il tuo turno.",
+      action: "draft-selected-card",
+      cardId: previewCard?.id ?? "",
+      label: self.isCurrentDrafter ? "Drafta" : "Aspetta turno",
+      enabled: canDraftPreview(lobby, previewCard)
+    };
+  }
+
+  if (lobby.phase === "select") {
+    const selectedCard = getCardById(appState.selectedCardId);
+    const alreadySelected = Boolean(self.selected?.cardId);
+    return {
+      state: self.isActive ? "Scegli carta" : "Spettatore",
+      detail: self.isActive ? selectedCard?.name ?? "Nessuna carta disponibile" : "Non sei nel duello corrente.",
+      action: "submit-card",
+      label: alreadySelected ? "Carta scelta" : self.isActive ? "Seleziona" : "Aspetta turno",
+      enabled: Boolean(self.isActive && selectedCard && !alreadySelected)
+    };
+  }
+
+  if (lobby.phase === "plan") {
+    const selectedCard = getCardById(self.selected?.cardId);
+    const validation = selectedCard ? getPlanValidation(lobby, selectedCard) : { ok: false, error: "Carta mancante" };
+    const submitted = Boolean(self.selected?.attacks && self.selected?.defenses);
+    return {
+      state: self.isActive ? "Piano fight" : "Spettatore",
+      detail: submitted ? "Piano confermato." : validation.ok ? "Pronto a confermare." : validation.error,
+      action: "submit-plan",
+      label: submitted ? "Aspetta reveal" : self.isActive ? "Conferma" : "Aspetta turno",
+      enabled: Boolean(self.isActive && !submitted && validation.ok)
+    };
+  }
+
+  if (lobby.phase === "reveal") {
+    return {
+      state: "Reveal",
+      detail: lobby.lastResult?.summary?.reason ?? "Round concluso.",
+      action: "next-round",
+      label: isHost ? "Prossimo" : "Aspetta host",
+      enabled: isHost
+    };
+  }
+
+  if (lobby.phase === "ended") {
+    return {
+      state: "Fine partita",
+      detail: lobby.winnerId ? `${getPlayerName(lobby, lobby.winnerId)} vince.` : "Partita chiusa.",
+      action: "restart",
+      label: isHost ? "Reset" : "Fine",
+      enabled: isHost
+    };
+  }
+
+  return { state: phaseLabel(lobby.phase), detail: "", action: "noop", label: "Aspetta", enabled: false };
+}
+
+function getDraftPreviewItem(lobby) {
+  const pool = lobby?.draft?.pool ?? [];
+  return (
+    pool.find((item) => item.card?.id === appState.draftPreviewCardId) ??
+    pool.find((item) => item.canPick) ??
+    pool.find((item) => item.isAvailable) ??
+    pool[0] ??
+    null
+  );
+}
+
+function getDraftPreviewCard(lobby) {
+  return getDraftPreviewItem(lobby)?.card ?? null;
+}
+
+function canDraftPreview(lobby, card) {
+  if (!card || !lobby?.self?.isCurrentDrafter) {
+    return false;
+  }
+
+  return Boolean(getDraftPreviewItem(lobby)?.card?.id === card.id && getDraftPreviewItem(lobby)?.canPick);
 }
 
 function canUseActive(card, self) {

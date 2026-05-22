@@ -10,15 +10,20 @@ if (!lobbyId) {
 const bot = await connectPlayer("Bot Fight");
 send(bot, "joinLobby", { lobbyId });
 await waitFor(bot, (state) => state.lobby?.id === lobbyId && state.lobby.players.length >= 2);
+await runDraft(bot);
 
 const selectState = await waitFor(bot, (state) => state.lobby?.phase === "select", 30000);
-send(bot, "selectCard", { cardId: selectState.lobby.self.deck[0].id });
+if (selectState.lobby.self.isActive) {
+  send(bot, "selectCard", { cardId: selectState.lobby.self.deck[0].id });
+}
 
 const fightState = await waitFor(bot, (state) => state.lobby?.phase === "fight", 30000);
 console.log(`bot ready in ${fightState.lobby.id}`);
 
 await new Promise((resolve) => setTimeout(resolve, holdMs));
-send(bot, "submitFight", { useActive: false });
+if (fightState.lobby.self.isActive) {
+  send(bot, "submitFight", { useActive: false });
+}
 await new Promise((resolve) => setTimeout(resolve, 500));
 bot.ws.close();
 
@@ -57,11 +62,30 @@ function send(client, type, payload = {}) {
   client.ws.send(JSON.stringify({ type, payload }));
 }
 
+async function runDraft(client) {
+  while (true) {
+    const state = await waitFor(client, (nextState) => ["draft", "select"].includes(nextState.lobby?.phase), 30000);
+    if (state.lobby.phase === "select") {
+      return;
+    }
+
+    if (state.lobby.self.isCurrentDrafter) {
+      const pick = state.lobby.draft.pool.find((item) => item.isAvailable)?.card.id;
+      if (pick) {
+        send(client, "draftCard", { cardId: pick });
+        await new Promise((resolve) => setTimeout(resolve, 25));
+      }
+    } else {
+      await new Promise((resolve) => setTimeout(resolve, 80));
+    }
+  }
+}
+
 async function waitFor(client, predicate, timeoutMs = 5000) {
   const startedAt = Date.now();
 
   while (Date.now() - startedAt < timeoutMs) {
-    const found = client.states.find(predicate);
+    const found = [...client.states].reverse().find(predicate);
     if (found) {
       return found;
     }

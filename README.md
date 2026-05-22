@@ -1,24 +1,26 @@
-# Valerio The Game
+# valeverce
 
 Gioco di carte locale per 2-4 player sulla stessa rete. Il server Node serve la pagina e gestisce lobby, WebSocket, mazzi, mana e turni.
 
 ## Avvio
 
 ```bash
-npm run dev
+PORT=3000 npm run dev
 ```
 
 Apri `http://localhost:3000` sul computer host. Gli altri player entrano usando uno degli indirizzi `Network` stampati dal server, per esempio `http://192.168.1.20:3000`.
 
 ## Regole
 
-- Ogni player riceve tutte le carte del set, in ordine casuale.
-- Ogni turno ogni player sceglie prima una carta, senza vedere gli SPECIAL.
-- Quando tutti hanno scelto, si entra nel fight: il server sceglie 3 SPECIAL casuali e mostra le carte scelte da tutti.
-- Nel fight ogni player decide se attivare la carta spendendo mana.
+- A inizio partita si fa un draft: ogni player sceglie 6 carte dal pool comune.
+- Il draft e a turni: player 1 prende una carta, poi player 2, e cosi via. Le carte gia prese non sono piu disponibili.
+- Ogni round e un duello 1v1. Con 3/4 player la rotazione e 1 vs 2, 2 vs 3, 3 vs 4, 4 vs 1.
+- All'inizio del duello vedi subito i 3 SPECIAL del round.
+- Solo i due duellanti scelgono una carta; gli altri guardano il duello e la chat/event log.
+- Nel fight ogni duellante decide se attivare la carta spendendo mana.
 - Se usi l'attiva, per quel turno viene calcolata anche la passiva della carta.
 - Vince il turno chi ha la somma piu alta sui 3 SPECIAL, inclusi bonus attivi/passivi.
-- Chi vince recupera 2 mana, fino a un massimo di 10.
+- A inizio duello i duellanti recuperano 1 mana. Chi vince recupera 2 mana, chi perde recupera 1 mana, fino a un massimo di 10.
 - Chi perde scarta la carta giocata.
 - Chi resta senza carte esce. Vince l'ultimo player rimasto.
 
@@ -36,3 +38,11 @@ public/cards/courier.png
 ```
 
 Se manca l'immagine, la UI mostra un placeholder.
+
+## Comandi
+
+```bash
+npm run check
+npm run smoke
+npm run validate:cards
+```

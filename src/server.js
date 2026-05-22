@@ -216,6 +216,8 @@ function createLobby(client) {
     activePair: [],
     pairCursor: 0,
     draft: null,
+    actionTimer: null,
+    deadlineAt: null,
     chat: [],
     players: new Map(),
     lastResult: null,
@@ -287,6 +289,7 @@ function startGame(client) {
     target: SETTINGS.draftSize
   };
   lobby.phase = "draft";
+  scheduleActionTimer(lobby, "draft");
   pushChat(lobby, { kind: "system", text: `Draft iniziato: ${SETTINGS.draftSize} carte a testa` });
   broadcastAllStates();
 }
@@ -326,6 +329,7 @@ function draftCard(client, cardId) {
   }
 
   advanceDraftTurn(lobby);
+  scheduleActionTimer(lobby, "draft");
   broadcastAllStates();
 }
 
@@ -404,6 +408,27 @@ function submitFight(client, useActive) {
   broadcastAllStates();
 }
 
+function sendChat(client, text) {
+  const lobby = getClientLobby(client);
+  if (!lobby) {
+    sendError(client, "Entra in una lobby per chattare");
+    return;
+  }
+
+  const cleanText = sanitizeChatText(text);
+  if (!cleanText) {
+    return;
+  }
+
+  pushChat(lobby, {
+    kind: "user",
+    playerId: client.id,
+    name: client.name,
+    text: cleanText
+  });
+  broadcastAllStates();
+}
+
 function startNextRound(client) {
   const lobby = getClientLobby(client);
   if (!lobby || lobby.hostId !== client.id) {
@@ -432,6 +457,7 @@ function restartLobby(client) {
   lobby.activePair = [];
   lobby.pairCursor = 0;
   lobby.draft = null;
+  clearActionTimer(lobby);
   lobby.lastResult = null;
   lobby.winnerId = null;
 
@@ -451,6 +477,7 @@ function startRound(lobby) {
     const winner = getAlivePlayers(lobby)[0] ?? null;
     lobby.phase = "ended";
     lobby.winnerId = winner?.id ?? null;
+    clearActionTimer(lobby);
     broadcastAllStates();
     return;
   }
@@ -477,11 +504,13 @@ function startRound(lobby) {
     text: `Duello ${lobby.round}: ${lobby.players.get(activePair[0])?.name} vs ${lobby.players.get(activePair[1])?.name}`
   });
 
+  scheduleActionTimer(lobby, "select");
   broadcastAllStates();
 }
 
 function enterFight(lobby) {
   lobby.phase = "fight";
+  clearActionTimer(lobby);
 
   for (const player of getActiveDuelists(lobby)) {
     if (player.selected) {
@@ -525,34 +554,23 @@ function resolveRound(lobby) {
   });
 
   const topScore = Math.max(...plays.map((play) => play.detail.score));
-  const contenders = plays
-    .filter((play) => play.detail.score === topScore)
-    .sort((left, right) => {
-      const luckDelta = Number(right.card.special.L ?? 0) - Number(left.card.special.L ?? 0);
-      if (luckDelta !== 0) {
-        return luckDelta;
+  const contenders = plays.filter((play) => play.detail.score === topScore);
+  const isTie = contenders.length > 1;
+  const winner = isTie ? null : contenders[0];
+
+  if (winner) {
+    winner.player.mana = Math.min(SETTINGS.maxMana, winner.player.mana + SETTINGS.winnerManaGain);
+
+    for (const play of plays) {
+      if (play.player.id === winner.player.id) {
+        continue;
       }
 
-      const manaDelta = right.player.mana - left.player.mana;
-      if (manaDelta !== 0) {
-        return manaDelta;
+      play.player.mana = Math.min(SETTINGS.maxMana, play.player.mana + SETTINGS.loserManaGain);
+      play.player.deck = play.player.deck.filter((cardId) => cardId !== play.card.id);
+      if (play.player.deck.length === 0) {
+        play.player.alive = false;
       }
-
-      return left.player.id.localeCompare(right.player.id);
-    });
-
-  const winner = contenders[0];
-  winner.player.mana = Math.min(SETTINGS.maxMana, winner.player.mana + SETTINGS.winnerManaGain);
-
-  for (const play of plays) {
-    if (play.player.id === winner.player.id) {
-      continue;
-    }
-
-    play.player.mana = Math.min(SETTINGS.maxMana, play.player.mana + SETTINGS.loserManaGain);
-    play.player.deck = play.player.deck.filter((cardId) => cardId !== play.card.id);
-    if (play.player.deck.length === 0) {
-      play.player.alive = false;
     }
   }
 
@@ -563,8 +581,8 @@ function resolveRound(lobby) {
     round: lobby.round,
     specialKeys: lobby.specialKeys,
     activePair: lobby.activePair,
-    winnerId: winner.player.id,
-    tieBreak: contenders.length > 1,
+    winnerId: winner?.player.id ?? null,
+    tieBreak: isTie,
     summary: makeRoundSummary(plays, winner),
     plays: plays.map((play) => ({
       playerId: play.player.id,
@@ -579,17 +597,21 @@ function resolveRound(lobby) {
       passiveScore: play.detail.passiveScore,
       manaCost: play.detail.manaCost,
       manaStartGain: SETTINGS.roundManaGain,
-      manaOutcomeGain: play.player.id === winner.player.id ? SETTINGS.winnerManaGain : SETTINGS.loserManaGain,
+      manaOutcomeGain: winner && play.player.id === winner.player.id ? SETTINGS.winnerManaGain : SETTINGS.loserManaGain,
       activeApplied: play.detail.activeApplied,
       notes: play.detail.notes,
-      outcome: play.player.id === winner.player.id ? "win" : "lose",
+      outcome: winner ? (play.player.id === winner.player.id ? "win" : "lose") : "tie",
       eliminated: !play.player.alive
     }))
   };
 
   lobby.phase = gameWinner ? "ended" : "reveal";
   lobby.winnerId = gameWinner?.id ?? null;
-  pushChat(lobby, { kind: "system", text: `${winner.player.name} vince il duello ${lobby.round}` });
+  clearActionTimer(lobby);
+  pushChat(lobby, {
+    kind: "system",
+    text: winner ? `${winner.player.name} vince il duello ${lobby.round}` : `Duello ${lobby.round} in pareggio`
+  });
 }
 
 function leaveLobby(client, options = { broadcast: true }) {
@@ -610,6 +632,7 @@ function leaveLobby(client, options = { broadcast: true }) {
   client.lobbyId = null;
 
   if (lobby.players.size === 0) {
+    clearActionTimer(lobby);
     lobbies.delete(lobby.id);
   } else {
     if (lobby.hostId === client.id) {
@@ -621,14 +644,17 @@ function leaveLobby(client, options = { broadcast: true }) {
       if (lobby.players.size < SETTINGS.minPlayers) {
         lobby.phase = "lobby";
         lobby.draft = null;
+        clearActionTimer(lobby);
       } else if (isDraftComplete(lobby)) {
         startRound(lobby);
       } else {
         advanceDraftTurn(lobby);
+        scheduleActionTimer(lobby, "draft");
       }
     } else if (["select", "fight", "reveal"].includes(lobby.phase) && stillAlive.length <= 1) {
       lobby.phase = "ended";
       lobby.winnerId = stillAlive[0]?.id ?? null;
+      clearActionTimer(lobby);
     } else {
       advanceRoundIfReady(lobby);
     }
@@ -672,8 +698,178 @@ function getClientLobby(client) {
   return client.lobbyId ? lobbies.get(client.lobbyId) : null;
 }
 
+function isActiveDuelist(lobby, playerId) {
+  return lobby.activePair.includes(playerId);
+}
+
+function getActiveDuelists(lobby) {
+  return lobby.activePair.map((playerId) => lobby.players.get(playerId)).filter(Boolean);
+}
+
 function getAlivePlayers(lobby) {
   return [...lobby.players.values()].filter((player) => player.alive);
+}
+
+function pickActivePair(lobby) {
+  const orderedAliveIds = lobby.playerOrder.filter((playerId) => {
+    const player = lobby.players.get(playerId);
+    return player?.alive && player.deck.length > 0;
+  });
+
+  if (orderedAliveIds.length < SETTINGS.minPlayers) {
+    return [];
+  }
+
+  const startIndex = lobby.pairCursor % orderedAliveIds.length;
+  const pair = [orderedAliveIds[startIndex], orderedAliveIds[(startIndex + 1) % orderedAliveIds.length]];
+  lobby.pairCursor = (startIndex + 1) % orderedAliveIds.length;
+  return pair;
+}
+
+function getCurrentDrafterId(lobby) {
+  if (!lobby.draft) {
+    return null;
+  }
+
+  const order = lobby.draft.order.filter((playerId) => {
+    const player = lobby.players.get(playerId);
+    return player && player.deck.length < lobby.draft.target;
+  });
+
+  if (order.length === 0) {
+    return null;
+  }
+
+  for (let offset = 0; offset < lobby.draft.order.length; offset += 1) {
+    const playerId = lobby.draft.order[(lobby.draft.pickIndex + offset) % lobby.draft.order.length];
+    if (order.includes(playerId)) {
+      return playerId;
+    }
+  }
+
+  return order[0];
+}
+
+function advanceDraftTurn(lobby) {
+  if (!lobby.draft) {
+    return;
+  }
+
+  for (let attempts = 0; attempts < lobby.draft.order.length; attempts += 1) {
+    lobby.draft.pickIndex = (lobby.draft.pickIndex + 1) % lobby.draft.order.length;
+    const currentId = getCurrentDrafterId(lobby);
+    if (currentId) {
+      const index = lobby.draft.order.indexOf(currentId);
+      if (index >= 0) {
+        lobby.draft.pickIndex = index;
+      }
+      return;
+    }
+  }
+}
+
+function isDraftComplete(lobby) {
+  return Boolean(
+    lobby.draft &&
+      lobby.draft.order
+        .filter((playerId) => lobby.players.has(playerId))
+        .every((playerId) => lobby.players.get(playerId).deck.length >= lobby.draft.target)
+  );
+}
+
+function scheduleActionTimer(lobby, phase) {
+  clearActionTimer(lobby);
+  if (!["draft", "select"].includes(phase)) {
+    return;
+  }
+
+  const deadlineAt = Date.now() + SETTINGS.actionSeconds * 1000;
+  lobby.deadlineAt = deadlineAt;
+  lobby.actionTimer = setTimeout(() => handleActionTimeout(lobby.id, phase, deadlineAt), SETTINGS.actionSeconds * 1000);
+}
+
+function clearActionTimer(lobby) {
+  if (lobby.actionTimer) {
+    clearTimeout(lobby.actionTimer);
+  }
+  lobby.actionTimer = null;
+  lobby.deadlineAt = null;
+}
+
+function handleActionTimeout(lobbyId, phase, deadlineAt) {
+  const lobby = lobbies.get(lobbyId);
+  if (!lobby || lobby.phase !== phase || lobby.deadlineAt !== deadlineAt) {
+    return;
+  }
+
+  if (phase === "draft") {
+    autoDraftCard(lobby);
+    return;
+  }
+
+  autoSelectCards(lobby);
+}
+
+function autoDraftCard(lobby) {
+  const currentPlayerId = getCurrentDrafterId(lobby);
+  const player = currentPlayerId ? lobby.players.get(currentPlayerId) : null;
+  const cardId = lobby.draft?.pool.find((candidateId) => cardsById.has(candidateId) && !lobby.draft.taken.includes(candidateId));
+
+  if (!player || !cardId) {
+    clearActionTimer(lobby);
+    broadcastAllStates();
+    return;
+  }
+
+  player.deck.push(cardId);
+  lobby.draft.taken.push(cardId);
+  pushChat(lobby, { kind: "system", text: `Timer scaduto: ${player.name} drafta ${cardsById.get(cardId).name}` });
+
+  if (isDraftComplete(lobby)) {
+    pushChat(lobby, { kind: "system", text: "Draft completato, si entra nei duelli" });
+    startRound(lobby);
+    return;
+  }
+
+  advanceDraftTurn(lobby);
+  scheduleActionTimer(lobby, "draft");
+  broadcastAllStates();
+}
+
+function autoSelectCards(lobby) {
+  for (const player of getActiveDuelists(lobby)) {
+    if (!player.selected?.cardId && player.deck.length > 0) {
+      player.selected = { cardId: player.deck[0], useActive: null };
+      pushChat(lobby, { kind: "system", text: `Timer scaduto: ${player.name} sceglie ${cardsById.get(player.deck[0])?.name ?? "una carta"}` });
+    }
+  }
+
+  advanceRoundIfReady(lobby);
+  if (lobby.phase === "select") {
+    scheduleActionTimer(lobby, "select");
+  }
+  broadcastAllStates();
+}
+
+function makeRoundSummary(plays, winner) {
+  const [first, second] = plays;
+  const margin = Math.abs(first.detail.score - second.detail.score);
+  const reason = winner
+    ? `${winner.player.name} ha chiuso con ${margin} punti di vantaggio.`
+    : "Pareggio pieno: nessuno perde carte, nessuno recupera mana. Si passa al prossimo round.";
+
+  return {
+    reason,
+    margin,
+    lines: plays.map((play) => ({
+      playerId: play.player.id,
+      text: `${play.player.name}: ${play.detail.baseScore} base, ${formatScorePart(play.detail.activeScore)} attiva, ${formatScorePart(play.detail.passiveScore)} passiva = ${play.detail.score}`
+    }))
+  };
+}
+
+function formatScorePart(value) {
+  return value >= 0 ? `+${value}` : String(value);
 }
 
 function broadcastAllStates() {
@@ -715,6 +911,7 @@ function serializeLobbyList() {
 
 function serializeLobby(lobby, selfId) {
   const self = lobby.players.get(selfId);
+  const currentDrafterId = getCurrentDrafterId(lobby);
 
   return {
     id: lobby.id,
@@ -722,14 +919,22 @@ function serializeLobby(lobby, selfId) {
     phase: lobby.phase,
     round: lobby.round,
     specialKeys: lobby.specialKeys,
+    activePair: lobby.activePair,
+    deadlineAt: lobby.deadlineAt,
+    draft: serializeDraft(lobby, currentDrafterId),
+    chat: lobby.chat,
     lastResult: lobby.lastResult,
     winnerId: lobby.winnerId,
     players: [...lobby.players.values()].map((player) => ({
       id: player.id,
       name: player.name,
       mana: player.mana,
+      deck: player.deck.map((cardId) => cardsById.get(cardId)).filter(Boolean),
       deckCount: player.deck.length,
+      draftCount: player.deck.length,
       alive: player.alive,
+      isActive: isActiveDuelist(lobby, player.id),
+      isCurrentDrafter: currentDrafterId === player.id,
       hasSelected: Boolean(player.selected),
       hasFightChoice: player.selected?.useActive !== null && player.selected?.useActive !== undefined,
       selectedCard: shouldRevealSelectedCard(lobby, player) ? cardsById.get(player.selected.cardId) : null,
@@ -742,14 +947,52 @@ function serializeLobby(lobby, selfId) {
           mana: self.mana,
           deck: self.deck.map((cardId) => cardsById.get(cardId)),
           selected: self.selected,
+          isActive: isActiveDuelist(lobby, self.id),
+          isCurrentDrafter: currentDrafterId === self.id,
           alive: self.alive
         }
       : null
   };
 }
 
+function serializeDraft(lobby, currentDrafterId) {
+  if (!lobby.draft) {
+    return null;
+  }
+
+  return {
+    target: lobby.draft.target,
+    currentPlayerId: currentDrafterId,
+    taken: lobby.draft.taken,
+    pool: lobby.draft.pool.map((cardId) => {
+      const takenBy = [...lobby.players.values()].find((player) => player.deck.includes(cardId));
+      return {
+        card: cardsById.get(cardId),
+        takenBy: takenBy?.id ?? null,
+        takenByName: takenBy?.name ?? null,
+        isAvailable: !takenBy
+      };
+    })
+  };
+}
+
 function shouldRevealSelectedCard(lobby, player) {
   return Boolean(player.selected?.cardId && ["fight", "reveal", "ended"].includes(lobby.phase));
+}
+
+function pushChat(lobby, entry) {
+  lobby.chat.push({
+    id: makeId("m", 6),
+    createdAt: new Date().toISOString(),
+    kind: entry.kind ?? "user",
+    playerId: entry.playerId ?? null,
+    name: entry.name ?? null,
+    text: String(entry.text ?? "").slice(0, 260)
+  });
+
+  if (lobby.chat.length > 80) {
+    lobby.chat = lobby.chat.slice(-80);
+  }
 }
 
 function sendError(client, message) {
@@ -852,6 +1095,10 @@ function makeFrame(data, opcode = 0x1) {
 function sanitizeName(name) {
   const trimmed = String(name ?? "").trim().slice(0, 18);
   return trimmed || "Player";
+}
+
+function sanitizeChatText(text) {
+  return String(text ?? "").replace(/\s+/g, " ").trim().slice(0, 240);
 }
 
 function makeLobbyId() {

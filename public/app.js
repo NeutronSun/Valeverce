@@ -7,14 +7,22 @@ const appState = {
   lastError: "",
   playerName: localStorage.getItem("vtg:name") || "",
   selectedCardId: "",
-  useActive: false
+  useActive: false,
+  handOrder: [],
+  draggedCardId: "",
+  justDraggedUntil: 0
 };
 
 class GameApp extends HTMLElement {
   connectedCallback() {
+    this.clock = window.setInterval(() => this.updateTimers(), 2500000);
     this.loadCards();
     this.connect();
     this.render();
+  }
+
+  disconnectedCallback() {
+    window.clearInterval(this.clock);
   }
 
   async loadCards() {
@@ -82,6 +90,7 @@ class GameApp extends HTMLElement {
     }
 
     if (lobby.phase === "select") {
+      syncHandOrder(hand);
       if (!hand.some((card) => card.id === appState.selectedCardId)) {
         appState.selectedCardId = hand[0]?.id ?? "";
       }
@@ -109,14 +118,17 @@ class GameApp extends HTMLElement {
   render() {
     const snapshot = appState.snapshot;
     const lobby = snapshot?.lobby;
+    const focusState = this.captureFocusState();
+    const title = lobby ? (lobby.phase === "lobby" ? "Lobby" : phaseLabel(lobby.phase)) : "Lobby";
 
     this.innerHTML = `
       <main class="shell">
-        <section class="topbar">
+        <section class="topbar ${lobby ? "is-compact" : ""}">
           <div>
-            <p class="eyebrow">Valerio The Game</p>
-            <h1>${lobby ? `Lobby ${escapeHtml(lobby.id)}` : "Lobby"}</h1>
+            <p class="eyebrow">valeverce</p>
+            <h1>${escapeHtml(title)}</h1>
           </div>
+          ${lobby ? `<div class="lobby-code"><span>Codice</span><strong>${escapeHtml(lobby.id)}</strong></div>` : ""}
           <div class="connection ${appState.connected ? "is-online" : ""}">
             ${appState.connected ? "Online" : "Connessione"}
           </div>
@@ -127,19 +139,88 @@ class GameApp extends HTMLElement {
     `;
 
     this.bindEvents();
+    this.restoreFocusState(focusState);
+    this.scrollChatToBottom();
+    this.updateTimers();
+  }
+
+  captureFocusState() {
+    const active = document.activeElement;
+    if (!this.contains(active)) {
+      return null;
+    }
+
+    if (active?.dataset?.action === "name-input") {
+      return {
+        kind: "name",
+        value: active.value,
+        start: active.selectionStart,
+        end: active.selectionEnd
+      };
+    }
+
+    if (active?.closest?.('[data-action="chat"]')) {
+      return {
+        kind: "chat",
+        value: active.value,
+        start: active.selectionStart,
+        end: active.selectionEnd
+      };
+    }
+
+    return null;
+  }
+
+  restoreFocusState(focusState) {
+    if (!focusState) {
+      return;
+    }
+
+    const input =
+      focusState.kind === "name"
+        ? this.querySelector('[data-action="name-input"]')
+        : this.querySelector('[data-action="chat"] input');
+
+    if (!input) {
+      return;
+    }
+
+    input.value = focusState.value;
+    input.focus();
+    if (typeof focusState.start === "number" && typeof focusState.end === "number") {
+      input.setSelectionRange(focusState.start, focusState.end);
+    }
+  }
+
+  scrollChatToBottom() {
+    const chatLog = this.querySelector(".chat-log");
+    if (chatLog) {
+      chatLog.scrollTop = chatLog.scrollHeight;
+    }
+  }
+
+  updateTimers() {
+    this.querySelectorAll(".timer-pill").forEach((timer) => {
+      const deadlineAt = Number(timer.dataset.deadlineAt ?? 0);
+      const seconds = Math.max(0, Math.ceil((deadlineAt - Date.now()) / 1000));
+      const label = timer.querySelector("strong");
+      if (label) {
+        label.textContent = `${seconds}s`;
+      }
+      timer.classList.toggle("is-low", seconds <= 5);
+    });
   }
 
   renderHome(snapshot) {
     const lobbies = snapshot?.lobbies ?? [];
     return `
       <section class="panel home-grid">
-        <form class="join-panel" data-action="name">
+        <div class="join-panel">
           <label>
             Nome
-            <input name="name" maxlength="18" value="${escapeAttr(appState.playerName)}" placeholder="Player" />
+            <input data-action="name-input" maxlength="18" value="${escapeAttr(appState.playerName)}" placeholder="Player" />
           </label>
-          <button type="submit">Salva nome</button>
-        </form>
+        </div>
         <div class="join-panel">
           <button type="button" data-action="create">Crea lobby</button>
           <form class="inline-form" data-action="join">
@@ -184,9 +265,14 @@ class GameApp extends HTMLElement {
     const isHost = lobby.hostId === snapshot.selfId;
     return `
       <section class="panel lobby-head">
-        <div>
-          <p class="eyebrow">${phaseLabel(lobby.phase)}</p>
-          <h2>${escapeHtml(lobby.id)}</h2>
+        <div class="lobby-player-summary">
+          <div>
+            <p class="eyebrow">Player</p>
+            <h2>${lobby.players.length}/${snapshot.settings.maxPlayers}</h2>
+          </div>
+          <div class="top-players">
+            ${lobby.players.map((player) => renderTopPlayer(player, lobby.phase)).join("")}
+          </div>
         </div>
         <div class="actions">
           ${isHost && lobby.phase === "lobby" ? `<button type="button" data-action="start">Inizia</button>` : ""}
@@ -196,19 +282,102 @@ class GameApp extends HTMLElement {
         </div>
       </section>
       <section class="layout">
-        <aside class="panel">
-          <div class="section-title">
-            <h2>Player</h2>
-            <span>${lobby.players.length}</span>
-          </div>
-          <div class="players">
-            ${lobby.players.map((player) => renderPlayer(player, lobby.phase)).join("")}
-          </div>
+        <aside class="panel left-rail">
+          ${this.renderChat(lobby)}
         </aside>
         <section class="panel table">
           ${this.renderPhase(lobby, snapshot)}
         </section>
+        <aside class="panel right-rail">
+          ${this.renderSidePanel(lobby, snapshot)}
+        </aside>
       </section>
+    `;
+  }
+
+  renderChat(lobby) {
+    return `
+      <div class="chat">
+        <div class="section-title">
+          <h2>Chat</h2>
+          <span>${lobby.chat?.length ?? 0}</span>
+        </div>
+        <div class="chat-log">
+          ${(lobby.chat ?? []).map((message) => renderChatMessage(message)).join("")}
+        </div>
+        <form class="chat-form" data-action="chat">
+          <input name="text" maxlength="240" placeholder="Scrivi..." />
+          <button type="submit">Invia</button>
+        </form>
+      </div>
+    `;
+  }
+
+  renderSidePanel(lobby, snapshot) {
+    const self = lobby.self;
+    const activePlayers = getActivePlayers(lobby);
+    const opponent = activePlayers.find((player) => player.id !== snapshot.selfId);
+    const selectedCard =
+      lobby.phase === "select"
+        ? getCardById(appState.selectedCardId)
+        : getCardById(self?.selected?.cardId) ?? activePlayers.find((player) => player.id === snapshot.selfId)?.selectedCard;
+    const opponentCard = opponent?.selectedCard;
+
+    if (lobby.phase === "draft") {
+      return `
+        <div class="side-summary">
+          <p class="eyebrow">Draft</p>
+          <h2>${self?.isCurrentDrafter ? "Tocca a te" : "In attesa"}</h2>
+          <p>${escapeHtml(getPlayerName(lobby, lobby.draft?.currentPlayerId) ?? "Player")} sta scegliendo una carta.</p>
+          <div class="summary-line"><span>Le tue carte</span><strong>${self?.deck.length ?? 0}/${lobby.draft?.target ?? 6}</strong></div>
+          <div class="summary-line"><span>Pool rimasto</span><strong>${(lobby.draft?.pool ?? []).filter((item) => item.isAvailable).length}</strong></div>
+        </div>
+      `;
+    }
+
+    if (lobby.phase === "select") {
+      return `
+        <div class="side-summary">
+          <p class="eyebrow">SPECIAL round</p>
+          <div class="specials">${lobby.specialKeys.map((key) => `<span>${key}</span>`).join("")}</div>
+          <h2>${self?.isActive ? "Scegli la carta" : "Sei spettatore"}</h2>
+          ${selectedCard ? renderCardMath(selectedCard, lobby.specialKeys, "La tua preview") : `<p class="empty">Seleziona una carta per vedere il calcolo base.</p>`}
+        </div>
+      `;
+    }
+
+    if (lobby.phase === "fight") {
+      return `
+        <div class="side-summary">
+          <p class="eyebrow">${self?.isActive ? "La tua mossa" : "Duello in corso"}</p>
+          ${selectedCard ? renderFightMath(selectedCard, opponentCard, lobby, self, appState.useActive) : `<p class="empty">Stai guardando il fight.</p>`}
+          ${
+            selectedCard && self?.isActive
+              ? `
+                <label class="${canUseActive(selectedCard, self) ? "switch" : "switch muted"}">
+                  <input type="checkbox" data-action="toggle-active" ${appState.useActive && canUseActive(selectedCard, self) ? "checked" : ""} ${canUseActive(selectedCard, self) && self.selected?.useActive === null ? "" : "disabled"} />
+                  Usa attiva
+                </label>
+                <button type="button" data-action="submit-fight" ${self.selected?.useActive !== null ? "disabled" : ""}>
+                  ${self.selected?.useActive !== null ? "Fight confermato" : "Conferma fight"}
+                </button>
+              `
+              : ""
+          }
+        </div>
+      `;
+    }
+
+    if (lobby.phase === "reveal" || lobby.phase === "ended") {
+      return renderResultSummary(lobby.lastResult, snapshot.selfId);
+    }
+
+    return `
+      <div class="side-summary">
+        <p class="eyebrow">Lobby</p>
+        <h2>${lobby.players.length}/${snapshot.settings.maxPlayers}</h2>
+        <p>In attesa dell'inizio.</p>
+      </div>
     `;
   }
 
@@ -220,6 +389,10 @@ class GameApp extends HTMLElement {
           <p>${lobby.players.length < snapshot.settings.minPlayers ? `Servono ${snapshot.settings.minPlayers} player.` : "Pronti."}</p>
         </div>
       `;
+    }
+
+    if (lobby.phase === "draft") {
+      return this.renderDraft(lobby);
     }
 
     if (lobby.phase === "select") {
@@ -237,28 +410,60 @@ class GameApp extends HTMLElement {
     return this.renderResult(lobby, true);
   }
 
-  renderSelect(lobby) {
+  renderDraft(lobby) {
     const self = lobby.self;
-    const selectedCard = self.deck.find((card) => card.id === appState.selectedCardId) ?? self.deck[0];
-    const alreadyPlayed = Boolean(self.selected?.cardId);
+    const currentName = getPlayerName(lobby, lobby.draft?.currentPlayerId) ?? "Player";
+    const isMyTurn = self?.isCurrentDrafter;
 
     return `
       <div class="turn-head">
         <div>
-          <p class="eyebrow">Turno ${lobby.round}</p>
-          <h2>Scegli la carta</h2>
+          <p class="eyebrow">Draft</p>
+          <h2>${isMyTurn ? "Scegli una carta" : `Tocca a ${escapeHtml(currentName)}`}</h2>
         </div>
-        <div class="covered-specials">
-          <span>?</span><span>?</span><span>?</span>
+        <div class="turn-tools">
+          ${renderTimer(lobby)}
+          <div class="draft-counter">${self?.deck.length ?? 0}/${lobby.draft?.target ?? 6}</div>
+        </div>
+      </div>
+      <div class="draft-picked">
+        <strong>Le tue carte draftate</strong>
+        <div>${(self?.deck ?? []).map((card) => `<span>${escapeHtml(card.name)}</span>`).join("") || "<span>Nessuna</span>"}</div>
+      </div>
+      <div class="draft-pool">
+        ${(lobby.draft?.pool ?? [])
+          .map((item) => renderDraftCard(item, isMyTurn && item.isAvailable && (self?.deck.length ?? 0) < (lobby.draft?.target ?? 6)))
+          .join("")}
+      </div>
+    `;
+  }
+
+  renderSelect(lobby) {
+    const self = lobby.self;
+    const orderedDeck = orderCards(self.deck);
+    const selectedCard = orderedDeck.find((card) => card.id === appState.selectedCardId) ?? orderedDeck[0];
+    const alreadyPlayed = Boolean(self.selected?.cardId);
+    const activePlayers = getActivePlayers(lobby);
+    const pairLabel = activePlayers.map((player) => player.name).join(" vs ");
+
+    return `
+      <div class="turn-head">
+        <div>
+          <p class="eyebrow">Duello ${lobby.round}</p>
+          <h2>${escapeHtml(pairLabel)}</h2>
+        </div>
+        <div class="turn-tools">
+          ${renderTimer(lobby)}
+          <div class="specials">${lobby.specialKeys.map((key) => `<span>${key}</span>`).join("")}</div>
         </div>
       </div>
       ${
-        self.alive
+        self.alive && self.isActive
           ? `
             <div class="mana-line">
               <span>Mana ${self.mana}</span>
               <span>${self.deck.length} carte disponibili</span>
-              <span class="muted">${alreadyPlayed ? "Carta bloccata" : "SPECIAL coperti"}</span>
+              <span class="muted">${alreadyPlayed ? "Carta bloccata" : "SPECIAL visibili"}</span>
               <button type="button" data-action="submit-card" ${selectedCard && !alreadyPlayed ? "" : "disabled"}>
                 ${alreadyPlayed ? "Carta scelta" : "Conferma carta"}
               </button>
@@ -268,24 +473,23 @@ class GameApp extends HTMLElement {
                 <h2>Le tue carte</h2>
                 <span>${self.deck.length}</span>
               </div>
-              <div class="hand">
-                ${self.deck.map((card) => renderCardElement(card, [], card.id === selectedCard?.id, alreadyPlayed)).join("")}
+              <div class="hand ${appState.draggedCardId ? "is-sorting" : ""}">
+                ${orderedDeck.map((card) => renderCardElement(card, [], card.id === selectedCard?.id, alreadyPlayed, !alreadyPlayed)).join("")}
               </div>
             </div>
           `
-          : `<div class="waiting"><h2>Fuori</h2><p>La partita continua.</p></div>`
+          : `<div class="waiting"><h2>Stai guardando</h2><p>${escapeHtml(pairLabel)} stanno scegliendo la carta.</p></div>`
       }
     `;
   }
 
   renderFight(lobby, snapshot) {
     const self = lobby.self;
-    const selfPlayer = lobby.players.find((player) => player.id === snapshot.selfId);
-    const opponents = lobby.players.filter((player) => player.id !== snapshot.selfId);
-    const selectedCard = selfPlayer?.selectedCard ?? getCardById(self.selected?.cardId);
-    const activeCost = Number(selectedCard?.active?.cost ?? 0);
-    const canUseActive = selectedCard && self.mana >= activeCost;
-    const alreadyConfirmed = self.selected?.useActive !== null && self.selected?.useActive !== undefined;
+    const activePlayers = getActivePlayers(lobby);
+    const selfPlayer = activePlayers.find((player) => player.id === snapshot.selfId);
+    const opponents = activePlayers.filter((player) => player.id !== snapshot.selfId);
+    const isParticipant = Boolean(selfPlayer);
+    const opponentNames = opponents.map((player) => player.name).join(" vs ");
 
     return `
       <div class="turn-head">
@@ -295,64 +499,35 @@ class GameApp extends HTMLElement {
         </div>
         <div class="specials">${lobby.specialKeys.map((key) => `<span>${key}</span>`).join("")}</div>
       </div>
-      <div class="fight-grid">
-        <div class="fight-board">
-          <section class="fight-lane is-you">
-            <div class="fight-lane-title">
-              <span class="role-pill is-you">TU</span>
-              <div>
-                <strong>La tua carta</strong>
-                <small>${escapeHtml(selfPlayer?.name ?? "Tu")}</small>
-              </div>
-            </div>
-            ${renderChosenCard(selfPlayer, lobby.specialKeys, snapshot.selfId)}
-          </section>
-          <section class="fight-lane is-opponents">
-            <div class="fight-lane-title">
-              <span class="role-pill is-opponent">${opponents.length === 1 ? "AVVERSARIO" : "AVVERSARI"}</span>
-              <div>
-                <strong>${opponents.length === 1 ? "Carta avversaria" : "Carte avversarie"}</strong>
-                <small>${opponents.map((player) => player.name).join(", ")}</small>
-              </div>
-            </div>
-            <div class="fighters">
-              ${opponents.map((player) => renderChosenCard(player, lobby.specialKeys, snapshot.selfId)).join("")}
-            </div>
-          </section>
-        </div>
+      <div class="fight-board ${isParticipant ? "" : "is-spectator"}">
         ${
-          selectedCard && self.alive
+          isParticipant
             ? `
-              <aside class="choice-panel">
-                <p class="eyebrow">La tua mossa</p>
-                <h2>${escapeHtml(selectedCard.name)}</h2>
-                <div class="score-preview">
-                  <strong>${scoreBase(selectedCard, lobby.specialKeys)}</strong>
-                  <span>base</span>
+              <section class="fight-lane is-you">
+                <div class="fight-lane-title">
+                  <span class="role-pill is-you">TU</span>
+                  <div>
+                    <strong>La tua carta</strong>
+                    <small>${escapeHtml(selfPlayer.name)}</small>
+                  </div>
                 </div>
-                <div class="ability-list">
-                  <article class="ability-box">
-                    <span>Attiva - ${activeCost} mana</span>
-                    <strong>${escapeHtml(selectedCard.active.name)}</strong>
-                    <p>${escapeHtml(selectedCard.active.text)}</p>
-                  </article>
-                  <article class="ability-box">
-                    <span>Passiva</span>
-                    <strong>${escapeHtml(selectedCard.passive.name)}</strong>
-                    <p>${escapeHtml(selectedCard.passive.text)}</p>
-                  </article>
-                </div>
-                <label class="${canUseActive ? "switch" : "switch muted"}">
-                  <input type="checkbox" data-action="toggle-active" ${appState.useActive && canUseActive ? "checked" : ""} ${canUseActive && !alreadyConfirmed ? "" : "disabled"} />
-                  Usa attiva
-                </label>
-                <button type="button" data-action="submit-fight" ${alreadyConfirmed ? "disabled" : ""}>
-                  ${alreadyConfirmed ? "Fight confermato" : "Conferma fight"}
-                </button>
-              </aside>
+                ${renderChosenCard(selfPlayer, lobby.specialKeys, snapshot.selfId)}
+              </section>
             `
-            : `<aside class="choice-panel"><h2>In attesa</h2><p class="empty">Gli altri stanno decidendo.</p></aside>`
+            : ""
         }
+        <section class="fight-lane is-opponents">
+          <div class="fight-lane-title">
+            <span class="role-pill is-opponent">${escapeHtml(isParticipant ? opponentNames : "DUELLO")}</span>
+            <div>
+              <strong>${isParticipant ? "Carta in campo" : "Carte in campo"}</strong>
+              <small>${escapeHtml(opponentNames)}</small>
+            </div>
+          </div>
+          <div class="fighters">
+            ${opponents.map((player) => renderChosenCard(player, lobby.specialKeys, snapshot.selfId)).join("")}
+          </div>
+        </section>
       </div>
     `;
   }
@@ -360,6 +535,7 @@ class GameApp extends HTMLElement {
   renderResult(lobby, ended) {
     const result = lobby.lastResult;
     const winner = lobby.players.find((player) => player.id === lobby.winnerId);
+    const duelWinner = result?.winnerId ? result.plays.find((play) => play.playerId === result.winnerId) : null;
 
     if (!result) {
       return `
@@ -374,11 +550,11 @@ class GameApp extends HTMLElement {
       <div class="turn-head">
         <div>
           <p class="eyebrow">${ended ? "Fine partita" : `Turno ${result.round}`}</p>
-          <h2>${escapeHtml(result.plays.find((play) => play.playerId === result.winnerId)?.playerName ?? "Winner")} vince</h2>
+          <h2>${duelWinner ? `${escapeHtml(duelWinner.playerName)} vince` : "Pareggio"}</h2>
         </div>
         <div class="specials">${result.specialKeys.map((key) => `<span>${key}</span>`).join("")}</div>
       </div>
-      ${result.tieBreak ? `<p class="notice">Pari risolto con Luck, poi mana.</p>` : ""}
+      ${result.tieBreak ? `<p class="notice">Pareggio: nessuno perde carte, prossimo round.</p>` : ""}
       <div class="result-list">
         ${result.plays.map((play) => renderResultRow(play, result.specialKeys)).join("")}
       </div>
@@ -397,19 +573,23 @@ class GameApp extends HTMLElement {
       });
     });
 
-    this.querySelector('[data-action="name"]')?.addEventListener("submit", (event) => {
-      event.preventDefault();
-      const name = new FormData(event.currentTarget).get("name");
-      appState.playerName = String(name || "").trim();
+    this.querySelector('[data-action="name-input"]')?.addEventListener("input", (event) => {
+      appState.playerName = String(event.currentTarget.value || "");
       localStorage.setItem("vtg:name", appState.playerName);
-      send("setName", { name: appState.playerName });
-      this.render();
+      send("setName", { name: appState.playerName.trim() });
     });
 
     this.querySelector('[data-action="join"]')?.addEventListener("submit", (event) => {
       event.preventDefault();
       const lobbyId = new FormData(event.currentTarget).get("lobbyId");
       send("joinLobby", { lobbyId });
+    });
+
+    this.querySelector('[data-action="chat"]')?.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const input = event.currentTarget.querySelector("input");
+      send("sendChat", { text: input.value });
+      input.value = "";
     });
 
     this.querySelectorAll("[data-action]").forEach((element) => {
@@ -421,7 +601,13 @@ class GameApp extends HTMLElement {
         if (action === "start") send("startGame");
         if (action === "next-round") send("nextRound");
         if (action === "restart") send("restartLobby");
+        if (action === "draft-card" && !element.hasAttribute("disabled")) {
+          send("draftCard", { cardId: element.dataset.cardId });
+        }
         if (action === "select-card" && !element.hasAttribute("disabled")) {
+          if (Date.now() < appState.justDraggedUntil) {
+            return;
+          }
           appState.selectedCardId = element.dataset.cardId;
           appState.useActive = false;
           this.render();
@@ -439,6 +625,39 @@ class GameApp extends HTMLElement {
       appState.useActive = event.currentTarget.checked;
       this.render();
     });
+
+    this.querySelectorAll("[data-draggable-card]").forEach((element) => {
+      element.addEventListener("dragstart", (event) => {
+        appState.draggedCardId = element.dataset.cardId;
+        appState.justDraggedUntil = Date.now() + 500;
+        event.dataTransfer.effectAllowed = "move";
+        event.dataTransfer.setData("text/plain", element.dataset.cardId);
+        element.classList.add("is-dragging");
+      });
+
+      element.addEventListener("dragend", () => {
+        appState.draggedCardId = "";
+        appState.justDraggedUntil = Date.now() + 500;
+        this.render();
+      });
+
+      element.addEventListener("dragover", (event) => {
+        event.preventDefault();
+        const moved = moveHandCard(appState.draggedCardId, element.dataset.cardId);
+        if (moved) {
+          this.render();
+        }
+      });
+
+      element.addEventListener("drop", (event) => {
+        event.preventDefault();
+        const draggedCardId = event.dataTransfer.getData("text/plain") || appState.draggedCardId;
+        moveHandCard(draggedCardId, element.dataset.cardId);
+        appState.draggedCardId = "";
+        appState.justDraggedUntil = Date.now() + 500;
+        this.render();
+      });
+    });
   }
 }
 
@@ -448,7 +667,7 @@ class GameCard extends HTMLElement {
   }
 
   static get observedAttributes() {
-    return ["data-card-id", "data-specials", "data-selected", "data-disabled"];
+    return ["data-card-id", "data-action-name", "data-specials", "data-selected", "data-disabled"];
   }
 
   attributeChangedCallback() {
@@ -465,7 +684,7 @@ class GameCard extends HTMLElement {
     const initials = getInitials(card.name);
 
     this.innerHTML = `
-      <button type="button" data-action="select-card" data-card-id="${escapeAttr(card.id)}" ${this.dataset.disabled === "true" ? "disabled" : ""}>
+      <button type="button" data-action="${escapeAttr(this.dataset.actionName || "select-card")}" data-card-id="${escapeAttr(card.id)}" ${this.dataset.disabled === "true" ? "disabled" : ""}>
         <div class="card-image-fallback">
           <span>${escapeHtml(initials)}</span>
         </div>
@@ -514,21 +733,72 @@ function renderPlayer(player, phase) {
   `;
 }
 
-function renderCardElement(card, specialKeys, selected, disabled) {
+function renderTopPlayer(player, phase) {
+  const status = getPlayerStatus(player, phase);
+  const cards = player.deck ?? [];
   return `
-    <game-card
+    <article class="top-player ${player.alive ? "" : "is-out"}">
+      <strong>${escapeHtml(player.name)}</strong>
+      <span>${player.mana}M</span>
+      <span>${player.deckCount}C</span>
+      <small>${player.isHost ? `Host - ${status}` : status}</small>
+      <div class="top-card-strip">
+        ${
+          cards.length
+            ? cards
+                .map(
+                  (card) => `
+                    <img data-card-image src="${escapeAttr(cardImageSrc(card))}" alt="${escapeAttr(card.name ?? card.id)}" title="${escapeAttr(card.name ?? card.id)}" />
+                  `
+                )
+                .join("")
+            : `<i></i>`
+        }
+      </div>
+    </article>
+  `;
+}
+
+function renderCardElement(card, specialKeys, selected, disabled, draggable = false) {
+  const dragClass = appState.draggedCardId === card.id ? "is-dragging" : "";
+  return `
+    <div
+      class="hand-card-wrap ${dragClass}"
       data-card-id="${escapeAttr(card.id)}"
-      data-specials="${escapeAttr(specialKeys.join(","))}"
-      data-selected="${selected ? "true" : "false"}"
-      data-disabled="${disabled ? "true" : "false"}"
-      class="${selected ? "is-selected" : ""}"
-    ></game-card>
+      ${draggable ? `data-draggable-card draggable="true"` : ""}
+    >
+      <game-card
+        data-card-id="${escapeAttr(card.id)}"
+        data-action-name="select-card"
+        data-specials="${escapeAttr(specialKeys.join(","))}"
+        data-selected="${selected ? "true" : "false"}"
+        data-disabled="${disabled ? "true" : "false"}"
+        class="${selected ? "is-selected" : ""}"
+      ></game-card>
+    </div>
+  `;
+}
+
+function renderDraftCard(item, canPick) {
+  const card = item.card;
+  return `
+    <div class="draft-card-wrap">
+      <game-card
+        data-card-id="${escapeAttr(card.id)}"
+        data-action-name="draft-card"
+        data-specials=""
+        data-selected="false"
+        data-disabled="${canPick ? "false" : "true"}"
+        class="${item.isAvailable ? "" : "is-taken"}"
+      ></game-card>
+      ${item.isAvailable ? "" : `<span class="taken-label">Presa da ${escapeHtml(item.takenByName)}</span>`}
+    </div>
   `;
 }
 
 function renderChosenCard(player, specialKeys, selfId) {
   const isSelf = player?.id === selfId;
-  const roleText = isSelf ? "TU" : "AVVERSARIO";
+  const roleText = isSelf ? "TU" : player?.name ?? "Player";
   const card = player?.selectedCard;
 
   if (!card) {
@@ -549,7 +819,7 @@ function renderChosenCard(player, specialKeys, selfId) {
       </div>
       <img class="card-full-image" data-card-image src="${escapeAttr(cardImageSrc(card))}" alt="" />
       <div class="fight-body card-overlay">
-        <p class="eyebrow">${isSelf ? "La tua carta" : "Carta avversaria"} - ${escapeHtml(player.name)}</p>
+        <p class="eyebrow">${isSelf ? "La tua carta" : `Carta di ${escapeHtml(player.name)}`}</p>
         <h3>${escapeHtml(card.name)}</h3>
         ${renderStats(card, specialKeys)}
         <div class="mini-abilities">
@@ -563,7 +833,7 @@ function renderChosenCard(player, specialKeys, selfId) {
 
 function renderResultRow(play, specialKeys) {
   return `
-    <article class="result-row ${play.outcome === "win" ? "is-win" : "is-lose"}">
+    <article class="result-row ${play.outcome === "win" ? "is-win" : play.outcome === "tie" ? "is-tie" : "is-lose"}">
       <div class="result-card-art">
         <span>${escapeHtml(getInitials(play.cardName))}</span>
         ${play.card ? `<img data-card-image src="${escapeAttr(cardImageSrc(play.card))}" alt="" />` : ""}
@@ -589,6 +859,194 @@ function renderStats(card, specialKeys) {
   `;
 }
 
+function renderTimer(lobby) {
+  if (!lobby.deadlineAt || !["draft", "select"].includes(lobby.phase)) {
+    return "";
+  }
+
+  const deadlineAt = Number(lobby.deadlineAt);
+  const seconds = Math.max(0, Math.ceil((deadlineAt - Date.now()) / 1000));
+  return `<div class="timer-pill ${seconds <= 5 ? "is-low" : ""}" data-deadline-at="${deadlineAt}"><span>Timer</span><strong>${seconds}s</strong></div>`;
+}
+
+function syncHandOrder(hand) {
+  const ids = hand.map((card) => card.id);
+  appState.handOrder = appState.handOrder.filter((cardId) => ids.includes(cardId));
+  for (const cardId of ids) {
+    if (!appState.handOrder.includes(cardId)) {
+      appState.handOrder.push(cardId);
+    }
+  }
+}
+
+function orderCards(cards) {
+  syncHandOrder(cards);
+  const indexById = new Map(appState.handOrder.map((cardId, index) => [cardId, index]));
+  return [...cards].sort((left, right) => (indexById.get(left.id) ?? 999) - (indexById.get(right.id) ?? 999));
+}
+
+function moveHandCard(draggedCardId, targetCardId) {
+  if (!draggedCardId || !targetCardId || draggedCardId === targetCardId) {
+    return false;
+  }
+
+  const nextOrder = appState.handOrder.filter((cardId) => cardId !== draggedCardId);
+  const targetIndex = nextOrder.indexOf(targetCardId);
+  if (targetIndex < 0) {
+    return false;
+  }
+
+  nextOrder.splice(targetIndex, 0, draggedCardId);
+  if (nextOrder.join("|") === appState.handOrder.join("|")) {
+    return false;
+  }
+  appState.handOrder = nextOrder;
+  return true;
+}
+
+function renderChatMessage(message) {
+  return `
+    <div class="chat-message ${message.kind === "system" ? "is-system" : ""}">
+      <strong>${message.kind === "system" ? "Sistema" : escapeHtml(message.name ?? "Player")}</strong>
+      <p>${escapeHtml(message.text)}</p>
+    </div>
+  `;
+}
+
+function renderCardMath(card, specialKeys, title) {
+  return `
+    <div class="math-box">
+      <h3>${escapeHtml(title)}</h3>
+      <strong>${escapeHtml(card.name)}</strong>
+      <div class="summary-line"><span>Base SPECIAL</span><strong>${scoreBase(card, specialKeys)}</strong></div>
+      ${specialKeys
+        .map((key) => `<div class="summary-line"><span>${key}</span><strong>${Number(card.special[key] ?? 0)}</strong></div>`)
+        .join("")}
+      <div class="ability-box">
+        <span>Attiva - ${Number(card.active.cost ?? 0)} mana</span>
+        <strong>${escapeHtml(card.active.name)}</strong>
+        <p>${escapeHtml(card.active.text)}</p>
+      </div>
+      <div class="ability-box">
+        <span>Passiva - solo con attiva</span>
+        <strong>${escapeHtml(card.passive.name)}</strong>
+        <p>${escapeHtml(card.passive.text)}</p>
+      </div>
+    </div>
+  `;
+}
+
+function renderFightMath(card, opponentCard, lobby, self, useActive) {
+  const preview = scorePreview(card, lobby.specialKeys, useActive, self.mana, self.deck.length);
+  const opponentBase = opponentCard ? scoreBase(opponentCard, lobby.specialKeys) : null;
+  return `
+    <h2>${escapeHtml(card.name)}</h2>
+    <div class="score-preview">
+      <strong>${preview.score}</strong>
+      <span>${useActive ? "con attiva" : "senza attiva"}</span>
+    </div>
+    <div class="summary-line"><span>Base</span><strong>${preview.baseScore}</strong></div>
+    <div class="summary-line"><span>Attiva</span><strong>${formatSigned(preview.activeScore)}</strong></div>
+    <div class="summary-line"><span>Passiva ${useActive ? "" : "(spenta)"}</span><strong>${formatSigned(preview.passiveScore)}</strong></div>
+    <div class="summary-line"><span>Mana dopo scelta</span><strong>${Math.max(0, self.mana - preview.manaCost)}</strong></div>
+    ${
+      opponentCard
+        ? `<div class="summary-line is-compare"><span>Avversario base</span><strong>${opponentBase}</strong></div>
+           <p class="notice">${preview.score >= opponentBase ? "Se l'avversario non usa bonus, sei sopra o pari." : "Senza bonus extra sei sotto la base avversaria."}</p>`
+        : ""
+    }
+    <div class="ability-box">
+      <span>Attiva - ${Number(card.active.cost ?? 0)} mana</span>
+      <strong>${escapeHtml(card.active.name)}</strong>
+      <p>${escapeHtml(card.active.text)}</p>
+    </div>
+    <div class="ability-box">
+      <span>Passiva - solo con attiva</span>
+      <strong>${escapeHtml(card.passive.name)}</strong>
+      <p>${escapeHtml(card.passive.text)}</p>
+    </div>
+  `;
+}
+
+function renderResultSummary(result, selfId) {
+  if (!result) {
+    return `<div class="side-summary"><h2>Nessun risultato</h2></div>`;
+  }
+
+  const selfPlay = result.plays.find((play) => play.playerId === selfId);
+  const opponentPlay = result.plays.find((play) => play.playerId !== selfId);
+  const winnerPlay = result.winnerId ? result.plays.find((play) => play.playerId === result.winnerId) : null;
+  return `
+    <div class="side-summary">
+      <p class="eyebrow">${selfPlay ? result.winnerId ? `Perche ${selfPlay.outcome === "win" ? "hai vinto" : "hai perso"}` : "Perche e pari" : "Risultato duello"}</p>
+      <h2>${winnerPlay ? escapeHtml(winnerPlay.playerName) : "Pareggio"}</h2>
+      <p>${escapeHtml(result.summary?.reason ?? "")}</p>
+      ${(result.summary?.lines ?? []).map((line) => `<p class="math-line">${escapeHtml(line.text)}</p>`).join("")}
+      ${
+        selfPlay && opponentPlay
+          ? `
+            <div class="summary-line"><span>Tu</span><strong>${selfPlay.score}</strong></div>
+            <div class="summary-line"><span>Avversario</span><strong>${opponentPlay.score}</strong></div>
+            <div class="summary-line"><span>Mana speso</span><strong>${selfPlay.manaCost}</strong></div>
+            <div class="summary-line"><span>Mana round</span><strong>+${selfPlay.manaStartGain} / +${selfPlay.manaOutcomeGain}</strong></div>
+          `
+          : ""
+      }
+    </div>
+  `;
+}
+
+function scorePreview(card, specialKeys, useActive, mana, deckSize) {
+  const selectedStats = specialKeys.map((key) => Number(card.special[key] ?? 0));
+  const baseScore = selectedStats.reduce((total, value) => total + value, 0);
+  let activeScore = 0;
+  let passiveScore = 0;
+  let manaCost = 0;
+
+  if (useActive && mana >= Number(card.active?.cost ?? 0)) {
+    manaCost = Number(card.active.cost ?? 0);
+    activeScore = resolveEffect(card.active.effect, { card, specialKeys, selectedStats, mana, deckSize });
+    passiveScore = resolveEffect(card.passive.effect, { card, specialKeys, selectedStats, mana, deckSize });
+  }
+
+  return {
+    score: baseScore + activeScore + passiveScore,
+    baseScore,
+    activeScore,
+    passiveScore,
+    manaCost
+  };
+}
+
+function resolveEffect(effect, context) {
+  if (!effect) return 0;
+  if (effect.type === "score") return Number(effect.value ?? 0);
+  if (effect.type === "selected-stat") return context.specialKeys.includes(effect.stat) ? Number(context.card.special[effect.stat] ?? 0) : 0;
+  if (effect.type === "highest-selected") return Math.max(...context.selectedStats);
+  if (effect.type === "lowest-selected") return Math.min(...context.selectedStats);
+  if (effect.type === "contains") return context.specialKeys.includes(effect.stat) ? Number(effect.value ?? 0) : 0;
+  if (effect.type === "missing") return context.specialKeys.includes(effect.stat) ? 0 : Number(effect.value ?? 0);
+  if (effect.type === "deck-low") return context.deckSize <= Number(effect.count ?? 0) ? Number(effect.value ?? 0) : 0;
+  if (effect.type === "mana-low") return context.mana <= Number(effect.mana ?? 0) ? Number(effect.value ?? 0) : 0;
+  return 0;
+}
+
+function getActivePlayers(lobby) {
+  return (lobby.activePair ?? []).map((playerId) => lobby.players.find((player) => player.id === playerId)).filter(Boolean);
+}
+
+function getPlayerName(lobby, playerId) {
+  return lobby.players.find((player) => player.id === playerId)?.name;
+}
+
+function canUseActive(card, self) {
+  return Boolean(card && self && self.mana >= Number(card.active?.cost ?? 0));
+}
+
+function formatSigned(value) {
+  return value >= 0 ? `+${value}` : String(value);
+}
+
 function readCards(data) {
   return Array.isArray(data) ? data : data.cards ?? [];
 }
@@ -602,6 +1060,10 @@ function getPlayerStatus(player, phase) {
     return player.hasSelected ? "Carta scelta" : "Sceglie carta";
   }
 
+  if (phase === "draft") {
+    return player.isCurrentDrafter ? "Sta draftando" : `${player.draftCount} carte`;
+  }
+
   if (phase === "fight") {
     return player.hasFightChoice ? "Fight pronto" : "Decide attiva";
   }
@@ -612,6 +1074,7 @@ function getPlayerStatus(player, phase) {
 function phaseLabel(phase) {
   return {
     lobby: "Codice",
+    draft: "Draft",
     select: "Scelta carta",
     fight: "Fight",
     reveal: "Risultato",

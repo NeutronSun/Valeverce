@@ -10,6 +10,8 @@ send(playerTwo, "joinLobby", { lobbyId });
 await waitFor(playerTwo, (state) => state.lobby?.id === lobbyId && state.lobby.players.length === 2);
 
 send(playerOne, "startGame");
+await runDraft(playerOne, playerTwo);
+
 const stateOne = await waitFor(playerOne, (state) => state.lobby?.phase === "select");
 const stateTwo = await waitFor(playerTwo, (state) => state.lobby?.phase === "select");
 
@@ -24,11 +26,11 @@ send(playerTwo, "submitFight", { useActive: false });
 
 const reveal = await waitFor(playerOne, (state) => ["reveal", "ended"].includes(state.lobby?.phase));
 
-if (!reveal.lobby.lastResult?.winnerId) {
-  throw new Error("Missing winner in reveal state");
+if (!reveal.lobby.lastResult) {
+  throw new Error("Missing result in reveal state");
 }
 
-console.log(`ok lobby=${lobbyId} phase=${reveal.lobby.phase} winner=${reveal.lobby.lastResult.winnerId}`);
+console.log(`ok lobby=${lobbyId} phase=${reveal.lobby.phase} winner=${reveal.lobby.lastResult.winnerId ?? "tie"}`);
 
 playerOne.ws.close();
 playerTwo.ws.close();
@@ -69,13 +71,45 @@ function send(client, type, payload = {}) {
   client.ws.send(JSON.stringify({ type, payload }));
 }
 
+async function runDraft(...players) {
+  await waitFor(players[0], (state) => state.lobby?.phase === "draft");
+
+  while (true) {
+    const state = await waitFor(players[0], (nextState) => ["draft", "select"].includes(nextState.lobby?.phase), 10000);
+    if (state.lobby.phase === "select") {
+      return;
+    }
+
+    const currentPlayerId = state.lobby.draft.currentPlayerId;
+    const player = players.find((candidate) => candidate.states.at(-1)?.selfId === currentPlayerId) ?? players[0];
+    const playerState = await waitFor(
+      player,
+      (nextState) => nextState.lobby?.phase === "draft" && nextState.lobby.draft.currentPlayerId === currentPlayerId,
+      10000
+    );
+    const pick = playerState.lobby.draft.pool.find((item) => item.isAvailable)?.card.id;
+    if (!pick) {
+      throw new Error("No draft pick available");
+    }
+    send(player, "draftCard", { cardId: pick });
+    const takenCount = state.lobby.draft.taken.length;
+    await waitFor(
+      players[0],
+      (nextState) =>
+        nextState.lobby?.phase === "select" ||
+        (nextState.lobby?.phase === "draft" && nextState.lobby.draft.taken.length > takenCount),
+      10000
+    );
+  }
+}
+
 async function waitFor(client, predicate, timeoutMs = 5000) {
   const startedAt = Date.now();
 
   while (Date.now() - startedAt < timeoutMs) {
-    const found = client.states.find(predicate);
-    if (found) {
-      return found;
+    const latest = client.states.at(-1);
+    if (latest && predicate(latest)) {
+      return latest;
     }
 
     await new Promise((resolve) => {

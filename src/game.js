@@ -13,9 +13,10 @@ export const SPECIAL_LABELS = {
 export const SETTINGS = {
   startingMana: 3,
   maxMana: 10,
-  roundManaGain: 1,
+  roundManaGain: 0,
   winnerManaGain: 2,
-  loserManaGain: 1,
+  loserManaGain: 0,
+  actionSeconds: 15,
   draftSize: 6,
   handSize: 6,
   minPlayers: 2,

@@ -19,6 +19,7 @@ const appState = {
   playerName: localStorage.getItem("vtg:name") || "",
   selectedCardId: "",
   draftPreviewCardId: "",
+  menuOpen: false,
   plan: {
     cardId: "",
     attacks: {},
@@ -27,11 +28,49 @@ const appState = {
   },
   handOrder: [],
   draggedCardId: "",
-  justDraggedUntil: 0
+  justDraggedUntil: 0,
+  chatVisible: false,
+  chatFocusRequested: false,
+  chatLastMessageId: "",
+  chatHideTimer: null,
+  chatPosition: readChatPosition()
 };
 
 class GameApp extends HTMLElement {
   connectedCallback() {
+    this.onKeyDown = (event) => {
+      const lobby = appState.snapshot?.lobby;
+      const key = event.key.toLowerCase();
+
+      if (event.key === "Escape" && isChatTarget(event.target)) {
+        event.preventDefault();
+        event.target.blur?.();
+        scheduleChatHide(() => this.render(), 10000);
+        return;
+      }
+
+      if (key === "t" && lobby && !isTypingTarget(event.target)) {
+        event.preventDefault();
+        appState.chatVisible = true;
+        appState.chatFocusRequested = true;
+        clearChatHideTimer();
+        this.render();
+        return;
+      }
+
+      if (event.key !== "Escape") {
+        return;
+      }
+
+      if (!lobby) {
+        return;
+      }
+
+      event.preventDefault();
+      appState.menuOpen = !appState.menuOpen;
+      this.render();
+    };
+    document.addEventListener("keydown", this.onKeyDown);
     this.clock = window.setInterval(() => this.updateTimers(), 250);
     this.loadCards();
     this.connect();
@@ -39,6 +78,9 @@ class GameApp extends HTMLElement {
   }
 
   disconnectedCallback() {
+    document.removeEventListener("keydown", this.onKeyDown);
+    document.documentElement.classList.remove("has-menu-open");
+    document.body.classList.remove("has-menu-open");
     window.clearInterval(this.clock);
   }
 
@@ -73,9 +115,11 @@ class GameApp extends HTMLElement {
         appState.selfId = message.selfId;
       }
       if (message.type === "state") {
+        const previousChatId = appState.chatLastMessageId || getLastChatMessageId(appState.snapshot?.lobby);
         appState.snapshot = message;
         appState.selfId = message.selfId;
         this.keepSelectionValid();
+        this.syncChatVisibility(message.lobby, previousChatId, message.selfId);
       }
       if (message.type === "error") {
         appState.lastError = message.message;
@@ -153,26 +197,39 @@ class GameApp extends HTMLElement {
     const lobby = snapshot?.lobby;
     const focusState = this.captureFocusState();
     const title = lobby ? (lobby.phase === "lobby" ? "Lobby" : phaseLabel(lobby.phase)) : "Lobby";
+    const hideMatchChrome = Boolean(lobby && !["lobby", "draft"].includes(lobby.phase));
+    const menuOpen = Boolean(lobby && appState.menuOpen);
+    document.documentElement.classList.toggle("has-menu-open", menuOpen);
+    document.body.classList.toggle("has-menu-open", menuOpen);
 
     this.innerHTML = `
-      <main class="shell">
-        <section class="topbar ${lobby ? "is-compact" : ""}">
-          <div>
-            <p class="eyebrow">valeverce</p>
-            <h1>${escapeHtml(title)}</h1>
-          </div>
-          ${lobby ? `<div class="lobby-code"><span>Codice</span><strong>${escapeHtml(lobby.id)}</strong></div>` : ""}
-          <div class="connection ${appState.connected ? "is-online" : ""}">
-            ${appState.connected ? "Online" : "Connessione"}
-          </div>
-        </section>
+      <main class="shell ${hideMatchChrome ? "is-match-focus" : ""}">
+        ${
+          hideMatchChrome
+            ? ""
+            : `
+              <section class="topbar ${lobby ? "is-compact" : ""}">
+                <div>
+                  <p class="eyebrow">valeverce</p>
+                  <h1>${escapeHtml(title)}</h1>
+                </div>
+                ${lobby ? `<div class="lobby-code"><span>Codice</span><strong>${escapeHtml(lobby.id)}</strong></div>` : ""}
+                <div class="connection ${appState.connected ? "is-online" : ""}">
+                  ${appState.connected ? "Online" : "Connessione"}
+                </div>
+              </section>
+            `
+        }
         ${appState.lastError ? `<p class="toast">${escapeHtml(appState.lastError)}</p>` : ""}
-        ${lobby ? this.renderLobby(lobby, snapshot) : this.renderHome(snapshot)}
+        ${lobby ? this.renderLobby(lobby, snapshot, hideMatchChrome) : this.renderHome(snapshot)}
+        ${lobby && appState.menuOpen ? this.renderEscMenu(lobby, snapshot) : ""}
       </main>
     `;
 
     this.bindEvents();
+    this.openMenuDialog();
     this.restoreFocusState(focusState);
+    this.focusChatIfRequested();
     this.scrollChatToBottom();
     this.updateTimers();
   }
@@ -238,6 +295,47 @@ class GameApp extends HTMLElement {
     }
   }
 
+  focusChatIfRequested() {
+    if (!appState.chatFocusRequested) {
+      return;
+    }
+
+    const input = this.querySelector('[data-action="chat"] input');
+    if (input) {
+      input.focus();
+    }
+    appState.chatFocusRequested = false;
+  }
+
+  syncChatVisibility(lobby, previousChatId, selfId) {
+    const latestChatId = getLastChatMessageId(lobby);
+    if (!latestChatId) {
+      appState.chatLastMessageId = "";
+      return;
+    }
+
+    if (!previousChatId) {
+      appState.chatLastMessageId = latestChatId;
+      return;
+    }
+
+    if (latestChatId === previousChatId) {
+      appState.chatLastMessageId = latestChatId;
+      return;
+    }
+
+    const chat = lobby?.chat ?? [];
+    const previousIndex = chat.findIndex((message) => message.id === previousChatId);
+    const newMessages = previousIndex >= 0 ? chat.slice(previousIndex + 1) : chat.slice(-1);
+    appState.chatLastMessageId = latestChatId;
+
+    if (newMessages.some((message) => message.kind === "user" && message.playerId && message.playerId !== selfId)) {
+      appState.chatVisible = true;
+      appState.chatFocusRequested = false;
+      scheduleChatHide(() => this.render());
+    }
+  }
+
   updateTimers() {
     this.querySelectorAll(".timer-pill").forEach((timer) => {
       const deadlineAt = Number(timer.dataset.deadlineAt ?? 0);
@@ -247,6 +345,58 @@ class GameApp extends HTMLElement {
         label.textContent = `${seconds}s`;
       }
       timer.classList.toggle("is-low", seconds <= 5);
+    });
+  }
+
+  syncPlanUi() {
+    const lobby = appState.snapshot?.lobby;
+    const card = getCardById(lobby?.self?.selected?.cardId);
+    if (!lobby || lobby.phase !== "plan" || !card) {
+      return;
+    }
+
+    this.querySelectorAll(".choice-panel[data-plan-kind]").forEach((panel) => {
+      syncPlanPanel(panel, card);
+    });
+
+    const validation = getPlanValidation(lobby, card);
+    const submitted = Boolean(lobby.self?.selected?.attacks && lobby.self?.selected?.defenses);
+    const submitButton = this.querySelector('.action-dock [data-action="submit-plan"]');
+    if (submitButton) {
+      submitButton.disabled = Boolean(!lobby.self?.isActive || submitted || !validation.ok);
+    }
+
+    const dockState = this.querySelector(".dock-state small");
+    if (dockState) {
+      dockState.textContent = submitted ? "Piano confermato." : validation.ok ? "Pronto a confermare." : validation.error;
+    }
+
+    const manaPreview = getManaPreview(lobby, lobby.self, card, lobby.settings ?? {});
+    const manaBar = this.querySelector(".action-dock .resource-bar.is-mana");
+    if (manaBar) {
+      manaBar.dataset.tooltip = `Mana ${manaPreview}/${lobby.settings?.maxMana ?? 10}`;
+      manaBar.querySelector("i").style.width = `${percent(manaPreview, lobby.settings?.maxMana ?? 10)}%`;
+      manaBar.querySelector("span").textContent = `Mana ${manaPreview}/${lobby.settings?.maxMana ?? 10}`;
+    }
+
+    const stats = this.querySelector(".dock-card-stats");
+    if (stats) {
+      stats.outerHTML = renderDockStats(card, appState.plan);
+    }
+
+    const trait = this.querySelector(".dock-trait");
+    if (trait) {
+      trait.outerHTML = renderDockTrait(card, appState.plan);
+    }
+
+    const opponent = getActivePlayers(lobby).find((player) => player.id !== appState.selfId);
+    this.querySelectorAll("[data-plan-preview-lines], [data-main-preview-lines]").forEach((preview) => {
+      const lines = getPlanPreviewLines(card, opponent?.selectedCard, appState.plan.attacks);
+      preview.innerHTML = lines.length
+        ? lines
+        .map((line) => renderPreviewLine(line))
+        .join("")
+        : renderEmptyPreview();
     });
   }
 
@@ -284,6 +434,32 @@ class GameApp extends HTMLElement {
     `;
   }
 
+  renderEscMenu(lobby, snapshot) {
+    const isHost = lobby.hostId === snapshot.selfId;
+    return `
+      <dialog class="menu-modal" data-menu-dialog aria-label="Menu">
+        <div>
+          <p class="eyebrow">Menu</p>
+          <h2>valeverce</h2>
+        </div>
+        <div class="menu-actions">
+          <button type="button" data-action="close-menu">Riprendi</button>
+          ${isHost ? `<button type="button" class="ghost" data-action="restart">Reset lobby</button>` : ""}
+          <button type="button" class="ghost" data-action="leave">Esci lobby</button>
+        </div>
+      </dialog>
+    `;
+  }
+
+  openMenuDialog() {
+    const dialog = this.querySelector("[data-menu-dialog]");
+    if (!dialog || dialog.open) {
+      return;
+    }
+
+    dialog.showModal();
+  }
+
   renderLobbyRow(lobby) {
     const canJoin = lobby.phase === "lobby" && lobby.players < lobby.maxPlayers;
     return `
@@ -300,22 +476,27 @@ class GameApp extends HTMLElement {
     `;
   }
 
-  renderLobby(lobby, snapshot) {
+  renderLobby(lobby, snapshot, hideMatchChrome = false) {
     const isHost = lobby.hostId === snapshot.selfId;
     return `
-      <section class="panel match-head">
-        <div>
-          <p class="eyebrow">${escapeHtml(phaseLabel(lobby.phase))}</p>
-          <h2>${lobby.players.length}/${snapshot.settings.maxPlayers} player</h2>
-        </div>
-        <div class="actions">
-          <button type="button" class="ghost" data-action="leave">Esci</button>
-        </div>
-      </section>
+      ${
+        hideMatchChrome
+          ? ""
+          : `
+            <section class="panel match-head">
+              <div>
+                <p class="eyebrow">${escapeHtml(phaseLabel(lobby.phase))}</p>
+                <h2>${lobby.players.length}/${snapshot.settings.maxPlayers} player</h2>
+              </div>
+              <div class="actions">
+                <button type="button" class="ghost" data-action="leave">Esci</button>
+              </div>
+            </section>
+          `
+      }
       <section class="layout">
         <aside class="panel left-rail">
           ${this.renderPlayerBoard(lobby, snapshot)}
-          ${this.renderChat(lobby)}
         </aside>
         <section class="panel table">
           ${this.renderPhase(lobby, snapshot)}
@@ -325,22 +506,23 @@ class GameApp extends HTMLElement {
         </aside>
       </section>
       ${this.renderActionDock(lobby, snapshot, isHost)}
+      ${this.renderChat(lobby)}
     `;
   }
 
   renderPlayerBoard(lobby, snapshot) {
+    const activeOpponents = new Set((lobby.activePair ?? []).filter((playerId) => playerId !== snapshot.selfId));
     return `
       <div class="player-board">
         <div class="terminal-title">
-          <span>avversari</span>
-          <strong>${Math.max(0, lobby.players.length - 1)}</strong>
+          <span>player</span>
+          <strong>${lobby.players.length}</strong>
         </div>
         <div class="top-players">
           ${
             lobby.players
-              .filter((player) => player.id !== snapshot.selfId)
-              .map((player) => renderTopPlayer(player, lobby.phase, snapshot.settings))
-              .join("") || `<p class="empty compact">Nessun avversario.</p>`
+              .map((player) => renderTopPlayer(player, lobby.phase, snapshot.settings, activeOpponents.has(player.id), player.id === snapshot.selfId))
+              .join("") || `<p class="empty compact">Nessun player.</p>`
           }
         </div>
       </div>
@@ -348,11 +530,14 @@ class GameApp extends HTMLElement {
   }
 
   renderChat(lobby) {
+    const position = appState.chatPosition;
+    const style = position ? `style="left: ${Number(position.x)}px; top: ${Number(position.y)}px;"` : "";
     return `
-      <div class="chat">
-        <div class="chat-head">
+      <div class="chat-float ${appState.chatVisible ? "is-visible" : "is-hidden"}" data-chat-window ${style}>
+        <div class="chat-head" data-chat-drag>
           <span>chat</span>
           <strong>${lobby.chat?.length ?? 0}</strong>
+          <button type="button" class="chat-close" data-action="hide-chat" aria-label="Nascondi chat">x</button>
         </div>
         <div class="chat-log">
           ${(lobby.chat ?? []).map((message) => renderChatMessage(message)).join("")}
@@ -368,22 +553,51 @@ class GameApp extends HTMLElement {
   renderActionDock(lobby, snapshot, isHost) {
     const self = lobby.self;
     const action = getDockAction(lobby, snapshot, isHost);
+    const dockCard = getDockCard(lobby);
+    const manaPreview = getManaPreview(lobby, self, dockCard, snapshot.settings);
+    const activeCost = Number(dockCard?.active?.cost ?? 0);
+    const canToggleActive = Boolean(lobby.phase === "plan" && self?.isActive && dockCard && canUseActive(dockCard, self));
+    const submittedPlan = Boolean(lobby.phase === "plan" && self?.selected?.attacks && self?.selected?.defenses);
     return `
-      <section class="action-dock">
-        <div class="dock-player">
-          <strong>${escapeHtml(self?.name ?? "Player")}</strong>
-          <div class="dock-bars">
-            ${renderMiniResource("PV", self?.health ?? 0, self?.maxHealth ?? snapshot.settings.maxHealth, "health")}
-            ${renderMiniResource("Mana", self?.mana ?? 0, snapshot.settings.maxMana, "mana")}
+      <section class="action-hud ${dockCard ? "has-card" : ""}" data-action-dock>
+        <div class="dock-topline">
+          ${dockCard ? renderDockTrait(dockCard, appState.plan, lobby.phase === "plan") : `<div class="dock-trait is-empty"></div>`}
+          <div class="dock-state">
+            <span>${escapeHtml(action.state)}</span>
+            <small>${escapeHtml(action.detail)}</small>
           </div>
         </div>
-        <div class="dock-state">
-          <span>${escapeHtml(action.state)}</span>
-          <small>${escapeHtml(action.detail)}</small>
+        <div class="hud-main">
+          ${renderDockCard(dockCard)}
+          <div class="action-dock">
+            ${dockCard ? renderDockStats(dockCard, appState.plan) : `<div class="dock-card-stats is-empty"></div>`}
+            <div class="dock-actions">
+              ${
+                lobby.phase === "plan" && dockCard
+                  ? `
+                    <button
+                      type="button"
+                      class="dock-active rich-tooltip ${appState.plan.useActive ? "is-on" : ""}"
+                      data-action="toggle-active-button"
+                      ${canToggleActive && !submittedPlan ? "" : "disabled"}
+                      data-tooltip=""
+                    >
+                      Attiva <small>-${activeCost}</small>
+                      ${renderTooltipContent(dockCard.active?.text ?? "")}
+                    </button>
+                  `
+                  : ""
+              }
+              <button type="button" data-action="${escapeAttr(action.action)}" data-card-id="${escapeAttr(action.cardId ?? "")}" ${action.enabled ? "" : "disabled"}>
+                ${escapeHtml(action.label)}
+              </button>
+            </div>
+            <div class="dock-bars">
+              ${renderMiniResource("PV", self?.health ?? 0, self?.maxHealth ?? snapshot.settings.maxHealth, "health")}
+              ${renderMiniResource("Mana", manaPreview, snapshot.settings.maxMana, "mana")}
+            </div>
+          </div>
         </div>
-        <button type="button" data-action="${escapeAttr(action.action)}" data-card-id="${escapeAttr(action.cardId ?? "")}" ${action.enabled ? "" : "disabled"}>
-          ${escapeHtml(action.label)}
-        </button>
       </section>
     `;
   }
@@ -574,11 +788,7 @@ class GameApp extends HTMLElement {
           <div class="draft-counter">${self?.mana ?? 0} M</div>
         </div>
       </div>
-      <div class="fight-flow">
-        <div><strong>1</strong><span>Carte rivelate</span></div>
-        <div><strong>2</strong><span>Attacca sopra, difendi sotto</span></div>
-        <div><strong>3</strong><span>Reveal Breccia e danno PV</span></div>
-      </div>
+      ${isParticipant && self?.isActive && card ? renderFightPreviewOverview(card, opponentCard) : ""}
       ${
         isParticipant && self?.isActive && card
           ? selfPlayer.hasSubmittedPlan
@@ -593,46 +803,23 @@ class GameApp extends HTMLElement {
     const validation = getPlanValidation(lobby, card);
     const attackPool = getAttackPool(card);
     const defensePool = getDefensePool(card);
-    const activeCost = Number(card.active?.cost ?? 0);
-    const activeEnabled = canUseActive(card, lobby.self);
 
     return `
       <section class="plan-controls">
-        <div class="duel-planner">
-          <section class="duel-zone enemy-zone">
-            <div class="duel-card-slot">
-              <div class="fight-lane-title">
-                <span class="role-pill is-opponent">TARGET</span>
-                <div>
-                  <strong>${escapeHtml(opponent?.name ?? "Avversario")}</strong>
-                  <small>stat avversarie visibili, piano nascosto</small>
-                </div>
-              </div>
-              ${opponent ? renderChosenCard(opponent, selfId) : `<p class="empty">Avversario non disponibile.</p>`}
-            </div>
-            ${renderPlanDistribution({
-              title: "Attacca questa carta",
-              kind: "attacks",
-              card,
-              opponentCard,
-              distribution: appState.plan.attacks,
-              pool: attackPool,
-              slots: lobby.settings?.attackSlots ?? 3
-            })}
-          </section>
-          <section class="duel-zone own-zone">
-            <div class="duel-card-slot">
+        <div class="duel-planner is-grid">
+          <section class="duel-zone own-zone defense-zone">
+            <div class="duel-zone-head">
               <div class="fight-lane-title">
                 <span class="role-pill is-you">TU</span>
                 <div>
                   <strong>${escapeHtml(selfPlayer.name)}</strong>
-                  <small>scegli dove proteggerti</small>
+                  <small>proteggi la tua carta</small>
                 </div>
               </div>
-              ${renderChosenCard(selfPlayer, selfId)}
+              ${renderStats(card, [], Object.keys(appState.plan.defenses))}
             </div>
             ${renderPlanDistribution({
-              title: "Difendi la tua carta",
+              title: "",
               kind: "defenses",
               card,
               opponentCard,
@@ -641,13 +828,27 @@ class GameApp extends HTMLElement {
               slots: lobby.settings?.defenseSlots ?? 3
             })}
           </section>
-        </div>
-        <div class="mana-line">
-          <label class="${activeEnabled ? "switch" : "switch muted"}">
-            <input type="checkbox" data-action="toggle-active" ${appState.plan.useActive && activeEnabled ? "checked" : ""} ${activeEnabled ? "" : "disabled"} />
-            Usa attiva (${activeCost} mana)
-          </label>
-          <span>${escapeHtml(card.active?.name ?? "Attiva")}</span>
+          <section class="duel-zone enemy-zone attack-zone">
+            <div class="duel-zone-head">
+              <div class="fight-lane-title">
+                <span class="role-pill is-opponent">TARGET</span>
+                <div>
+                  <strong>${escapeHtml(opponent?.name ?? "Avversario")}</strong>
+                  <small>${opponentCard ? escapeHtml(opponentCard.name) : "carta avversaria rivelata"}</small>
+                </div>
+              </div>
+              ${opponentCard ? renderStats(opponentCard, Object.keys(appState.plan.attacks), [], getOpponentStatInfluences(card, appState.plan)) : ""}
+            </div>
+            ${renderPlanDistribution({
+              title: "",
+              kind: "attacks",
+              card,
+              opponentCard,
+              distribution: appState.plan.attacks,
+              pool: attackPool,
+              slots: lobby.settings?.attackSlots ?? 3
+            })}
+          </section>
         </div>
         ${validation.ok ? "" : `<p class="notice">${escapeHtml(validation.error)}</p>`}
       </section>
@@ -717,8 +918,39 @@ class GameApp extends HTMLElement {
     this.querySelector('[data-action="chat"]')?.addEventListener("submit", (event) => {
       event.preventDefault();
       const input = event.currentTarget.querySelector("input");
+      if (!input.value.trim()) {
+        return;
+      }
       send("sendChat", { text: input.value });
       input.value = "";
+    });
+
+    this.querySelector("[data-chat-window]")?.addEventListener("focusin", () => {
+      appState.chatVisible = true;
+      clearChatHideTimer();
+    });
+
+    this.querySelector("[data-chat-window]")?.addEventListener("focusout", () => {
+      window.setTimeout(() => {
+        if (!this.querySelector("[data-chat-window]")?.contains(document.activeElement)) {
+          scheduleChatHide(() => this.render(), 10000);
+        }
+      }, 0);
+    });
+
+    this.bindChatDrag();
+
+    this.querySelector("[data-menu-dialog]")?.addEventListener("click", (event) => {
+      if (event.target === event.currentTarget) {
+        appState.menuOpen = false;
+        this.render();
+      }
+    });
+
+    this.querySelector("[data-menu-dialog]")?.addEventListener("cancel", (event) => {
+      event.preventDefault();
+      appState.menuOpen = false;
+      this.render();
     });
 
     this.querySelectorAll("[data-action]").forEach((element) => {
@@ -726,10 +958,25 @@ class GameApp extends HTMLElement {
         const action = element.dataset.action;
         if (action === "create") send("createLobby");
         if (action === "join-code") send("joinLobby", { lobbyId: element.dataset.lobbyId });
-        if (action === "leave") send("leaveLobby");
+        if (action === "leave") {
+          appState.menuOpen = false;
+          send("leaveLobby");
+        }
+        if (action === "close-menu") {
+          appState.menuOpen = false;
+          this.render();
+        }
+        if (action === "hide-chat") {
+          appState.chatVisible = false;
+          clearChatHideTimer();
+          this.render();
+        }
         if (action === "start") send("startGame");
         if (action === "next-round") send("nextRound");
-        if (action === "restart") send("restartLobby");
+        if (action === "restart") {
+          appState.menuOpen = false;
+          send("restartLobby");
+        }
         if (action === "draft-card" && !element.hasAttribute("disabled")) {
           send("draftCard", { cardId: element.dataset.cardId });
         }
@@ -739,6 +986,10 @@ class GameApp extends HTMLElement {
         }
         if (action === "draft-selected-card" && !element.hasAttribute("disabled")) {
           send("draftCard", { cardId: element.dataset.cardId });
+        }
+        if (action === "toggle-active-button" && !element.hasAttribute("disabled")) {
+          appState.plan.useActive = !appState.plan.useActive;
+          this.render();
         }
         if (action === "select-card" && !element.hasAttribute("disabled")) {
           if (Date.now() < appState.justDraggedUntil) {
@@ -760,13 +1011,12 @@ class GameApp extends HTMLElement {
       });
     });
 
-    this.querySelector('[data-action="toggle-active"]')?.addEventListener("change", (event) => {
-      appState.plan.useActive = event.currentTarget.checked;
-      this.render();
-    });
-
     this.querySelectorAll('[data-action="plan-slider"]').forEach((input) => {
       input.addEventListener("input", (event) => {
+        updatePlanPoints(input.dataset.planKind, input.dataset.planStat, event.currentTarget.value);
+        this.syncPlanUi();
+      });
+      input.addEventListener("change", (event) => {
         updatePlanPoints(input.dataset.planKind, input.dataset.planStat, event.currentTarget.value);
         this.render();
       });
@@ -804,6 +1054,58 @@ class GameApp extends HTMLElement {
         this.render();
       });
     });
+  }
+
+  bindChatDrag() {
+    const chat = this.querySelector("[data-chat-window]");
+    const handle = this.querySelector("[data-chat-drag]");
+    if (!chat || !handle) {
+      return;
+    }
+
+    let dragState = null;
+    handle.addEventListener("pointerdown", (event) => {
+      if (event.button !== 0 || event.target.closest("button")) {
+        return;
+      }
+
+      const rect = chat.getBoundingClientRect();
+      dragState = {
+        offsetX: event.clientX - rect.left,
+        offsetY: event.clientY - rect.top
+      };
+      chat.classList.add("is-dragging");
+      handle.setPointerCapture?.(event.pointerId);
+    });
+
+    handle.addEventListener("pointermove", (event) => {
+      if (!dragState) {
+        return;
+      }
+
+      const rect = chat.getBoundingClientRect();
+      const x = clamp(event.clientX - dragState.offsetX, 8, window.innerWidth - rect.width - 8);
+      const y = clamp(event.clientY - dragState.offsetY, 8, window.innerHeight - rect.height - 8);
+      chat.style.left = `${x}px`;
+      chat.style.top = `${y}px`;
+      chat.style.right = "auto";
+      chat.style.bottom = "auto";
+      appState.chatPosition = { x, y };
+    });
+
+    const finishDrag = (event) => {
+      if (!dragState) {
+        return;
+      }
+
+      dragState = null;
+      chat.classList.remove("is-dragging");
+      handle.releasePointerCapture?.(event.pointerId);
+      writeChatPosition(appState.chatPosition);
+    };
+
+    handle.addEventListener("pointerup", finishDrag);
+    handle.addEventListener("pointercancel", finishDrag);
   }
 }
 
@@ -843,11 +1145,11 @@ class GameCard extends HTMLElement {
           <div class="abilities">
             <div class="ability-list">
               <span class="ability-name">${escapeHtml(card.active?.name ?? "Attiva")}</span>
-              <span class="ability-text">${escapeHtml(card.active?.text ?? "")}</span>
+              <span class="ability-text">${renderAbilityText(card.active?.text ?? "")}</span>
             </div>
             <div class="ability-list">
               <span class="ability-name">${escapeHtml(card.passive?.name ?? "Tratto")}</span>
-              <span class="ability-text">${escapeHtml(card.passive?.text ?? "")}</span>
+              <span class="ability-text">${renderAbilityText(card.passive?.text ?? "")}</span>
             </div>
           </div>
         </div>
@@ -865,7 +1167,7 @@ class GameCard extends HTMLElement {
 customElements.define("game-app", GameApp);
 customElements.define("game-card", GameCard);
 
-function renderTopPlayer(player, phase, settings) {
+function renderTopPlayer(player, phase, settings, isCurrentOpponent = false, isSelf = false) {
   const status = getPlayerStatus(player, phase);
   const cards = player.deck ?? [];
   const maxHealth = Number(player.maxHealth ?? settings?.maxHealth ?? 50);
@@ -873,17 +1175,17 @@ function renderTopPlayer(player, phase, settings) {
   const healthPct = percent(player.health, maxHealth);
   const manaPct = percent(player.mana, maxMana);
   return `
-    <article class="top-player ${player.alive ? "" : "is-out"}">
+    <article class="top-player ${player.alive ? "" : "is-out"} ${isCurrentOpponent ? "is-current-opponent" : ""} ${isSelf ? "is-self" : ""}">
       <div class="top-player-head">
         <strong>${escapeHtml(player.name)}</strong>
-        <small>${player.isHost ? `Host - ${status}` : status}</small>
+        <small>${[isSelf ? "Tu" : "", player.isHost ? "Host" : "", status].filter(Boolean).join(" - ")}</small>
       </div>
       <div class="top-player-bars">
-        <div class="resource-bar is-health" title="PV ${player.health}/${maxHealth}">
+        <div class="resource-bar is-health" data-tooltip="PV ${player.health}/${maxHealth}">
           <i style="width: ${healthPct}%"></i>
           <span>PV ${player.health}/${maxHealth}</span>
         </div>
-        <div class="resource-bar is-mana" title="Mana ${player.mana}/${maxMana}">
+        <div class="resource-bar is-mana" data-tooltip="Mana ${player.mana}/${maxMana}">
           <i style="width: ${manaPct}%"></i>
           <span>Mana ${player.mana}/${maxMana}</span>
         </div>
@@ -896,8 +1198,8 @@ function renderTopPlayer(player, phase, settings) {
                   (card) => {
                     const cooldown = Number(player.cooldowns?.[card.id] ?? 0);
                     return `
-                    <span class="top-card-thumb ${cooldown > 0 ? "is-cooling" : ""}">
-                      <img data-card-image src="${escapeAttr(cardImageSrc(card))}" alt="${escapeAttr(card.name ?? card.id)}" title="${escapeAttr(card.name ?? card.id)}" />
+                    <span class="top-card-thumb ${cooldown > 0 ? "is-cooling" : ""}" data-tooltip="${escapeAttr(card.name ?? card.id)}${cooldown > 0 ? escapeAttr(` - cooldown ${cooldown}`) : ""}">
+                      <img data-card-image src="${escapeAttr(cardImageSrc(card))}" alt="${escapeAttr(card.name ?? card.id)}" />
                       ${cooldown > 0 ? `<b>${cooldown}</b>` : ""}
                     </span>
                   `;
@@ -914,9 +1216,68 @@ function renderTopPlayer(player, phase, settings) {
 function renderMiniResource(label, value, max, kind) {
   const pct = percent(value, max);
   return `
-    <div class="resource-bar is-${escapeAttr(kind)}" title="${escapeAttr(`${label} ${value}/${max}`)}">
+    <div class="resource-bar is-${escapeAttr(kind)}" data-tooltip="${escapeAttr(`${label} ${value}/${max}`)}">
       <i style="width: ${pct}%"></i>
       <span>${escapeHtml(label)} ${value}/${max}</span>
+    </div>
+  `;
+}
+
+function renderDockCard(card) {
+  if (!card) {
+    return `
+      <div class="dock-card is-empty">
+        <div class="dock-card-art"><span>?</span></div>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="dock-card">
+      <div class="dock-card-art">
+        <span>${escapeHtml(getInitials(card.name))}</span>
+        <img data-card-image src="${escapeAttr(cardImageSrc(card))}" alt="" />
+      </div>
+    </div>
+  `;
+}
+
+function renderDockStats(card, plan = appState.plan) {
+  const influences = getStatInfluences(card, plan);
+  const valerio = getCardValerio(card);
+  return `
+    <div class="dock-card-stats">
+      <div class="dock-stat-row">
+        ${VALERIO_KEYS.map((key) => {
+          const value = Number(valerio[key] ?? 0);
+          const influence = influences[key] ?? "";
+          return `
+            <span
+              class="stat-tile rich-tooltip stat-${key.toLowerCase()} ${influence ? `is-${influence}-boosted` : ""}"
+              data-tooltip=""
+            >
+              <b>${value}</b>
+              <small>${key}</small>
+              ${renderTooltipContent(getStatInfluenceTitle(card, key, influence, value, plan))}
+            </span>
+          `;
+        }).join("")}
+      </div>
+    </div>
+  `;
+}
+
+function renderDockTrait(card, plan = appState.plan, evaluate = true) {
+  const trait = evaluate ? getTraitPreview(card, plan) : {
+    applied: false,
+    boostedStats: [],
+    title: `${card?.passive?.name ?? "Tratto"}: ${card?.passive?.text ?? ""}`
+  };
+  return `
+    <div class="dock-trait rich-tooltip ${trait.applied ? "is-active" : ""}" data-tooltip="">
+      <span class="trait-mark">P</span>
+      <strong>${escapeHtml(card.passive?.name ?? "Tratto")}</strong>
+      ${renderTooltipContent(trait.title)}
     </div>
   `;
 }
@@ -944,7 +1305,7 @@ function renderCardElement({ card, selected, disabled, draggable = false, cooldo
 function renderDraftCard(item, selected = false) {
   const card = item.card;
   return `
-    <div class="draft-card-wrap ${selected ? "is-previewed" : ""}">
+    <div class="draft-card-wrap ${selected ? "is-previewed" : ""} ${item.isAvailable ? "" : "is-taken"} ${item.isAvailable && !item.canAfford ? "is-too-expensive" : ""}">
       <game-card
         data-card-id="${escapeAttr(card.id)}"
         data-action-name="preview-draft-card"
@@ -957,7 +1318,7 @@ function renderDraftCard(item, selected = false) {
         <span>ATT ${card.combat?.attackPower ?? 0}% (${item.attackPool})</span>
         <span>DIF ${card.combat?.defensePower ?? 0}% (${item.defensePool})</span>
       </div>
-      ${item.isAvailable ? (item.canAfford ? "" : `<span class="taken-label">Troppo costosa</span>`) : `<span class="taken-label">Presa da ${escapeHtml(item.takenByName)}</span>`}
+      ${item.isAvailable ? (item.canAfford ? "" : `<span class="taken-label is-overlay">Troppo costosa</span>`) : `<span class="taken-label is-overlay">Presa da ${escapeHtml(item.takenByName)}</span>`}
     </div>
   `;
 }
@@ -990,8 +1351,8 @@ function renderChosenCard(player, selfId) {
         ${renderStats(card)}
         ${renderCombat(card)}
         <div class="mini-abilities">
-          <p><strong>${escapeHtml(card.active?.name ?? "Attiva")}</strong> ${escapeHtml(card.active?.text ?? "")}</p>
-          <p><strong>${escapeHtml(card.passive?.name ?? "Tratto")}</strong> ${escapeHtml(card.passive?.text ?? "")}</p>
+          <p><strong>${escapeHtml(card.active?.name ?? "Attiva")}</strong> ${renderAbilityText(card.active?.text ?? "")}</p>
+          <p><strong>${escapeHtml(card.passive?.name ?? "Tratto")}</strong> ${renderAbilityText(card.passive?.text ?? "")}</p>
         </div>
       </div>
     </article>
@@ -1006,12 +1367,12 @@ function renderPlanDistribution({ title, kind, card, opponentCard, distribution,
   const remaining = Math.max(0, pool - used);
   const isPoolFull = remaining <= 0;
   return `
-    <div class="choice-panel">
+    <div class="choice-panel" data-plan-kind="${escapeAttr(kind)}" data-plan-slots="${slots}">
       <div class="section-title">
-        <h2>${escapeHtml(title)}</h2>
-        <span>${selectedStats.length}/${slots} - ${used}/${pool}</span>
+        ${title ? `<h2>${escapeHtml(title)}</h2>` : ""}
+        <span data-plan-count>${selectedStats.length}/${slots} - ${used}/${pool}</span>
       </div>
-      <div class="pool-meter ${isPoolFull ? "is-full" : ""}">
+      <div class="pool-meter ${isPoolFull ? "is-full" : ""}" data-plan-meter>
         <i style="width: ${percent(used, pool)}%"></i>
         <span>${isPoolFull ? "Pool massimo raggiunto" : `${remaining} punti rimasti`}</span>
       </div>
@@ -1020,17 +1381,17 @@ function renderPlanDistribution({ title, kind, card, opponentCard, distribution,
           const value = Number(distribution[stat] ?? 0);
           const selected = value > 0;
           const locked = !selected && (selectedStats.length >= slots || isPoolFull);
-          const pointLimit = value + remaining;
           const pointsLocked = locked;
+          const influence = getPlanLineInfluence(card, kind, stat, appState.plan);
           return `
-            <label class="plan-stat ${selected ? "is-selected" : ""} ${locked || pointsLocked ? "is-locked" : ""}">
-              <span>${stat}</span>
+            <label class="plan-stat rich-tooltip ${selected ? "is-selected" : ""} ${locked || pointsLocked ? "is-locked" : ""} ${influence ? `is-${influence}-line` : ""}" data-tooltip="">
+              <span class="stat-${stat.toLowerCase()}">${stat}</span>
               <strong>${escapeHtml(VALERIO_LABELS[stat])}</strong>
               <small>${Number(getCardValerio(card)[stat] ?? 0)}${opponentCard ? ` vs ${Number(getCardValerio(opponentCard)[stat] ?? 0)}` : ""}</small>
               <input
                 type="range"
                 min="0"
-                max="${pointLimit}"
+                max="${pool}"
                 value="${value}"
                 data-action="plan-slider"
                 data-plan-kind="${escapeAttr(kind)}"
@@ -1038,9 +1399,25 @@ function renderPlanDistribution({ title, kind, card, opponentCard, distribution,
                 ${pointsLocked ? "disabled" : ""}
               />
               <b>${value}</b>
+              ${renderTooltipContent(getPlanLineTooltip(card, kind, stat, influence))}
             </label>
           `;
         }).join("")}
+      </div>
+    </div>
+  `;
+}
+
+function renderFightPreviewOverview(selectedCard, opponentCard) {
+  const lines = getPlanPreviewLines(selectedCard, opponentCard, appState.plan.attacks);
+  return `
+    <div class="fight-preview">
+      <div class="fight-preview-head">
+        <strong>Preview Breccia</strong>
+        <span>prima della difesa avversaria</span>
+      </div>
+      <div class="preview-stack is-main" data-main-preview-lines>
+        ${lines.length ? lines.map((line) => renderPreviewLine(line)).join("") : renderEmptyPreview()}
       </div>
     </div>
   `;
@@ -1083,13 +1460,13 @@ function renderAttackLine(line) {
     <div class="attack-line ${line.lineDamage > 0 ? "is-hit" : ""}">
       <strong>${line.stat}</strong>
       <span class="calc-strip">
-        <i class="calc-atk" title="Punti attacco">ATK ${line.attackPoints}</i>
+        <i class="calc-atk" data-tooltip="Punti attacco">ATK ${line.attackPoints}</i>
         <i class="calc-plus">+</i>
-        <i class="calc-own" title="Tuo VALERIO">${line.attackerValerio}</i>
+        <i class="calc-own" data-tooltip="VALERIO attaccante">${line.attackerValerio}</i>
         <i class="calc-minus">-</i>
-        <i class="calc-enemy" title="VALERIO avversario">OPP ${line.defenderValerio}</i>
+        <i class="calc-enemy" data-tooltip="VALERIO difensore">OPP ${line.defenderValerio}</i>
         <i class="calc-minus">-</i>
-        <i class="calc-def" title="Difesa avversaria">DEF ${line.defensePoints}</i>
+        <i class="calc-def" data-tooltip="Difesa investita">DEF ${line.defensePoints}</i>
       </span>
       <b>${line.lineDamage}</b>
       ${line.defenseIgnored ? `<em>difesa ignorata</em>` : ""}
@@ -1097,13 +1474,21 @@ function renderAttackLine(line) {
   `;
 }
 
-function renderStats(card, attackKeys = [], defenseKeys = []) {
+function renderStats(card, attackKeys = [], defenseKeys = [], influenceMap = {}) {
   const valerio = getCardValerio(card);
   return `
     <div class="stats">
       ${VALERIO_KEYS.map((key) => {
         const hotClass = attackKeys.includes(key) ? "is-hot" : defenseKeys.includes(key) ? "is-cool" : "";
-        return `<span class="${hotClass}" title="${escapeAttr(VALERIO_LABELS[key])}">${key}${Number(valerio[key] ?? 0)}</span>`;
+        const influenceClass = influenceMap[key] ? `is-${influenceMap[key]}-target` : "";
+        const value = Number(valerio[key] ?? 0);
+        return `
+          <span class="stat-tile rich-tooltip stat-${key.toLowerCase()} ${hotClass} ${influenceClass}" data-tooltip="">
+            <b>${value}</b>
+            <small>${key}</small>
+            ${renderTooltipContent(VALERIO_LABELS[key])}
+          </span>
+        `;
       }).join("")}
     </div>
   `;
@@ -1153,12 +1538,12 @@ function renderInspectorCard(card, title) {
         <div class="ability-box">
           <span>Attiva - ${Number(card.active?.cost ?? 0)} mana</span>
           <strong>${escapeHtml(card.active?.name ?? "Attiva")}</strong>
-          <p>${escapeHtml(card.active?.text ?? "")}</p>
+          <p>${renderAbilityText(card.active?.text ?? "")}</p>
         </div>
         <div class="ability-box">
           <span>Tratto</span>
           <strong>${escapeHtml(card.passive?.name ?? "Tratto")}</strong>
-          <p>${escapeHtml(card.passive?.text ?? "")}</p>
+          <p>${renderAbilityText(card.passive?.text ?? "")}</p>
         </div>
       </div>
     </div>
@@ -1176,12 +1561,12 @@ function renderCardMath(card, title) {
       <div class="ability-box">
         <span>Attiva - ${Number(card.active?.cost ?? 0)} mana</span>
         <strong>${escapeHtml(card.active?.name ?? "Attiva")}</strong>
-        <p>${escapeHtml(card.active?.text ?? "")}</p>
+        <p>${renderAbilityText(card.active?.text ?? "")}</p>
       </div>
       <div class="ability-box">
         <span>Tratto - sempre attivo</span>
         <strong>${escapeHtml(card.passive?.name ?? "Tratto")}</strong>
-        <p>${escapeHtml(card.passive?.text ?? "")}</p>
+        <p>${renderAbilityText(card.passive?.text ?? "")}</p>
       </div>
     </div>
   `;
@@ -1191,7 +1576,7 @@ function renderPlanSummary(lobby, self, selectedCard, opponent, opponentCard) {
   if (!self?.isActive || !selectedCard) {
     return `
       <div class="side-summary">
-        <p class="eyebrow">Piano</p>
+        <p class="eyebrow">Fight</p>
         <h2>Lobby duello</h2>
         <p>Le carte sono rivelate ai partecipanti. Attacchi e difese restano coperti fino al reveal.</p>
       </div>
@@ -1202,38 +1587,75 @@ function renderPlanSummary(lobby, self, selectedCard, opponent, opponentCard) {
   const defensePool = getDefensePool(selectedCard);
   const attacksUsed = sumDistribution(appState.plan.attacks);
   const defensesUsed = sumDistribution(appState.plan.defenses);
-  const previewLines = opponentCard
-    ? Object.entries(appState.plan.attacks)
-      .filter(([, points]) => Number(points ?? 0) > 0)
-      .map(([stat, points]) => {
-        const mine = Number(getCardValerio(selectedCard)[stat] ?? 0);
-        const enemy = Number(getCardValerio(opponentCard)[stat] ?? 0);
-        const raw = Number(points) + mine - enemy;
-        return { stat, points: Number(points), mine, enemy, result: Math.max(0, raw) };
-      })
-    : [];
+  const previewLines = getPlanPreviewLines(selectedCard, opponentCard, appState.plan.attacks);
 
   return `
-    <div class="side-summary">
-      <p class="eyebrow">Piano</p>
-      <h2>${escapeHtml(selectedCard.name)}</h2>
+    <div class="side-summary opponent-summary">
+      <p class="eyebrow">Target</p>
+      <h2>${escapeHtml(opponent?.name ?? "Avversario")}</h2>
+      ${opponentCard ? renderOpponentInfoCard(opponent, opponentCard, lobby.settings ?? appState.snapshot?.settings ?? {}) : `<p class="empty">Carta avversaria non disponibile.</p>`}
       <div class="summary-line"><span>Attacco</span><strong>${attacksUsed}/${attackPool}</strong></div>
       <div class="summary-line"><span>Difesa</span><strong>${defensesUsed}/${defensePool}</strong></div>
-      <div class="summary-line"><span>Mana dopo attiva</span><strong>${appState.plan.useActive ? Math.max(0, self.mana - Number(selectedCard.active?.cost ?? 0)) : self.mana}</strong></div>
-      ${opponentCard ? `<div class="summary-line is-compare"><span>Avversario</span><strong>${escapeHtml(opponent?.name ?? "Player")}</strong></div>` : ""}
-      ${previewLines.map((line) => renderPreviewLine(line)).join("")}
-      <div class="ability-box">
-        <span>Attiva - opzionale</span>
-        <strong>${escapeHtml(selectedCard.active?.name ?? "Attiva")}</strong>
-        <p>${escapeHtml(selectedCard.active?.text ?? "")}</p>
-      </div>
-      <div class="ability-box">
-        <span>Tratto - sempre attivo</span>
-        <strong>${escapeHtml(selectedCard.passive?.name ?? "Tratto")}</strong>
-        <p>${escapeHtml(selectedCard.passive?.text ?? "")}</p>
+      <div class="summary-line"><span>Mana previsto</span><strong>${appState.plan.useActive ? Math.max(0, self.mana - Number(selectedCard.active?.cost ?? 0)) : self.mana}</strong></div>
+      <div class="preview-stack" data-plan-preview-lines>
+        ${previewLines.length ? previewLines.map((line) => renderPreviewLine(line)).join("") : renderEmptyPreview()}
       </div>
     </div>
   `;
+}
+
+function renderOpponentInfoCard(opponent, card, settings = {}) {
+  const maxHealth = Number(opponent?.maxHealth ?? settings.maxHealth ?? 50);
+  const maxMana = Number(settings.maxMana ?? 10);
+  return `
+    <div class="opponent-hud-card">
+      <div class="opponent-card-art">
+        <span>${escapeHtml(getInitials(card.name))}</span>
+        <img data-card-image src="${escapeAttr(cardImageSrc(card))}" alt="" />
+      </div>
+      <div class="opponent-hud-body">
+        <div class="opponent-hud-title">
+          <strong>${escapeHtml(opponent?.name ?? "Avversario")}</strong>
+          <span>${escapeHtml(card.name)}</span>
+        </div>
+        <div class="opponent-hud-bars">
+          ${renderMiniResource("PV", opponent?.health ?? 0, maxHealth, "health")}
+          ${renderMiniResource("Mana", opponent?.mana ?? 0, maxMana, "mana")}
+        </div>
+      </div>
+    </div>
+    <div class="opponent-card-info">
+      <div class="opponent-card-body">
+        ${renderStats(card)}
+        ${renderCombat(card)}
+      </div>
+    </div>
+    <div class="ability-box is-compact">
+      <span>Attiva - ${Number(card.active?.cost ?? 0)} mana</span>
+      <strong>${escapeHtml(card.active?.name ?? "Attiva")}</strong>
+      <p>${renderAbilityText(card.active?.text ?? "")}</p>
+    </div>
+    <div class="ability-box is-compact">
+      <span>Tratto</span>
+      <strong>${escapeHtml(card.passive?.name ?? "Tratto")}</strong>
+      <p>${renderAbilityText(card.passive?.text ?? "")}</p>
+    </div>
+  `;
+}
+
+function getPlanPreviewLines(selectedCard, opponentCard, attacks) {
+  if (!selectedCard || !opponentCard) {
+    return [];
+  }
+
+  return Object.entries(attacks ?? {})
+    .filter(([, points]) => Number(points ?? 0) > 0)
+    .map(([stat, points]) => {
+      const mine = Number(getCardValerio(selectedCard)[stat] ?? 0);
+      const enemy = Number(getCardValerio(opponentCard)[stat] ?? 0);
+      const raw = Number(points) + mine - enemy;
+      return { stat, points: Number(points), mine, enemy, result: Math.max(0, raw) };
+    });
 }
 
 function renderPreviewLine(line) {
@@ -1241,17 +1663,21 @@ function renderPreviewLine(line) {
     <div class="preview-line">
       <strong>${escapeHtml(line.stat)}</strong>
       <span class="calc-strip">
-        <i class="calc-atk" title="Punti attacco investiti">ATK ${line.points}</i>
+        <i class="calc-atk" data-tooltip="Punti attacco investiti">ATK ${line.points}</i>
         <i class="calc-plus">+</i>
-        <i class="calc-own" title="VALERIO tuo">TU ${line.mine}</i>
+        <i class="calc-own" data-tooltip="VALERIO tuo">TU ${line.mine}</i>
         <i class="calc-minus">-</i>
-        <i class="calc-enemy" title="VALERIO avversario">OPP ${line.enemy}</i>
+        <i class="calc-enemy" data-tooltip="VALERIO avversario">OPP ${line.enemy}</i>
         <i class="calc-equals">=</i>
-        <i class="calc-result" title="Breccia prima della difesa">${line.result}</i>
+        <i class="calc-result" data-tooltip="Breccia prima della difesa">${line.result}</i>
       </span>
       <small>prima della difesa</small>
     </div>
   `;
+}
+
+function renderEmptyPreview() {
+  return `<p class="empty preview-empty">Muovi gli slider di attacco per vedere la previsione.</p>`;
 }
 
 function renderResultSummary(result, selfId) {
@@ -1412,12 +1838,288 @@ function captureInputFocus(input, extra) {
   };
 }
 
+function syncPlanPanel(panel, card) {
+  const kind = panel.dataset.planKind;
+  const slots = Number(panel.dataset.planSlots ?? 3);
+  const distribution = appState.plan[kind] ?? {};
+  const pool = kind === "attacks" ? getAttackPool(card) : getDefensePool(card);
+  const selectedStats = Object.entries(distribution)
+    .filter(([, value]) => Number(value ?? 0) > 0)
+    .map(([stat]) => stat);
+  const used = sumDistribution(distribution);
+  const remaining = Math.max(0, pool - used);
+  const isPoolFull = remaining <= 0;
+
+  const count = panel.querySelector("[data-plan-count]");
+  if (count) {
+    count.textContent = `${selectedStats.length}/${slots} - ${used}/${pool}`;
+  }
+
+  const meter = panel.querySelector("[data-plan-meter]");
+  if (meter) {
+    meter.classList.toggle("is-full", isPoolFull);
+    meter.querySelector("i").style.width = `${percent(used, pool)}%`;
+    meter.querySelector("span").textContent = isPoolFull ? "Pool massimo raggiunto" : `${remaining} punti rimasti`;
+  }
+
+  panel.querySelectorAll('[data-action="plan-slider"]').forEach((input) => {
+    const stat = input.dataset.planStat;
+    const value = Number(distribution[stat] ?? 0);
+    const selected = value > 0;
+    const locked = !selected && (selectedStats.length >= slots || isPoolFull);
+    const label = input.closest(".plan-stat");
+    const influence = getPlanLineInfluence(card, kind, stat, appState.plan);
+
+    input.max = String(pool);
+    input.value = String(value);
+    input.disabled = locked;
+
+    label?.classList.toggle("is-selected", selected);
+    label?.classList.toggle("is-locked", locked);
+    label?.classList.toggle("is-trait-line", influence === "trait");
+    label?.classList.toggle("is-active-line", influence === "active");
+    label?.classList.toggle("is-both-line", influence === "both");
+    if (label) {
+      label.dataset.tooltip = "";
+      const tooltip = label.querySelector(".tooltip-content");
+      if (tooltip) {
+        tooltip.innerHTML = renderAbilityText(getPlanLineTooltip(card, kind, stat, influence, appState.plan));
+      }
+    }
+    const valueBadge = label?.querySelector("b");
+    if (valueBadge) {
+      valueBadge.textContent = String(value);
+    }
+  });
+}
+
 function getActivePlayers(lobby) {
   return (lobby.activePair ?? []).map((playerId) => lobby.players.find((player) => player.id === playerId)).filter(Boolean);
 }
 
 function getPlayerName(lobby, playerId) {
   return lobby.players.find((player) => player.id === playerId)?.name;
+}
+
+function getDockCard(lobby) {
+  const self = lobby?.self;
+  if (!self) {
+    return null;
+  }
+
+  if (lobby.phase === "draft") {
+    return getDraftPreviewCard(lobby);
+  }
+
+  if (lobby.phase === "select") {
+    return getCardById(appState.selectedCardId) ?? self.selected?.selectedCard ?? null;
+  }
+
+  if (["plan", "reveal", "ended"].includes(lobby.phase)) {
+    return self.selected?.selectedCard ?? getCardById(self.selected?.cardId) ?? null;
+  }
+
+  return null;
+}
+
+function getManaPreview(lobby, self, card, settings = {}) {
+  const mana = Number(self?.mana ?? 0);
+  if (lobby?.phase === "plan" && appState.plan.useActive && card && canUseActive(card, self)) {
+    return Math.max(0, mana - Number(card.active?.cost ?? 0));
+  }
+  return Math.min(Number(settings.maxMana ?? 10), mana);
+}
+
+function getTraitPreview(card, plan = appState.plan) {
+  const effect = card?.passive?.effect ?? {};
+  const stat = effect.stat;
+  const attacks = plan?.attacks ?? {};
+  const defenses = plan?.defenses ?? {};
+  const hasAttack = VALERIO_KEYS.includes(stat) && Number(attacks[stat] ?? 0) > 0;
+  const hasDefense = VALERIO_KEYS.includes(stat) && Number(defenses[stat] ?? 0) > 0;
+  const value = Number(effect.value ?? 0);
+  const baseTitle = `${card?.passive?.name ?? "Tratto"}: ${card?.passive?.text ?? ""}`;
+  const statLabel = VALERIO_LABELS[stat] ?? "stat";
+
+  switch (effect.type) {
+    case "attack-stat-bonus":
+      return {
+        applied: hasAttack,
+        boostedStats: hasAttack ? [stat] : [],
+        title: `${baseTitle} ${hasAttack ? `Attivo: +${value} Breccia su ${statLabel}.` : `Si attiva attaccando con ${statLabel}.`}`
+      };
+    case "defense-stat-bonus":
+      return {
+        applied: hasDefense,
+        boostedStats: hasDefense ? [stat] : [],
+        title: `${baseTitle} ${hasDefense ? `Attivo: +${value} difesa su ${statLabel}.` : `Si attiva difendendo ${statLabel}.`}`
+      };
+    case "flat-damage":
+    case "score":
+      return {
+        applied: true,
+        boostedStats: [],
+        title: `${baseTitle} Sempre attivo: +${value} Breccia.`
+      };
+    case "contains":
+      return {
+        applied: hasAttack || hasDefense,
+        boostedStats: hasAttack || hasDefense ? [stat] : [],
+        title: `${baseTitle} Si attiva usando ${statLabel} in attacco o difesa.`
+      };
+    case "missing": {
+      const applied = VALERIO_KEYS.includes(stat) && !hasAttack && !hasDefense;
+      return {
+        applied,
+        boostedStats: applied ? [stat] : [],
+        title: `${baseTitle} Si attiva se non usi ${statLabel}.`
+      };
+    }
+    case "defense-hit-bonus":
+      return {
+        applied: false,
+        boostedStats: [],
+        title: `${baseTitle} Condizionale: dipende dagli attacchi avversari.`
+      };
+    default:
+      return {
+        applied: false,
+        boostedStats: [],
+        title: baseTitle
+      };
+  }
+}
+
+function getActiveInfluencedStats(card, plan = appState.plan) {
+  if (!plan?.useActive) {
+    return [];
+  }
+
+  const effect = card?.active?.effect ?? {};
+  if (
+    ["ignore-defense", "selected-stat"].includes(effect.type) &&
+    VALERIO_KEYS.includes(effect.stat) &&
+    Number(plan.attacks?.[effect.stat] ?? 0) > 0
+  ) {
+    return [effect.stat];
+  }
+
+  const count = Number(effect.count ?? 0);
+  if (["ignore-defense", "selected-stat"].includes(effect.type) && count > 0) {
+    return Object.entries(plan.attacks ?? {})
+      .filter(([, value]) => Number(value ?? 0) > 0)
+      .sort((left, right) => Number(right[1] ?? 0) - Number(left[1] ?? 0))
+      .slice(0, count)
+      .map(([stat]) => stat);
+  }
+
+  return [];
+}
+
+function getStatInfluences(card, plan = appState.plan) {
+  const passiveStats = new Set(getOwnValueBoostStats(card?.passive?.effect, plan));
+  const activeStats = new Set(plan?.useActive ? getOwnValueBoostStats(card?.active?.effect, plan) : []);
+  const result = {};
+
+  for (const key of VALERIO_KEYS) {
+    const passive = passiveStats.has(key);
+    const active = activeStats.has(key);
+    if (passive && active) {
+      result[key] = "both";
+    } else if (passive) {
+      result[key] = "trait";
+    } else if (active) {
+      result[key] = "active";
+    }
+  }
+
+  return result;
+}
+
+function getOwnValueBoostStats(effect, plan = appState.plan) {
+  if (!effect?.type) {
+    return [];
+  }
+
+  if (["valerio-bonus", "stat-bonus", "self-stat-bonus"].includes(effect.type) && VALERIO_KEYS.includes(effect.stat)) {
+    return [effect.stat];
+  }
+
+  return [];
+}
+
+function getPlanLineInfluence(card, kind, stat, plan = appState.plan) {
+  const traitStats = getTraitLineStats(card?.passive?.effect, kind, plan);
+  const activeStats = kind === "attacks" ? getActiveInfluencedStats(card, plan) : [];
+  const trait = traitStats.includes(stat);
+  const active = activeStats.includes(stat);
+
+  if (trait && active) return "both";
+  if (trait) return "trait";
+  if (active) return "active";
+  return "";
+}
+
+function getPlanLineTooltip(card, kind, stat, influence, plan = appState.plan) {
+  const label = VALERIO_LABELS[stat] ?? stat;
+  const mode = kind === "attacks" ? "attacco" : "difesa";
+  const notes = [`${label}: slider ${mode}`];
+  const trait = getTraitPreview(card, plan);
+
+  if (influence === "trait" || influence === "both") {
+    notes.push(`Tratto: ${trait.title}`);
+  }
+
+  if (influence === "active" || influence === "both") {
+    notes.push(`Attiva: ${card?.active?.text ?? card?.active?.name ?? "effetto attivo"}`);
+  }
+
+  return notes.join(" - ");
+}
+
+function getTraitLineStats(effect, kind, plan = appState.plan) {
+  if (!effect?.type || !VALERIO_KEYS.includes(effect.stat)) {
+    return [];
+  }
+
+  if (kind === "attacks" && ["attack-stat-bonus", "contains"].includes(effect.type) && Number(plan.attacks?.[effect.stat] ?? 0) > 0) {
+    return [effect.stat];
+  }
+
+  if (kind === "defenses" && ["defense-stat-bonus", "contains"].includes(effect.type) && Number(plan.defenses?.[effect.stat] ?? 0) > 0) {
+    return [effect.stat];
+  }
+
+  return [];
+}
+
+function getOpponentStatInfluences(card, plan = appState.plan) {
+  const result = {};
+  for (const stat of VALERIO_KEYS) {
+    const influence = getPlanLineInfluence(card, "attacks", stat, plan);
+    if (influence) {
+      result[stat] = influence;
+    }
+  }
+  return result;
+}
+
+function getStatInfluenceTitle(card, stat, influence, value, plan = appState.plan) {
+  const base = `${VALERIO_LABELS[stat]} originale: ${value}`;
+  const trait = getTraitPreview(card, plan);
+  const activeText = card?.active?.text ? `Attiva: ${card.active.text}` : "Attiva";
+
+  if (influence === "both") {
+    return `${base} - Passiva: ${trait.title} - ${activeText}`;
+  }
+  if (influence === "trait") {
+    return `${base} - Passiva: ${trait.title}`;
+  }
+  if (influence === "active") {
+    return `${base} - ${activeText}`;
+  }
+
+  return base;
 }
 
 function getDockAction(lobby, snapshot, isHost) {
@@ -1633,6 +2335,115 @@ function send(type, payload = {}) {
   if (appState.socket?.readyState === WebSocket.OPEN) {
     appState.socket.send(JSON.stringify({ type, payload }));
   }
+}
+
+function renderTooltipContent(value) {
+  return `<div class="tooltip-content">${renderAbilityText(value)}</div>`;
+}
+
+function renderAbilityText(value) {
+  const text = String(value ?? "");
+  const statPattern = /(?:(?:[+-]?\d+)\s+(?:punti|Breccia)\s+)?(?:Vigore|Astuzia|Lucidita|Lucidità|Ego|Rigore|Istinto|Opportunismo)\b/gi;
+  let output = "";
+  let lastIndex = 0;
+
+  for (const match of text.matchAll(statPattern)) {
+    const start = match.index ?? 0;
+    const chunk = match[0];
+    const stat = getStatFromText(chunk);
+
+    output += escapeHtml(text.slice(lastIndex, start));
+    output += stat
+      ? `<strong class="valerio-term stat-${stat.toLowerCase()}">${escapeHtml(chunk)}</strong>`
+      : escapeHtml(chunk);
+    lastIndex = start + chunk.length;
+  }
+
+  output += escapeHtml(text.slice(lastIndex));
+  return output;
+}
+
+function getStatFromText(value) {
+  const normalized = String(value)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+
+  for (const [key, label] of Object.entries(VALERIO_LABELS)) {
+    const normalizedLabel = label
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase();
+    if (normalized.includes(normalizedLabel)) {
+      return key;
+    }
+  }
+
+  return "";
+}
+
+function getLastChatMessageId(lobby) {
+  const chat = lobby?.chat ?? [];
+  return chat.at(-1)?.id ?? "";
+}
+
+function scheduleChatHide(onHide, delayMs = 10000) {
+  clearChatHideTimer();
+  appState.chatHideTimer = window.setTimeout(() => {
+    appState.chatVisible = false;
+    appState.chatHideTimer = null;
+    onHide?.();
+  }, delayMs);
+}
+
+function clearChatHideTimer() {
+  if (appState.chatHideTimer) {
+    window.clearTimeout(appState.chatHideTimer);
+    appState.chatHideTimer = null;
+  }
+}
+
+function readChatPosition() {
+  try {
+    const raw = localStorage.getItem("vtg:chat-position");
+    if (!raw) {
+      return null;
+    }
+
+    const position = JSON.parse(raw);
+    if (Number.isFinite(position?.x) && Number.isFinite(position?.y)) {
+      return {
+        x: clamp(Number(position.x), 8, Math.max(8, window.innerWidth - 320)),
+        y: clamp(Number(position.y), 8, Math.max(8, window.innerHeight - 220))
+      };
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
+}
+
+function writeChatPosition(position) {
+  if (!position) {
+    return;
+  }
+
+  localStorage.setItem("vtg:chat-position", JSON.stringify(position));
+}
+
+function isTypingTarget(target) {
+  const element = target instanceof Element ? target : null;
+  if (!element) {
+    return false;
+  }
+
+  return Boolean(element.closest("input, textarea, select, [contenteditable='true']"));
+}
+
+function isChatTarget(target) {
+  const element = target instanceof Element ? target : null;
+  return Boolean(element?.closest("[data-chat-window]"));
 }
 
 function escapeHtml(value) {

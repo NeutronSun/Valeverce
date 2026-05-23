@@ -14,7 +14,7 @@ export const SETTINGS = {
   startingHealth: 50,
   maxHealth: 50,
 
-  startingMana: 3,
+  startingMana: 10,
   maxMana: 10,
   roundManaGain: 1,
 

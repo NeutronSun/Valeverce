@@ -1,6 +1,8 @@
+import { io } from "socket.io-client";
+
 const lobbyId = process.argv[2];
 const holdMs = Number(process.argv[3] ?? 15000);
-const url = process.env.BOT_URL ?? "ws://localhost:3000";
+const url = process.env.BOT_URL ?? "http://localhost:3000";
 const valerioKeys = ["V", "A", "L", "E", "R", "I", "O"];
 
 if (!lobbyId) {
@@ -28,32 +30,35 @@ if (latest?.lobby?.phase === "plan" && latest.lobby.self.isActive && !latest.lob
   send(bot, "submitPlan", makePlanPayload(latest.lobby.self.selected.selectedCard));
 }
 await new Promise((resolve) => setTimeout(resolve, 500));
-bot.ws.close();
+bot.socket.close();
 
 async function connectPlayer(name) {
-  const ws = new WebSocket(url);
+  const socket = io(url, {
+    transports: ["websocket"],
+    reconnection: false
+  });
   const client = {
-    ws,
+    socket,
     states: [],
     waiters: []
   };
 
-  ws.addEventListener("message", (event) => {
-    const message = JSON.parse(event.data);
+  socket.on("state", (message) => {
     if (message.type === "state") {
       client.states.push(message);
       for (const waiter of client.waiters.splice(0)) {
         waiter();
       }
     }
-    if (message.type === "error") {
-      throw new Error(message.message);
-    }
+  });
+
+  socket.on("error", (message) => {
+    throw new Error(message.message);
   });
 
   await new Promise((resolve, reject) => {
-    ws.addEventListener("open", resolve, { once: true });
-    ws.addEventListener("error", reject, { once: true });
+    socket.once("connect", () => resolve());
+    socket.once("connect_error", reject);
   });
 
   send(client, "setName", { name });
@@ -62,7 +67,7 @@ async function connectPlayer(name) {
 }
 
 function send(client, type, payload = {}) {
-  client.ws.send(JSON.stringify({ type, payload }));
+  client.socket.emit(type, payload);
 }
 
 async function runDraft(client) {

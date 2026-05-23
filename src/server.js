@@ -1,10 +1,11 @@
 import crypto from "node:crypto";
-import { createReadStream } from "node:fs";
-import { readFile, stat } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import http from "node:http";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import next from "next";
+import { Server as SocketIOServer } from "socket.io";
 import {
   SETTINGS,
   VALERIO_LABELS,
@@ -15,65 +16,55 @@ import {
   shuffle,
   validateValerioPlan
 } from "./game.js";
+import { CLIENT_EVENT_NAMES, CLIENT_EVENTS, SERVER_EVENTS } from "./shared/events.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, "..");
 const publicDir = path.join(rootDir, "public");
 const port = Number(process.env.PORT ?? 3000);
+const isDev = process.env.NODE_ENV !== "production";
 
 const cardData = JSON.parse(await readFile(path.join(publicDir, "data", "cards.json"), "utf8"));
 const cards = readCards(cardData);
 const cardsById = new Map(cards.map((card) => [card.id, card]));
 
 const clients = new Map();
+const clientsBySocketId = new Map();
 const lobbies = new Map();
+let timerController;
+let lobbyManager;
 
-const server = http.createServer(serveStaticFile);
+const nextApp = next({ dev: isDev, dir: rootDir });
+const nextHandler = nextApp.getRequestHandler();
 
-server.on("upgrade", (request, socket) => {
-  if (request.headers.upgrade?.toLowerCase() !== "websocket") {
-    socket.destroy();
-    return;
+await nextApp.prepare();
+
+const server = http.createServer((request, response) => {
+  nextHandler(request, response);
+});
+
+const io = new SocketIOServer(server, {
+  cors: {
+    origin: true
   }
+});
 
-  const key = request.headers["sec-websocket-key"];
-  if (!key) {
-    socket.destroy();
-    return;
-  }
-
-  const accept = crypto
-    .createHash("sha1")
-    .update(`${key}258EAFA5-E914-47DA-95CA-C5AB0DC85B11`)
-    .digest("base64");
-
-  socket.write(
-    [
-      "HTTP/1.1 101 Switching Protocols",
-      "Upgrade: websocket",
-      "Connection: Upgrade",
-      `Sec-WebSocket-Accept: ${accept}`,
-      "",
-      ""
-    ].join("\r\n")
-  );
-
-  const client = {
-    id: makeId("p", 8),
-    name: `Player ${clients.size + 1}`,
-    lobbyId: null,
-    socket,
-    buffer: Buffer.alloc(0)
-  };
-
+io.on("connection", (socket) => {
+  const client = new ClientSession(socket, `Player ${clients.size + 1}`);
   clients.set(client.id, client);
-  socket.on("data", (chunk) => readSocketFrames(client, chunk));
-  socket.on("close", () => disconnectClient(client));
-  socket.on("error", () => disconnectClient(client));
+  clientsBySocketId.set(socket.id, client);
 
-  send(client, { type: "hello", selfId: client.id });
+  socket.emit(SERVER_EVENTS.HELLO, { type: SERVER_EVENTS.HELLO, selfId: client.id });
   sendState(client);
   broadcastLobbyList();
+
+  for (const eventName of [...CLIENT_EVENT_NAMES, "submitPlay", "submitFight"]) {
+    socket.on(eventName, (payload = {}) => {
+      handleMessage(client, { type: eventName, payload });
+    });
+  }
+
+  socket.on("disconnect", () => disconnectClient(client));
 });
 
 server.listen(port, "0.0.0.0", () => {
@@ -84,61 +75,93 @@ server.listen(port, "0.0.0.0", () => {
   }
 });
 
-async function serveStaticFile(request, response) {
-  try {
-    const requestUrl = new URL(request.url ?? "/", `http://${request.headers.host ?? "localhost"}`);
-    const pathname = requestUrl.pathname === "/" ? "/index.html" : requestUrl.pathname;
-    const filePath = safePublicPath(pathname);
-
-    if (!filePath) {
-      response.writeHead(403);
-      response.end("Forbidden");
-      return;
-    }
-
-    const fileStat = await stat(filePath);
-    if (!fileStat.isFile()) {
-      response.writeHead(404);
-      response.end("Not found");
-      return;
-    }
-
-    response.writeHead(200, {
-      "Content-Type": getMimeType(filePath),
-      "Cache-Control": getCacheControl(filePath)
-    });
-    createReadStream(filePath).pipe(response);
-  } catch (error) {
-    response.writeHead(error.code === "ENOENT" ? 404 : 500);
-    response.end(error.code === "ENOENT" ? "Not found" : "Server error");
+class ClientSession {
+  constructor(socket, fallbackName) {
+    this.id = makeId("p", 8);
+    this.name = fallbackName;
+    this.lobbyId = null;
+    this.socket = socket;
   }
 }
 
-function safePublicPath(pathname) {
-  const decoded = decodeURIComponent(pathname);
-  const resolved = path.resolve(publicDir, `.${decoded}`);
-  return resolved.startsWith(publicDir) ? resolved : null;
+class TimerController {
+  schedule(lobby, phase, delayMs, callback) {
+    this.clear(lobby);
+    const deadlineAt = Date.now() + delayMs;
+    lobby.deadlineAt = deadlineAt;
+    lobby.actionTimer = setTimeout(() => callback(deadlineAt), delayMs);
+  }
+
+  clear(lobby) {
+    if (lobby.actionTimer) {
+      clearTimeout(lobby.actionTimer);
+    }
+    lobby.actionTimer = null;
+    lobby.deadlineAt = null;
+  }
 }
 
-function getMimeType(filePath) {
-  const extension = path.extname(filePath).toLowerCase();
-  return {
-    ".css": "text/css; charset=utf-8",
-    ".html": "text/html; charset=utf-8",
-    ".js": "text/javascript; charset=utf-8",
-    ".json": "application/json; charset=utf-8",
-    ".png": "image/png",
-    ".jpg": "image/jpeg",
-    ".jpeg": "image/jpeg",
-    ".webp": "image/webp",
-    ".svg": "image/svg+xml"
-  }[extension] ?? "application/octet-stream";
+class LobbyState {
+  constructor({ id, hostId }) {
+    this.id = id;
+    this.hostId = hostId;
+    this.phase = "lobby";
+    this.round = 0;
+    this.playerOrder = [hostId];
+    this.activePair = [];
+    this.pairCursor = 0;
+    this.draft = null;
+    this.actionTimer = null;
+    this.deadlineAt = null;
+    this.chat = [];
+    this.players = new Map();
+    this.lastResult = null;
+    this.winnerId = null;
+  }
 }
 
-function getCacheControl(filePath) {
-  const extension = path.extname(filePath).toLowerCase();
-  return [".html", ".css", ".js", ".json"].includes(extension) ? "no-store" : "public, max-age=120";
+class LobbyManager {
+  constructor({ clients, lobbies }) {
+    this.clients = clients;
+    this.lobbies = lobbies;
+  }
+
+  attachClient(client, lobbyId) {
+    client.lobbyId = lobbyId;
+    client.socket.join(lobbyId);
+  }
+
+  detachClient(client, lobbyId) {
+    client.socket.leave(lobbyId);
+    client.lobbyId = null;
+  }
+
+  getClientLobby(client) {
+    return client.lobbyId ? this.lobbies.get(client.lobbyId) : null;
+  }
+
+  broadcastLobby(lobby) {
+    const room = io.sockets.adapter.rooms.get(lobby.id);
+    for (const socketId of room ?? []) {
+      const client = clientsBySocketId.get(socketId);
+      if (client) {
+        sendState(client);
+      }
+    }
+    this.broadcastLobbyList();
+  }
+
+  broadcastLobbyList() {
+    for (const client of this.clients.values()) {
+      if (!client.lobbyId) {
+        sendState(client);
+      }
+    }
+  }
 }
+
+timerController = new TimerController();
+lobbyManager = new LobbyManager({ clients, lobbies });
 
 function readCards(data) {
   const cardsList = Array.isArray(data) ? data : data.cards;
@@ -149,46 +172,38 @@ function readCards(data) {
   return cardsList;
 }
 
-function handleMessage(client, rawMessage) {
-  let message;
-  try {
-    message = JSON.parse(rawMessage);
-  } catch {
-    sendError(client, "Messaggio non valido");
-    return;
-  }
-
+function handleMessage(client, message) {
   const payload = message.payload ?? {};
 
   switch (message.type) {
-    case "setName":
+    case CLIENT_EVENTS.SET_NAME:
       client.name = sanitizeName(payload.name);
       updatePlayerName(client);
-      broadcastAllStates();
+      broadcastClientScope(client);
       break;
-    case "createLobby":
+    case CLIENT_EVENTS.CREATE_LOBBY:
       leaveLobby(client, { broadcast: false });
       createLobby(client);
       broadcastAllStates();
       break;
-    case "joinLobby":
+    case CLIENT_EVENTS.JOIN_LOBBY:
       leaveLobby(client, { broadcast: false });
       joinLobby(client, String(payload.lobbyId ?? ""));
       broadcastAllStates();
       break;
-    case "leaveLobby":
+    case CLIENT_EVENTS.LEAVE_LOBBY:
       leaveLobby(client);
       break;
-    case "startGame":
+    case CLIENT_EVENTS.START_GAME:
       startGame(client);
       break;
-    case "draftCard":
+    case CLIENT_EVENTS.DRAFT_CARD:
       draftCard(client, String(payload.cardId ?? ""));
       break;
-    case "selectCard":
+    case CLIENT_EVENTS.SELECT_CARD:
       selectCard(client, String(payload.cardId ?? ""));
       break;
-    case "submitPlan":
+    case CLIENT_EVENTS.SUBMIT_PLAN:
       submitPlan(client, payload);
       break;
     case "submitFight":
@@ -203,13 +218,13 @@ function handleMessage(client, rawMessage) {
         sendError(client, "Azione non valida in questa fase");
       }
       break;
-    case "nextRound":
+    case CLIENT_EVENTS.NEXT_ROUND:
       startNextRound(client);
       break;
-    case "restartLobby":
+    case CLIENT_EVENTS.RESTART_LOBBY:
       restartLobby(client);
       break;
-    case "sendChat":
+    case CLIENT_EVENTS.SEND_CHAT:
       sendChat(client, String(payload.text ?? ""));
       break;
     default:
@@ -219,27 +234,12 @@ function handleMessage(client, rawMessage) {
 
 function createLobby(client) {
   const lobbyId = makeLobbyId();
-  const lobby = {
-    id: lobbyId,
-    hostId: client.id,
-    phase: "lobby",
-    round: 0,
-    playerOrder: [client.id],
-    activePair: [],
-    pairCursor: 0,
-    draft: null,
-    actionTimer: null,
-    deadlineAt: null,
-    chat: [],
-    players: new Map(),
-    lastResult: null,
-    winnerId: null
-  };
+  const lobby = new LobbyState({ id: lobbyId, hostId: client.id });
 
   lobby.players.set(client.id, makePlayer(client));
   pushChat(lobby, { kind: "system", text: `${client.name} ha creato la lobby` });
   lobbies.set(lobbyId, lobby);
-  client.lobbyId = lobbyId;
+  lobbyManager.attachClient(client, lobbyId);
 }
 
 function joinLobby(client, lobbyId) {
@@ -264,7 +264,7 @@ function joinLobby(client, lobbyId) {
   lobby.players.set(client.id, makePlayer(client));
   lobby.playerOrder.push(client.id);
   pushChat(lobby, { kind: "system", text: `${client.name} entra in lobby` });
-  client.lobbyId = lobby.id;
+  lobbyManager.attachClient(client, lobby.id);
 }
 
 function startGame(client) {
@@ -303,7 +303,7 @@ function startGame(client) {
     kind: "system",
     text: `Draft iniziato: ${SETTINGS.draftSize} carte max, budget ${SETTINGS.draftBudget}`
   });
-  broadcastAllStates();
+  broadcastLobbyState(lobby);
 }
 
 function draftCard(client, cardId) {
@@ -379,7 +379,7 @@ function selectCard(client, cardId) {
     useActive: null
   };
   advanceRoundIfReady(lobby);
-  broadcastAllStates();
+  broadcastLobbyState(lobby);
 }
 
 function submitPlan(client, payload) {
@@ -428,7 +428,7 @@ function submitPlan(client, payload) {
   player.selected.defenses = plan.defenses;
   player.selected.useActive = plan.useActive;
   advanceRoundIfReady(lobby);
-  broadcastAllStates();
+  broadcastLobbyState(lobby);
 }
 
 function sendChat(client, text) {
@@ -449,7 +449,7 @@ function sendChat(client, text) {
     name: client.name,
     text: cleanText
   });
-  broadcastAllStates();
+  broadcastLobbyState(lobby);
 }
 
 function startNextRound(client) {
@@ -487,7 +487,7 @@ function restartLobby(client) {
     resetPlayerForGame(player);
   }
 
-  broadcastAllStates();
+  broadcastLobbyState(lobby);
 }
 
 function startRound(lobby) {
@@ -496,7 +496,7 @@ function startRound(lobby) {
     lobby.phase = "ended";
     lobby.winnerId = alivePlayers[0]?.id ?? null;
     clearActionTimer(lobby);
-    broadcastAllStates();
+    broadcastLobbyState(lobby);
     return;
   }
 
@@ -507,7 +507,7 @@ function startRound(lobby) {
     lobby.phase = "ended";
     lobby.winnerId = alivePlayers[0]?.id ?? null;
     clearActionTimer(lobby);
-    broadcastAllStates();
+    broadcastLobbyState(lobby);
     return;
   }
 
@@ -526,7 +526,7 @@ function startRound(lobby) {
   });
 
   scheduleActionTimer(lobby, "select");
-  broadcastAllStates();
+  broadcastLobbyState(lobby);
 }
 
 function enterPlan(lobby) {
@@ -702,7 +702,7 @@ function leaveLobby(client, options = { broadcast: true }) {
   if (lobby.draft) {
     lobby.draft.order = lobby.draft.order.filter((playerId) => playerId !== client.id);
   }
-  client.lobbyId = null;
+  lobbyManager.detachClient(client, lobby.id);
 
   if (lobby.players.size === 0) {
     clearActionTimer(lobby);
@@ -742,6 +742,7 @@ function disconnectClient(client) {
 
   leaveLobby(client, { broadcast: false });
   clients.delete(client.id);
+  clientsBySocketId.delete(client.socket.id);
   broadcastAllStates();
 }
 
@@ -778,7 +779,7 @@ function resetPlayerForGame(player) {
 }
 
 function getClientLobby(client) {
-  return client.lobbyId ? lobbies.get(client.lobbyId) : null;
+  return lobbyManager.getClientLobby(client);
 }
 
 function isActiveDuelist(lobby, playerId) {
@@ -835,7 +836,7 @@ function finishOrAdvanceDraft(lobby) {
 
   advanceDraftTurn(lobby);
   scheduleActionTimer(lobby, "draft");
-  broadcastAllStates();
+  broadcastLobbyState(lobby);
 }
 
 function advanceDraftTurn(lobby) {
@@ -894,22 +895,18 @@ function findAffordableDraftCard(lobby, player) {
 }
 
 function scheduleActionTimer(lobby, phase) {
-  clearActionTimer(lobby);
+  timerController.clear(lobby);
   if (!["draft", "select"].includes(phase)) {
     return;
   }
 
-  const deadlineAt = Date.now() + SETTINGS.actionSeconds * 1000;
-  lobby.deadlineAt = deadlineAt;
-  lobby.actionTimer = setTimeout(() => handleActionTimeout(lobby.id, phase, deadlineAt), SETTINGS.actionSeconds * 1000);
+  timerController.schedule(lobby, phase, SETTINGS.actionSeconds * 1000, (deadlineAt) => {
+    handleActionTimeout(lobby.id, phase, deadlineAt);
+  });
 }
 
 function clearActionTimer(lobby) {
-  if (lobby.actionTimer) {
-    clearTimeout(lobby.actionTimer);
-  }
-  lobby.actionTimer = null;
-  lobby.deadlineAt = null;
+  timerController.clear(lobby);
 }
 
 function handleActionTimeout(lobbyId, phase, deadlineAt) {
@@ -971,7 +968,7 @@ function autoSelectCards(lobby) {
   if (lobby.phase === "select") {
     scheduleActionTimer(lobby, "select");
   }
-  broadcastAllStates();
+  broadcastLobbyState(lobby);
 }
 
 function findSelectableCardId(player) {
@@ -1043,12 +1040,22 @@ function broadcastAllStates() {
   }
 }
 
-function broadcastLobbyList() {
-  for (const client of clients.values()) {
-    if (!client.lobbyId) {
-      sendState(client);
-    }
+function broadcastClientScope(client) {
+  const lobby = getClientLobby(client);
+  if (lobby) {
+    broadcastLobbyState(lobby);
+  } else {
+    sendState(client);
+    broadcastLobbyList();
   }
+}
+
+function broadcastLobbyState(lobby) {
+  lobbyManager.broadcastLobby(lobby);
+}
+
+function broadcastLobbyList() {
+  lobbyManager.broadcastLobbyList();
 }
 
 function sendState(client) {
@@ -1222,100 +1229,15 @@ function pushChat(lobby, entry) {
 }
 
 function sendError(client, message) {
-  send(client, { type: "error", message });
+  send(client, { type: SERVER_EVENTS.ERROR, message });
 }
 
 function send(client, payload) {
-  if (client.socket.destroyed) {
+  if (!client.socket.connected) {
     return;
   }
 
-  client.socket.write(makeFrame(JSON.stringify(payload)));
-}
-
-function readSocketFrames(client, chunk) {
-  client.buffer = Buffer.concat([client.buffer, chunk]);
-
-  while (client.buffer.length >= 2) {
-    const firstByte = client.buffer[0];
-    const secondByte = client.buffer[1];
-    const opcode = firstByte & 0x0f;
-    const masked = (secondByte & 0x80) === 0x80;
-    let length = secondByte & 0x7f;
-    let offset = 2;
-
-    if (length === 126) {
-      if (client.buffer.length < 4) {
-        return;
-      }
-      length = client.buffer.readUInt16BE(2);
-      offset = 4;
-    } else if (length === 127) {
-      if (client.buffer.length < 10) {
-        return;
-      }
-      length = Number(client.buffer.readBigUInt64BE(2));
-      offset = 10;
-    }
-
-    const maskOffset = offset;
-    if (masked) {
-      offset += 4;
-    }
-
-    if (client.buffer.length < offset + length) {
-      return;
-    }
-
-    const payload = client.buffer.subarray(offset, offset + length);
-    let data = payload;
-
-    if (masked) {
-      const mask = client.buffer.subarray(maskOffset, maskOffset + 4);
-      data = Buffer.alloc(length);
-      for (let index = 0; index < length; index += 1) {
-        data[index] = payload[index] ^ mask[index % 4];
-      }
-    }
-
-    client.buffer = client.buffer.subarray(offset + length);
-
-    if (opcode === 0x8) {
-      client.socket.end();
-      return;
-    }
-
-    if (opcode === 0x9) {
-      client.socket.write(makeFrame(data, 0x0a));
-      continue;
-    }
-
-    if (opcode === 0x1) {
-      handleMessage(client, data.toString("utf8"));
-    }
-  }
-}
-
-function makeFrame(data, opcode = 0x1) {
-  const payload = Buffer.isBuffer(data) ? data : Buffer.from(data);
-  const length = payload.length;
-  let header;
-
-  if (length < 126) {
-    header = Buffer.from([0x80 | opcode, length]);
-  } else if (length < 65536) {
-    header = Buffer.alloc(4);
-    header[0] = 0x80 | opcode;
-    header[1] = 126;
-    header.writeUInt16BE(length, 2);
-  } else {
-    header = Buffer.alloc(10);
-    header[0] = 0x80 | opcode;
-    header[1] = 127;
-    header.writeBigUInt64BE(BigInt(length), 2);
-  }
-
-  return Buffer.concat([header, payload]);
+  client.socket.emit(payload.type, payload);
 }
 
 function sanitizeName(name) {

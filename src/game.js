@@ -50,7 +50,7 @@ export function shuffle(items) {
 
 export function makeDeck(cards) {
   const deck = shuffle(cards.map((card) => card.id));
-  return SETTINGS.handSize === "all" ? deck : deck.slice(0, SETTINGS.handSize);
+  return deck.slice(0, SETTINGS.handSize);
 }
 
 export function getCardValerio(card) {

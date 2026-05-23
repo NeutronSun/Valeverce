@@ -6,11 +6,26 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "node src/server.js",
+    "build": "next build",
+    "typecheck": "tsc --noEmit",
     "smoke": "node scripts/smoke-test.mjs",
     "validate:cards": "node scripts/validate-cards.mjs",
-    "check": "node --check src/server.js && node --check src/game.js && node --check public/app.js && node --check scripts/smoke-test.mjs && node --check scripts/bot-player.mjs"
+    "check": "node --check src/server.js && node --check src/game.js && node --check scripts/smoke-test.mjs && node --check scripts/bot-player.mjs && npm run typecheck"
   },
   "engines": {
     "node": ">=20"
+  },
+  "dependencies": {
+    "next": "^15.3.2",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "socket.io": "^4.8.1",
+    "socket.io-client": "^4.8.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.18",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "typescript": "^5.8.3"
   }
 }

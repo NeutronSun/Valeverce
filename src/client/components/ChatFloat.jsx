@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { CLIENT_EVENTS } from "../../shared/events.js";
 
 export function ChatFloat({ lobby, emit }) {
@@ -8,10 +8,13 @@ export function ChatFloat({ lobby, emit }) {
   const [text, setText] = useState("");
   const [position, setPosition] = useState({ x: 18, y: 96 });
   const inputRef = useRef(null);
+  const logRef = useRef(null);
   const hideTimerRef = useRef(null);
   const lastSeenMessageIdRef = useRef(null);
   const latestMessage = lobby?.chat?.at(-1);
   const latestMessageId = latestMessage?.id;
+  const chatLength = lobby?.chat?.length ?? 0;
+  const selfId = lobby?.self?.id;
 
   useEffect(() => {
     lastSeenMessageIdRef.current = latestMessageId ?? null;
@@ -47,6 +50,14 @@ export function ChatFloat({ lobby, emit }) {
     return () => clearTimeout(hideTimerRef.current);
   }, [latestMessageId, latestMessage?.kind]);
 
+  useLayoutEffect(() => {
+    if (!visible || !logRef.current) {
+      return;
+    }
+
+    logRef.current.scrollTop = logRef.current.scrollHeight;
+  }, [chatLength, visible]);
+
   useEffect(() => {
     const onKeyDown = (event) => {
       if (event.key.toLowerCase() === "t" && document.activeElement?.tagName !== "INPUT") {
@@ -79,6 +90,11 @@ export function ChatFloat({ lobby, emit }) {
     }
     emit(CLIENT_EVENTS.SEND_CHAT, { text: clean });
     setText("");
+    requestAnimationFrame(() => {
+      if (logRef.current) {
+        logRef.current.scrollTop = logRef.current.scrollHeight;
+      }
+    });
   }
 
   function scheduleHideAfterBlur() {
@@ -118,13 +134,24 @@ export function ChatFloat({ lobby, emit }) {
           x
         </button>
       </div>
-      <div className="chat-log">
-        {lobby.chat.map((message) => (
-          <div key={message.id} className={`chat-message ${message.kind === "system" ? "is-system" : ""}`}>
-            <strong>{message.kind === "system" ? "sys" : message.name}</strong>
-            <p>{message.text}</p>
-          </div>
-        ))}
+      <div className="chat-log" ref={logRef}>
+        {lobby.chat.map((message) => {
+          const messageClass = [
+            "chat-message",
+            message.kind === "system" ? "is-system" : "",
+            message.kind === "user" && message.playerId === selfId ? "is-self" : "",
+            message.kind === "user" && message.playerId !== selfId ? "is-enemy" : ""
+          ]
+            .filter(Boolean)
+            .join(" ");
+
+          return (
+            <div key={message.id} className={messageClass}>
+              <strong>{message.kind === "system" ? "sys" : message.name}</strong>
+              <p>{message.text}</p>
+            </div>
+          );
+        })}
       </div>
       <form className="chat-form" onSubmit={submit}>
         <input

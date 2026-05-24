@@ -15,10 +15,10 @@ import {
   RevealView,
   SelectView
 } from "./PhaseViews.jsx";
-import { clampValue, currentOpponent, emptyPlan, phasePath, selectedStats, sumDistribution, validatePlanDraft } from "../ui.js";
+import { SETTINGS, clampValue, emptyPlan, phaseLabel, phasePath, selectedStats, sumDistribution, validatePlanDraft } from "../ui.js";
 
 export function GameApp({ initialLobbyId = "" }) {
-  const { snapshot, connectionState, lastError, clearError, emit, setName } = useGameSocket();
+  const { snapshot, connectionState, pingMs, lastError, clearError, emit, setName } = useGameSocket();
   const lobby = snapshot?.lobby ?? null;
   const [name, setNameState] = useState("");
   const [selectedCardId, setSelectedCardId] = useState("");
@@ -124,7 +124,8 @@ export function GameApp({ initialLobbyId = "" }) {
         const currentValue = Number(nextSection[key] ?? 0);
         const totalWithoutKey = sumDistribution(nextSection) - currentValue;
         const selected = selectedStats(nextSection).filter((stat) => stat !== key);
-        const canEnable = currentValue > 0 || value > 0 ? selected.length < 3 || currentValue > 0 : true;
+        const maxSlots = section === "attacks" ? SETTINGS.attackSlots : SETTINGS.defenseSlots;
+        const canEnable = currentValue > 0 || value > 0 ? selected.length < maxSlots || currentValue > 0 : true;
         nextSection[key] = canEnable ? clampValue(value, 0, Math.max(0, pool - totalWithoutKey)) : 0;
         return { ...current, [section]: nextSection };
       });
@@ -133,10 +134,9 @@ export function GameApp({ initialLobbyId = "" }) {
   );
 
   const shellClass = lobby ? "shell app-layout is-match-focus" : "shell";
-  const opponent = currentOpponent(lobby);
-
   return (
     <div className={shellClass}>
+      {lobby ? <MatchHeader lobby={lobby} connectionState={connectionState} pingMs={pingMs} /> : null}
       {lobby ? <PlayerRail lobby={lobby} /> : null}
       <main className={lobby ? "main-stage" : ""}>
         {lastError ? (
@@ -146,7 +146,14 @@ export function GameApp({ initialLobbyId = "" }) {
         ) : null}
 
         {!lobby ? (
-          <HomeView snapshot={snapshot} name={name} onNameChange={updateName} emit={emit} connectionState={connectionState} />
+          <HomeView
+            snapshot={snapshot}
+            name={name}
+            onNameChange={updateName}
+            emit={emit}
+            connectionState={connectionState}
+            pingMs={pingMs}
+          />
         ) : (
           <>
             {lobby.phase === "lobby" ? <LobbyView lobby={lobby} /> : null}
@@ -164,7 +171,7 @@ export function GameApp({ initialLobbyId = "" }) {
         )}
       </main>
 
-      {lobby ? <RightPanel lobby={lobby} previewCard={previewCard ?? opponent?.selectedCard} planPreview={planPreview} /> : null}
+      {lobby ? <RightPanel lobby={lobby} previewCard={previewCard} planPreview={planPreview} /> : null}
       {lobby ? (
         <ActionDock
           lobby={lobby}
@@ -207,5 +214,31 @@ export function GameApp({ initialLobbyId = "" }) {
         </div>
       </dialog>
     </div>
+  );
+}
+
+function MatchHeader({ lobby, connectionState, pingMs }) {
+  const self = lobby.self;
+  const pingLabel = Number.isFinite(pingMs) ? `${pingMs} ms` : "-- ms";
+
+  return (
+    <header className="match-header">
+      <div className="match-brand">
+        <span>V</span>
+        <strong>VALEVERCE</strong>
+      </div>
+      <div className="match-meta">
+        <span>Lobby <b>{lobby.id}</b></span>
+        <span>Player <b>{self?.name ?? "-"}</b></span>
+        <span>Fase <b>{phaseLabel(lobby.phase)}</b></span>
+        <span>Round <b>{lobby.round ?? 0}</b></span>
+      </div>
+      <div className={`match-signal is-${connectionState}`} title={`Ping: ${pingLabel}`} aria-label={`Ping: ${pingLabel}`}>
+        <i />
+        <i />
+        <i />
+        <i />
+      </div>
+    </header>
   );
 }

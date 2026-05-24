@@ -321,8 +321,12 @@ export function validatePlanDraft(plan, card) {
     attackCount,
     defenseCount,
     canSubmit:
-      attackCount === SETTINGS.attackSlots &&
-      defenseCount === SETTINGS.defenseSlots &&
+      attackCount >= 1 &&
+      attackCount <= SETTINGS.attackSlots &&
+      defenseCount >= 1 &&
+      defenseCount <= SETTINGS.defenseSlots &&
+      attackTotal > 0 &&
+      defenseTotal > 0 &&
       attackTotal <= attackPool &&
       defenseTotal <= defensePool
   };

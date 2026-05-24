@@ -5,6 +5,7 @@ import { io } from "socket.io-client";
 import { CLIENT_EVENTS, SERVER_EVENTS } from "../shared/events.js";
 
 const storedNameKey = "valeverce.playerName";
+const pingIntervalMs = 2500;
 
 export function useGameSocket() {
   const socketRef = useRef(null);
@@ -12,6 +13,7 @@ export function useGameSocket() {
   const [selfId, setSelfId] = useState(null);
   const [connectionState, setConnectionState] = useState("connecting");
   const [lastError, setLastError] = useState("");
+  const [pingMs, setPingMs] = useState(null);
 
   useEffect(() => {
     const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL || undefined, {
@@ -20,15 +22,46 @@ export function useGameSocket() {
     });
     socketRef.current = socket;
 
+    let pingInterval = null;
+
+    const stopPing = () => {
+      if (pingInterval) {
+        window.clearInterval(pingInterval);
+      }
+      pingInterval = null;
+    };
+
+    const measurePing = () => {
+      if (!socket.connected) {
+        return;
+      }
+
+      const startedAt = performance.now();
+      socket.emit(CLIENT_EVENTS.LATENCY_PROBE, { sentAt: Date.now() }, () => {
+        setPingMs(Math.max(0, Math.round(performance.now() - startedAt)));
+      });
+    };
+
+    const startPing = () => {
+      stopPing();
+      measurePing();
+      pingInterval = window.setInterval(measurePing, pingIntervalMs);
+    };
+
     socket.on("connect", () => {
       setConnectionState("connected");
       const savedName = window.localStorage.getItem(storedNameKey);
       if (savedName) {
         socket.emit(CLIENT_EVENTS.SET_NAME, { name: savedName });
       }
+      startPing();
     });
 
-    socket.on("disconnect", () => setConnectionState("disconnected"));
+    socket.on("disconnect", () => {
+      stopPing();
+      setConnectionState("disconnected");
+      setPingMs(null);
+    });
     socket.on("reconnect_attempt", () => setConnectionState("reconnecting"));
 
     socket.on(SERVER_EVENTS.HELLO, (message) => {
@@ -45,6 +78,7 @@ export function useGameSocket() {
     });
 
     return () => {
+      stopPing();
       socket.disconnect();
       socketRef.current = null;
     };
@@ -69,11 +103,12 @@ export function useGameSocket() {
       snapshot,
       selfId,
       connectionState,
+      pingMs,
       lastError,
       clearError: () => setLastError(""),
       emit,
       setName
     }),
-    [snapshot, selfId, connectionState, lastError, emit, setName]
+    [snapshot, selfId, connectionState, pingMs, lastError, emit, setName]
   );
 }

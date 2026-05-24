@@ -1777,12 +1777,20 @@ function getPlanValidation(lobby, card) {
   const defenseTotal = sumDistribution(appState.plan.defenses);
   const attackPool = getAttackPool(card);
   const defensePool = getDefensePool(card);
+  const attackSlots = lobby.settings?.attackSlots ?? 3;
+  const defenseSlots = lobby.settings?.defenseSlots ?? 3;
 
-  if (attackCount !== 3) {
-    return { ok: false, error: "Scegli esattamente 3 statistiche di attacco." };
+  if (attackCount < 1) {
+    return { ok: false, error: "Metti almeno 1 punto in attacco." };
   }
-  if (defenseCount !== 3) {
-    return { ok: false, error: "Scegli esattamente 3 statistiche di difesa." };
+  if (attackCount > attackSlots) {
+    return { ok: false, error: `Puoi attaccare massimo ${attackSlots} statistiche.` };
+  }
+  if (defenseCount < 1) {
+    return { ok: false, error: "Metti almeno 1 punto in difesa." };
+  }
+  if (defenseCount > defenseSlots) {
+    return { ok: false, error: `Puoi difendere massimo ${defenseSlots} statistiche.` };
   }
   if (attackTotal > attackPool) {
     return { ok: false, error: `Attacco oltre pool: ${attackTotal}/${attackPool}.` };

@@ -123,17 +123,14 @@ export function getNormalDamageCap(card) {
   return Math.floor(getValerioTotal(card) * SETTINGS.normalDamageCapRatio);
 }
 
-export function validateValerioDistribution(distribution, expectedCount, maxPool) {
+export function validateValerioDistribution(distribution, maxCount, maxPool) {
   if (!distribution || typeof distribution !== "object" || Array.isArray(distribution)) {
     return { ok: false, error: "Distribuzione non valida", total: 0 };
   }
 
   const entries = Object.entries(distribution);
-  if (entries.length !== expectedCount) {
-    return { ok: false, error: `Servono esattamente ${expectedCount} statistiche`, total: 0 };
-  }
-
   let total = 0;
+  let selectedCount = 0;
   for (const [key, value] of entries) {
     if (!VALERIO_KEYS.includes(key)) {
       return { ok: false, error: `Stat VALERIO non valida: ${key}`, total };
@@ -144,6 +141,17 @@ export function validateValerioDistribution(distribution, expectedCount, maxPool
     }
 
     total += value;
+    if (value > 0) {
+      selectedCount += 1;
+    }
+  }
+
+  if (selectedCount < 1) {
+    return { ok: false, error: "Metti almeno 1 punto", total };
+  }
+
+  if (selectedCount > maxCount) {
+    return { ok: false, error: `Puoi usare massimo ${maxCount} statistiche`, total };
   }
 
   if (total > maxPool) {

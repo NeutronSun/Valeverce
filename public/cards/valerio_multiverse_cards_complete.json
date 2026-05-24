@@ -4,7 +4,7 @@
     "id": "valerio_multiverse",
     "name": "Valerio Multiverse Cards",
     "language": "it",
-    "description": "Set completo delle carte Valerio aggiornato al sistema VALERIO con combat power, costo draft e rarità coerente con la forza/costo della carta.",
+    "description": "Set completo delle carte Valerio bilanciato per draft budget: rarità, costo draft, combat power e valori VALERIO sono coerenti tra loro.",
     "effect_types_supported": [
       "damage",
       "break-cap",
@@ -14,8 +14,8 @@
       "flat-damage",
       "defense-hit-bonus"
     ],
-    "design_note": "Carte convertite dal vecchio sistema SPECIAL al nuovo sistema VALERIO. Ogni carta ha valerio con totale massimo 40, combat.attackPower, combat.defensePower e combat.draftCost. I valori sono generati in modo pseudo-casuale/coerente e vanno rifiniti manualmente per il bilanciamento finale.",
-    "name_revision": "v6_valerio_combat_draft_rarity",
+    "design_note": "Bilanciamento v7: il costo draft è imposto dalla rarità per impedire mazzi full premium. Con draftBudget 20, cardsPerPlayer 6 e costo minimo 1, leggendaria/mitica/speciale costano 6, quindi se ne possono includere al massimo 2 nello stesso mazzo. Combat power, VALERIO e valori di attive/passive sono stati scalati per fascia senza cambiare la struttura JSON delle carte.",
+    "name_revision": "v7_rarity_cost_budget_balance",
     "valerio_legend": {
       "V": "Vigore",
       "A": "Astuzia",
@@ -28,17 +28,89 @@
     "draft_rules": {
       "draftBudget": 20,
       "cardsPerPlayer": 6,
+      "minCardCost": 1,
       "maxCardCost": 6,
-      "note": "Con 6 carte e budget 20, una carta da 6 è una scelta premium che obbliga a prendere carte più economiche."
+      "note": "Con 6 carte e budget 20: comune/non_comune/rara possono arrivare a 6 carte; epica arriva al massimo a 4; leggendaria/mitica/speciale arrivano al massimo a 2 perché costano 6 e richiedono filler economici.",
+      "costByRarity": {
+        "comune": 1,
+        "non_comune": 2,
+        "rara": 3,
+        "epica": 4,
+        "leggendaria": 6,
+        "mitica": 6,
+        "speciale": 6
+      }
     },
     "rarity_rules": {
-      "draftCost_1_2": "comune",
+      "draftCost_1": "comune",
+      "draftCost_2": "non_comune",
       "draftCost_3": "rara",
       "draftCost_4": "epica",
-      "draftCost_5": "leggendaria",
-      "draftCost_6": "mitica",
-      "speciale": "mantenuta per carte uniche come Valerio Prime",
-      "policy": "la rarità viene alzata quando il costo draft richiede una rarità minima più alta; non viene abbassata se era già più rara"
+      "draftCost_5": "riservato/non usato nel bilanciamento v7",
+      "draftCost_6": "leggendaria | mitica | speciale",
+      "cost_by_rarity": {
+        "comune": 1,
+        "non_comune": 2,
+        "rara": 3,
+        "epica": 4,
+        "leggendaria": 6,
+        "mitica": 6,
+        "speciale": 6
+      },
+      "valerio_total_by_rarity": {
+        "comune": 32,
+        "non_comune": 35,
+        "rara": 37,
+        "epica": 39,
+        "leggendaria": 40,
+        "mitica": 40,
+        "speciale": 40
+      },
+      "policy": "La rarità impone il costo minimo/reale della carta. La fama del personaggio non basta a rendere una carta premium; la potenza della carta deve restare dentro la fascia economica scelta.",
+      "draft_limits_with_budget_20_and_6_cards": {
+        "comune": {
+          "cost": 1,
+          "max_same_rarity_cards": 6,
+          "full_set_cost": 6,
+          "full_set_allowed": true
+        },
+        "non_comune": {
+          "cost": 2,
+          "max_same_rarity_cards": 6,
+          "full_set_cost": 12,
+          "full_set_allowed": true
+        },
+        "rara": {
+          "cost": 3,
+          "max_same_rarity_cards": 6,
+          "full_set_cost": 18,
+          "full_set_allowed": true
+        },
+        "epica": {
+          "cost": 4,
+          "max_same_rarity_cards": 4,
+          "full_set_cost": 24,
+          "full_set_allowed": false
+        },
+        "leggendaria": {
+          "cost": 6,
+          "max_same_rarity_cards": 2,
+          "full_set_cost": 36,
+          "full_set_allowed": false
+        },
+        "mitica": {
+          "cost": 6,
+          "max_same_rarity_cards": 2,
+          "full_set_cost": 36,
+          "full_set_allowed": false
+        },
+        "speciale": {
+          "cost": 6,
+          "max_same_rarity_cards": 2,
+          "full_set_cost": 36,
+          "full_set_allowed": false
+        }
+      }
     }
   },
   "cards": [
@@ -47,7 +119,7 @@
       "image": "Athene.png",
       "name": "Athene, Stratega dell'Olimpo",
       "subtitle": "Fa una retrospettiva anche sulla guerra di Troia.",
-      "rarity": "epica",
+      "rarity": "non_comune",
       "archetype": "stratega",
       "theme": "greco • oro • owl-core",
       "frame": {
@@ -57,21 +129,21 @@
       },
       "active": {
         "name": "Egida di Pallade",
-        "cost": 2,
-        "text": "+4 danni oltre il cap.",
+        "cost": 1,
+        "text": "+2 danni oltre il cap.",
         "effect": {
           "type": "damage",
-          "value": 4
+          "value": 2
         },
         "flavor": "Prima protegge il piano, poi lo rende inevitabile."
       },
       "passive": {
         "name": "Occhio della Civetta",
-        "text": "+2 danni se attacchi con Istinto.",
+        "text": "+1 danni se attacchi con Istinto.",
         "effect": {
           "type": "attack-stat-bonus",
           "stat": "I",
-          "value": 2
+          "value": 1
         },
         "flavor": "Vede il rischio quando gli altri stanno ancora scegliendo il tempio."
       },
@@ -82,27 +154,27 @@
         "controllo"
       ],
       "valerio": {
-        "V": 3,
-        "A": 5,
-        "L": 7,
-        "E": 7,
-        "R": 5,
-        "I": 7,
-        "O": 6
+        "V": 4,
+        "A": 4,
+        "L": 6,
+        "E": 6,
+        "R": 4,
+        "I": 6,
+        "O": 5
       },
       "combat": {
-        "attackPower": 60,
-        "defensePower": 90,
-        "draftCost": 4
+        "attackPower": 45,
+        "defensePower": 65,
+        "draftCost": 2
       },
-      "rarityRule": "minimo epica per draftCost 4; rarità originale mantenuta se più alta"
+      "rarityRule": "rarità non_comune: draftCost 2; target combat 110; VALERIO target 35"
     },
     {
       "id": "Magister",
       "image": "Magister.png",
       "name": "Il Magister",
       "subtitle": "Spiega la task, poi interroga la task.",
-      "rarity": "rara",
+      "rarity": "non_comune",
       "archetype": "controllore",
       "theme": "roma • registro • latino minaccioso",
       "frame": {
@@ -112,21 +184,21 @@
       },
       "active": {
         "name": "Editto dell'Imperatore",
-        "cost": 2,
-        "text": "+4 danni oltre il cap.",
+        "cost": 1,
+        "text": "+2 danni oltre il cap.",
         "effect": {
           "type": "damage",
-          "value": 4
+          "value": 2
         },
         "flavor": "Non interroga: emana decreti con voto in calce."
       },
       "passive": {
         "name": "Senatus Consultum Ultimum",
-        "text": "+2 danni se attacchi con Lucidità.",
+        "text": "+1 danni se attacchi con Lucidità.",
         "effect": {
           "type": "attack-stat-bonus",
           "stat": "L",
-          "value": 2
+          "value": 1
         },
         "flavor": "Quando cita il latino, il backlog si mette sull'attenti."
       },
@@ -138,26 +210,26 @@
       ],
       "valerio": {
         "V": 3,
-        "A": 3,
+        "A": 2,
         "L": 10,
-        "E": 8,
-        "R": 4,
-        "I": 7,
-        "O": 5
+        "E": 7,
+        "R": 3,
+        "I": 6,
+        "O": 4
       },
       "combat": {
         "attackPower": 45,
-        "defensePower": 65,
-        "draftCost": 3
+        "defensePower": 70,
+        "draftCost": 2
       },
-      "rarityRule": "minimo rara per draftCost 3; rarità originale mantenuta se più alta"
+      "rarityRule": "rarità non_comune: draftCost 2; target combat 115; VALERIO target 35"
     },
     {
       "id": "Nasus",
       "image": "Nasus.png",
       "name": "Nasus, Custode delle Sabbie",
       "subtitle": "Stacka ticket come fossero minion.",
-      "rarity": "leggendaria",
+      "rarity": "epica",
       "archetype": "scalatore",
       "theme": "egitto • sabbia • late game",
       "frame": {
@@ -168,10 +240,10 @@
       "active": {
         "name": "Q: Colpo Sifonante",
         "cost": 2,
-        "text": "+5 danni oltre il cap.",
+        "text": "+4 danni oltre il cap.",
         "effect": {
           "type": "damage",
-          "value": 5
+          "value": 4
         },
         "flavor": "Ogni ticket chiuso diventa una stack eterna."
       },
@@ -192,7 +264,7 @@
         "sabbie"
       ],
       "valerio": {
-        "V": 8,
+        "V": 10,
         "A": 3,
         "L": 6,
         "E": 3,
@@ -201,18 +273,18 @@
         "O": 4
       },
       "combat": {
-        "attackPower": 85,
-        "defensePower": 95,
-        "draftCost": 5
+        "attackPower": 70,
+        "defensePower": 80,
+        "draftCost": 4
       },
-      "rarityRule": "minimo leggendaria per draftCost 5; rarità originale mantenuta se più alta"
+      "rarityRule": "rarità epica: draftCost 4; target combat 150; VALERIO target 39"
     },
     {
       "id": "Samurai",
       "image": "Samurai.png",
       "name": "Samurai del Sottoscala",
       "subtitle": "Onore massimo, budget minimo.",
-      "rarity": "epica",
+      "rarity": "non_comune",
       "archetype": "duellante",
       "theme": "samurai • sakura • condominio",
       "frame": {
@@ -222,21 +294,21 @@
       },
       "active": {
         "name": "Iaijutsu del Sottoscala",
-        "cost": 2,
-        "text": "+4 danni oltre il cap.",
+        "cost": 1,
+        "text": "+2 danni oltre il cap.",
         "effect": {
           "type": "damage",
-          "value": 4
+          "value": 2
         },
         "flavor": "La lama esce prima del dubbio e rientra prima della call."
       },
       "passive": {
         "name": "Onore del Ronin",
-        "text": "+2 danni se attacchi con Vigore.",
+        "text": "+1 danni se attacchi con Vigore.",
         "effect": {
           "type": "attack-stat-bonus",
           "stat": "V",
-          "value": 2
+          "value": 1
         },
         "flavor": "Non ha padrone, ma ha una deadline da vendicare."
       },
@@ -247,27 +319,27 @@
         "sakura"
       ],
       "valerio": {
-        "V": 7,
-        "A": 8,
-        "L": 5,
-        "E": 4,
-        "R": 6,
-        "I": 6,
-        "O": 4
+        "V": 6,
+        "A": 7,
+        "L": 4,
+        "E": 5,
+        "R": 5,
+        "I": 5,
+        "O": 3
       },
       "combat": {
-        "attackPower": 90,
-        "defensePower": 55,
-        "draftCost": 4
+        "attackPower": 70,
+        "defensePower": 45,
+        "draftCost": 2
       },
-      "rarityRule": "minimo epica per draftCost 4; rarità originale mantenuta se più alta"
+      "rarityRule": "rarità non_comune: draftCost 2; target combat 115; VALERIO target 35"
     },
     {
       "id": "Sir",
       "image": "Sir.png",
       "name": "Sir Monocolo",
       "subtitle": "Gentilezza armata di sprint review.",
-      "rarity": "epica",
+      "rarity": "non_comune",
       "archetype": "diplomatico",
       "theme": "cavaliere • codice • salotto blu",
       "frame": {
@@ -278,20 +350,20 @@
       "active": {
         "name": "Duello all'Alba",
         "cost": 1,
-        "text": "+3 danni oltre il cap.",
+        "text": "+2 danni oltre il cap.",
         "effect": {
           "type": "damage",
-          "value": 3
+          "value": 2
         },
         "flavor": "Trasforma il punto debole in una questione d'onore."
       },
       "passive": {
         "name": "Sigillo Reale",
-        "text": "+2 danni se attacchi con Ego.",
+        "text": "+1 danni se attacchi con Ego.",
         "effect": {
           "type": "attack-stat-bonus",
           "stat": "E",
-          "value": 2
+          "value": 1
         },
         "flavor": "Una firma elegante e anche il caos chiede permesso."
       },
@@ -302,27 +374,27 @@
         "diplomazia"
       ],
       "valerio": {
-        "V": 4,
-        "A": 4,
-        "L": 7,
-        "E": 7,
-        "R": 5,
-        "I": 7,
-        "O": 6
+        "V": 5,
+        "A": 3,
+        "L": 6,
+        "E": 6,
+        "R": 4,
+        "I": 6,
+        "O": 5
       },
       "combat": {
-        "attackPower": 70,
-        "defensePower": 80,
-        "draftCost": 4
+        "attackPower": 55,
+        "defensePower": 65,
+        "draftCost": 2
       },
-      "rarityRule": "minimo epica per draftCost 4; rarità originale mantenuta se più alta"
+      "rarityRule": "rarità non_comune: draftCost 2; target combat 120; VALERIO target 35"
     },
     {
       "id": "auditore",
       "image": "auditore.png",
       "name": "Valerio Auditore",
       "subtitle": "Brotherhood of Projects, DLC incluso.",
-      "rarity": "leggendaria",
+      "rarity": "epica",
       "archetype": "assassino agile",
       "theme": "rinascimento • stealth • piume perse",
       "frame": {
@@ -332,11 +404,11 @@
       },
       "active": {
         "name": "Salto della Fede",
-        "cost": 3,
-        "text": "+5 danni oltre il cap.",
+        "cost": 2,
+        "text": "+4 danni oltre il cap.",
         "effect": {
           "type": "damage",
-          "value": 5
+          "value": 4
         },
         "flavor": "Si lancia nel vuoto e atterra esattamente sulla milestone."
       },
@@ -357,27 +429,27 @@
         "rinascimento"
       ],
       "valerio": {
-        "V": 5,
-        "A": 6,
-        "L": 6,
-        "E": 6,
-        "R": 5,
-        "I": 6,
-        "O": 6
+        "V": 10,
+        "A": 5,
+        "L": 5,
+        "E": 5,
+        "R": 4,
+        "I": 5,
+        "O": 5
       },
       "combat": {
-        "attackPower": 90,
-        "defensePower": 90,
-        "draftCost": 5
+        "attackPower": 80,
+        "defensePower": 75,
+        "draftCost": 4
       },
-      "rarityRule": "minimo leggendaria per draftCost 5; rarità originale mantenuta se più alta"
+      "rarityRule": "rarità epica: draftCost 4; target combat 155; VALERIO target 39"
     },
     {
       "id": "cave",
       "image": "cave.png",
       "name": "Cavernicolo Premium",
       "subtitle": "La user story è incisa sulla parete.",
-      "rarity": "rara",
+      "rarity": "comune",
       "archetype": "bruto",
       "theme": "pietra • fuoco • bonk",
       "frame": {
@@ -388,20 +460,20 @@
       "active": {
         "name": "Bonk Paleolitico",
         "cost": 1,
-        "text": "+3 danni oltre il cap.",
+        "text": "+2 danni oltre il cap.",
         "effect": {
           "type": "damage",
-          "value": 3
+          "value": 2
         },
         "flavor": "Niente raffinazioni: il problema prende una clava e tace."
       },
       "passive": {
         "name": "Istinto Primordiale",
-        "text": "+2 danni se attacchi con Vigore.",
+        "text": "+1 danni se attacchi con Vigore.",
         "effect": {
           "type": "attack-stat-bonus",
           "stat": "V",
-          "value": 2
+          "value": 1
         },
         "flavor": "Non capisce il diagramma, ma sente dove va spaccato."
       },
@@ -412,27 +484,27 @@
         "bonk"
       ],
       "valerio": {
-        "V": 10,
-        "A": 5,
-        "L": 2,
-        "E": 2,
-        "R": 8,
-        "I": 3,
-        "O": 5
+        "V": 9,
+        "A": 4,
+        "L": 5,
+        "E": 1,
+        "R": 7,
+        "I": 2,
+        "O": 4
       },
       "combat": {
-        "attackPower": 60,
-        "defensePower": 65,
-        "draftCost": 3
+        "attackPower": 45,
+        "defensePower": 45,
+        "draftCost": 1
       },
-      "rarityRule": "minimo rara per draftCost 3; rarità originale mantenuta se più alta"
+      "rarityRule": "rarità comune: draftCost 1; target combat 90; VALERIO target 32"
     },
     {
       "id": "doom",
       "image": "doom.png",
       "name": "Doom Valerio",
       "subtitle": "Doom of the Grand Project.",
-      "rarity": "mitica",
+      "rarity": "leggendaria",
       "archetype": "demolitore",
       "theme": "metallo • verde • boss finale",
       "frame": {
@@ -452,11 +524,11 @@
       },
       "passive": {
         "name": "Armatura del Dottor Destino",
-        "text": "+3 danni se attacchi con Rigore.",
+        "text": "+2 danni se attacchi con Rigore.",
         "effect": {
           "type": "attack-stat-bonus",
           "stat": "R",
-          "value": 3
+          "value": 2
         },
         "flavor": "Ogni critica rimbalza sul metallo e torna come action item."
       },
@@ -476,18 +548,18 @@
         "O": 3
       },
       "combat": {
-        "attackPower": 95,
+        "attackPower": 90,
         "defensePower": 85,
-        "draftCost": 5
+        "draftCost": 6
       },
-      "rarityRule": "minimo leggendaria per draftCost 5; rarità originale mantenuta se più alta"
+      "rarityRule": "rarità leggendaria: draftCost 6; target combat 175; VALERIO target 40"
     },
     {
       "id": "genshis",
       "image": "genshis.png",
       "name": "Genshis del Pull Singolo",
       "subtitle": "Ha trovato una 5★ nel deploy del venerdì.",
-      "rarity": "epica",
+      "rarity": "comune",
       "archetype": "gacha",
       "theme": "anime • fortuna • banner limitato",
       "frame": {
@@ -497,21 +569,21 @@
       },
       "active": {
         "name": "Wish sul Banner Limitato",
-        "cost": 2,
-        "text": "+4 danni oltre il cap.",
+        "cost": 1,
+        "text": "+2 danni oltre il cap.",
         "effect": {
           "type": "damage",
-          "value": 4
+          "value": 2
         },
         "flavor": "Un pull, una speranza, una soluzione glitterata."
       },
       "passive": {
         "name": "Pity a 90",
-        "text": "+2 danni se attacchi con Opportunismo.",
+        "text": "+1 danni se attacchi con Opportunismo.",
         "effect": {
           "type": "attack-stat-bonus",
           "stat": "O",
-          "value": 2
+          "value": 1
         },
         "flavor": "La fortuna non arriva subito, ma arriva con ricevuta fiscale."
       },
@@ -522,27 +594,27 @@
         "anime"
       ],
       "valerio": {
-        "V": 4,
-        "A": 6,
-        "L": 6,
-        "E": 6,
-        "R": 5,
-        "I": 6,
-        "O": 7
+        "V": 3,
+        "A": 8,
+        "L": 4,
+        "E": 4,
+        "R": 4,
+        "I": 4,
+        "O": 5
       },
       "combat": {
-        "attackPower": 80,
-        "defensePower": 65,
-        "draftCost": 4
+        "attackPower": 50,
+        "defensePower": 45,
+        "draftCost": 1
       },
-      "rarityRule": "minimo epica per draftCost 4; rarità originale mantenuta se più alta"
+      "rarityRule": "rarità comune: draftCost 1; target combat 95; VALERIO target 32"
     },
     {
       "id": "gta",
       "image": "gta.png",
       "name": "Los Santos Valerio",
       "subtitle": "Parcheggia il task dove capita.",
-      "rarity": "leggendaria",
+      "rarity": "epica",
       "archetype": "caos urbano",
       "theme": "neon • crime • radio anni 80",
       "frame": {
@@ -552,11 +624,11 @@
       },
       "active": {
         "name": "Colpo a Los Santos",
-        "cost": 3,
-        "text": "+5 danni oltre il cap.",
+        "cost": 2,
+        "text": "+4 danni oltre il cap.",
         "effect": {
           "type": "damage",
-          "value": 5
+          "value": 4
         },
         "flavor": "Il piano era semplice: entrare, consegnare, rubare un elicottero."
       },
@@ -577,27 +649,27 @@
         "caos"
       ],
       "valerio": {
-        "V": 6,
-        "A": 6,
-        "L": 4,
-        "E": 5,
-        "R": 6,
-        "I": 6,
-        "O": 7
+        "V": 5,
+        "A": 5,
+        "L": 9,
+        "E": 4,
+        "R": 5,
+        "I": 5,
+        "O": 6
       },
       "combat": {
-        "attackPower": 100,
-        "defensePower": 80,
-        "draftCost": 5
+        "attackPower": 90,
+        "defensePower": 70,
+        "draftCost": 4
       },
-      "rarityRule": "minimo leggendaria per draftCost 5; rarità originale mantenuta se più alta"
+      "rarityRule": "rarità epica: draftCost 4; target combat 160; VALERIO target 39"
     },
     {
       "id": "malenia",
       "image": "malenia.png",
       "name": "Malenia, Lama Puntigliosa",
       "subtitle": "Non ha mai perso: ha solo iterato.",
-      "rarity": "mitica",
+      "rarity": "leggendaria",
       "archetype": "duellante letale",
       "theme": "oro • rosso • boss fight",
       "frame": {
@@ -617,11 +689,11 @@
       },
       "passive": {
         "name": "Dea della Marcescenza",
-        "text": "+3 danni se attacchi con Astuzia.",
+        "text": "+2 danni se attacchi con Astuzia.",
         "effect": {
           "type": "attack-stat-bonus",
           "stat": "A",
-          "value": 3
+          "value": 2
         },
         "flavor": "Più provi a fermarla, più il bug marcisce da solo."
       },
@@ -641,18 +713,18 @@
         "O": 3
       },
       "combat": {
-        "attackPower": 100,
+        "attackPower": 95,
         "defensePower": 85,
         "draftCost": 6
       },
-      "rarityRule": "minimo mitica per draftCost 6; rarità originale mantenuta se più alta"
+      "rarityRule": "rarità leggendaria: draftCost 6; target combat 180; VALERIO target 40"
     },
     {
       "id": "nazi",
       "image": "nazi.png",
       "name": "Il Burocrate Inquadrato",
       "subtitle": "Molto rigido, sorprendentemente in ritardo.",
-      "rarity": "epica",
+      "rarity": "non_comune",
       "archetype": "ordine e controllo",
       "theme": "grigio • ufficio • calendario ostile",
       "frame": {
@@ -662,21 +734,21 @@
       },
       "active": {
         "name": "Guerra Lampo",
-        "cost": 2,
-        "text": "+4 danni oltre il cap.",
+        "cost": 1,
+        "text": "+2 danni oltre il cap.",
         "effect": {
           "type": "damage",
-          "value": 4
+          "value": 2
         },
         "flavor": "Non apre un fronte: apre direttamente il calendario degli altri."
       },
       "passive": {
         "name": "Gerarchia di Ferro",
-        "text": "+2 danni se attacchi con Istinto.",
+        "text": "+1 danni se attacchi con Istinto.",
         "effect": {
           "type": "attack-stat-bonus",
           "stat": "I",
-          "value": 2
+          "value": 1
         },
         "flavor": "Ogni dettaglio viene controllato, timbrato e messo in riga."
       },
@@ -687,27 +759,27 @@
         "burocrazia"
       ],
       "valerio": {
-        "V": 7,
-        "A": 7,
-        "L": 6,
-        "E": 3,
-        "R": 6,
-        "I": 8,
-        "O": 2
+        "V": 6,
+        "A": 6,
+        "L": 5,
+        "E": 2,
+        "R": 5,
+        "I": 7,
+        "O": 4
       },
       "combat": {
-        "attackPower": 65,
-        "defensePower": 90,
-        "draftCost": 4
+        "attackPower": 50,
+        "defensePower": 70,
+        "draftCost": 2
       },
-      "rarityRule": "minimo epica per draftCost 4; rarità originale mantenuta se più alta"
+      "rarityRule": "rarità non_comune: draftCost 2; target combat 120; VALERIO target 35"
     },
     {
       "id": "pirate",
       "image": "pirate.png",
       "name": "Capitan Sottocoperta",
       "subtitle": "Saccheggia il backlog, poi chiede ferie.",
-      "rarity": "leggendaria",
+      "rarity": "rara",
       "archetype": "corsaro",
       "theme": "pirati • legno • teschi",
       "frame": {
@@ -718,10 +790,10 @@
       "active": {
         "name": "Bordata di Tribordo",
         "cost": 2,
-        "text": "+4 danni oltre il cap.",
+        "text": "+3 danni oltre il cap.",
         "effect": {
           "type": "damage",
-          "value": 4
+          "value": 3
         },
         "flavor": "Non negozia lo scope: lo abborda."
       },
@@ -742,27 +814,27 @@
         "caos controllato"
       ],
       "valerio": {
-        "V": 6,
-        "A": 6,
-        "L": 4,
-        "E": 6,
-        "R": 6,
-        "I": 6,
-        "O": 6
+        "V": 5,
+        "A": 5,
+        "L": 7,
+        "E": 5,
+        "R": 5,
+        "I": 5,
+        "O": 5
       },
       "combat": {
-        "attackPower": 80,
-        "defensePower": 85,
-        "draftCost": 5
+        "attackPower": 65,
+        "defensePower": 65,
+        "draftCost": 3
       },
-      "rarityRule": "minimo leggendaria per draftCost 5; rarità originale mantenuta se più alta"
+      "rarityRule": "rarità rara: draftCost 3; target combat 130; VALERIO target 37"
     },
     {
       "id": "reddead",
       "image": "reddead.png",
       "name": "Fuorilegge Red Deadline",
       "subtitle": "Dead Eye sul ticket critico.",
-      "rarity": "leggendaria",
+      "rarity": "rara",
       "archetype": "tiratore",
       "theme": "western • tramonto • polvere",
       "frame": {
@@ -772,11 +844,11 @@
       },
       "active": {
         "name": "Dead Eye sul Ticket",
-        "cost": 3,
-        "text": "+5 danni oltre il cap.",
+        "cost": 2,
+        "text": "+3 danni oltre il cap.",
         "effect": {
           "type": "damage",
-          "value": 5
+          "value": 3
         },
         "flavor": "Rallenta il tempo, mira al blocker e spara una risposta secca."
       },
@@ -797,27 +869,27 @@
         "deadline"
       ],
       "valerio": {
-        "V": 6,
-        "A": 6,
-        "L": 5,
-        "E": 5,
-        "R": 6,
-        "I": 6,
-        "O": 6
+        "V": 5,
+        "A": 5,
+        "L": 8,
+        "E": 4,
+        "R": 5,
+        "I": 5,
+        "O": 5
       },
       "combat": {
-        "attackPower": 95,
-        "defensePower": 75,
-        "draftCost": 5
+        "attackPower": 75,
+        "defensePower": 60,
+        "draftCost": 3
       },
-      "rarityRule": "minimo leggendaria per draftCost 5; rarità originale mantenuta se più alta"
+      "rarityRule": "rarità rara: draftCost 3; target combat 135; VALERIO target 37"
     },
     {
       "id": "shaman",
       "image": "shaman.png",
       "name": "Sciamano Wi‑Fi",
       "subtitle": "Parla con gli spiriti e con il router.",
-      "rarity": "rara",
+      "rarity": "comune",
       "archetype": "support mistico",
       "theme": "totem • canyon • connessione instabile",
       "frame": {
@@ -827,20 +899,20 @@
       },
       "active": {
         "name": "Rito del Totem",
-        "cost": 2,
-        "text": "+4 danni oltre il cap.",
+        "cost": 1,
+        "text": "+2 danni oltre il cap.",
         "effect": {
           "type": "damage",
-          "value": 4
+          "value": 2
         },
         "flavor": "Anche lo spirito più scarso diventa utile se balli abbastanza."
       },
       "passive": {
         "name": "Visione degli Spiriti",
-        "text": "+2 danni sempre attivi.",
+        "text": "+1 danni sempre attivi.",
         "effect": {
           "type": "flat-damage",
-          "value": 2
+          "value": 1
         },
         "flavor": "Quando manca la logica, consulta gli antenati e il router."
       },
@@ -851,27 +923,27 @@
         "misticismo"
       ],
       "valerio": {
-        "V": 4,
-        "A": 5,
-        "L": 5,
-        "E": 6,
-        "R": 6,
-        "I": 7,
-        "O": 7
+        "V": 3,
+        "A": 4,
+        "L": 4,
+        "E": 7,
+        "R": 4,
+        "I": 5,
+        "O": 5
       },
       "combat": {
-        "attackPower": 55,
-        "defensePower": 70,
-        "draftCost": 3
+        "attackPower": 45,
+        "defensePower": 55,
+        "draftCost": 1
       },
-      "rarityRule": "minimo rara per draftCost 3; rarità originale mantenuta se più alta"
+      "rarityRule": "rarità comune: draftCost 1; target combat 100; VALERIO target 32"
     },
     {
       "id": "stark",
       "image": "stark.png",
       "name": "Tony Starkissimo",
       "subtitle": "Ha costruito l'armatura in una retrospettiva.",
-      "rarity": "mitica",
+      "rarity": "leggendaria",
       "archetype": "inventore",
       "theme": "tech • oro • ego sostenibile",
       "frame": {
@@ -916,17 +988,17 @@
       },
       "combat": {
         "attackPower": 85,
-        "defensePower": 100,
+        "defensePower": 95,
         "draftCost": 6
       },
-      "rarityRule": "minimo mitica per draftCost 6; rarità originale mantenuta se più alta"
+      "rarityRule": "rarità leggendaria: draftCost 6; target combat 180; VALERIO target 40"
     },
     {
       "id": "strano",
       "image": "strano.png",
       "name": "Dottor Strano",
       "subtitle": "Custode del calendario multiversale.",
-      "rarity": "leggendaria",
+      "rarity": "epica",
       "archetype": "mago controllo",
       "theme": "arcano • portali • bug cosmici",
       "frame": {
@@ -937,10 +1009,10 @@
       "active": {
         "name": "Occhio di Agamotto",
         "cost": 2,
-        "text": "+5 danni oltre il cap.",
+        "text": "+4 danni oltre il cap.",
         "effect": {
           "type": "damage",
-          "value": 5
+          "value": 4
         },
         "flavor": "Riavvolge la call finché qualcuno non dice la cosa giusta."
       },
@@ -961,27 +1033,27 @@
         "controllo"
       ],
       "valerio": {
-        "V": 3,
-        "A": 5,
-        "L": 7,
-        "E": 6,
-        "R": 5,
-        "I": 7,
-        "O": 7
+        "V": 8,
+        "A": 4,
+        "L": 6,
+        "E": 5,
+        "R": 4,
+        "I": 6,
+        "O": 6
       },
       "combat": {
-        "attackPower": 75,
-        "defensePower": 95,
-        "draftCost": 5
+        "attackPower": 70,
+        "defensePower": 90,
+        "draftCost": 4
       },
-      "rarityRule": "minimo leggendaria per draftCost 5; rarità originale mantenuta se più alta"
+      "rarityRule": "rarità epica: draftCost 4; target combat 160; VALERIO target 39"
     },
     {
       "id": "urss",
       "image": "urss.png",
       "name": "Compagno Borscht",
       "subtitle": "La burn‑down chart è collettiva.",
-      "rarity": "epica",
+      "rarity": "comune",
       "archetype": "resiliente",
       "theme": "grigio • rosso • piano quinquennale",
       "frame": {
@@ -991,21 +1063,21 @@
       },
       "active": {
         "name": "Piano Quinquennale",
-        "cost": 2,
-        "text": "+4 danni oltre il cap.",
+        "cost": 1,
+        "text": "+2 danni oltre il cap.",
         "effect": {
           "type": "damage",
-          "value": 4
+          "value": 2
         },
         "flavor": "Cinque anni di pianificazione compressi in una daily obbligatoria."
       },
       "passive": {
         "name": "Resistenza Sovietica",
-        "text": "+2 danni se attacchi con Rigore.",
+        "text": "+1 danni se attacchi con Rigore.",
         "effect": {
           "type": "attack-stat-bonus",
           "stat": "R",
-          "value": 2
+          "value": 1
         },
         "flavor": "La stanchezza è individuale, la consegna è collettiva."
       },
@@ -1016,27 +1088,27 @@
         "piano"
       ],
       "valerio": {
-        "V": 7,
-        "A": 4,
-        "L": 5,
+        "V": 5,
+        "A": 3,
+        "L": 4,
         "E": 6,
-        "R": 9,
-        "I": 5,
-        "O": 4
+        "R": 7,
+        "I": 4,
+        "O": 3
       },
       "combat": {
-        "attackPower": 75,
-        "defensePower": 60,
-        "draftCost": 4
+        "attackPower": 55,
+        "defensePower": 45,
+        "draftCost": 1
       },
-      "rarityRule": "minimo epica per draftCost 4; rarità originale mantenuta se più alta"
+      "rarityRule": "rarità comune: draftCost 1; target combat 100; VALERIO target 32"
     },
     {
       "id": "v",
       "image": "v.png",
       "name": "V, Maschera e Verbosità",
       "subtitle": "Vendetta, validazione, verbali.",
-      "rarity": "leggendaria",
+      "rarity": "rara",
       "archetype": "oratore oscuro",
       "theme": "gothic • rosso • allitterazioni",
       "frame": {
@@ -1047,10 +1119,10 @@
       "active": {
         "name": "Congiura delle Polveri",
         "cost": 2,
-        "text": "+4 danni oltre il cap.",
+        "text": "+3 danni oltre il cap.",
         "effect": {
           "type": "damage",
-          "value": 4
+          "value": 3
         },
         "flavor": "Accende la miccia del discorso e fa saltare il silenzio."
       },
@@ -1071,27 +1143,27 @@
         "vendetta"
       ],
       "valerio": {
-        "V": 5,
-        "A": 6,
-        "L": 6,
-        "E": 6,
-        "R": 5,
-        "I": 6,
-        "O": 6
+        "V": 8,
+        "A": 5,
+        "L": 5,
+        "E": 5,
+        "R": 4,
+        "I": 5,
+        "O": 5
       },
       "combat": {
-        "attackPower": 85,
-        "defensePower": 75,
-        "draftCost": 4
+        "attackPower": 70,
+        "defensePower": 65,
+        "draftCost": 3
       },
-      "rarityRule": "minimo epica per draftCost 4; rarità originale mantenuta se più alta"
+      "rarityRule": "rarità rara: draftCost 3; target combat 135; VALERIO target 37"
     },
     {
       "id": "valcraft",
       "image": "valcraft.png",
       "name": "Valcraft",
       "subtitle": "Build your project, blocco dopo blocco.",
-      "rarity": "epica",
+      "rarity": "non_comune",
       "archetype": "costruttore",
       "theme": "voxel • diamante • crafting",
       "frame": {
@@ -1102,20 +1174,20 @@
       "active": {
         "name": "Banco da Lavoro",
         "cost": 1,
-        "text": "+3 danni oltre il cap.",
+        "text": "+2 danni oltre il cap.",
         "effect": {
           "type": "damage",
-          "value": 3
+          "value": 2
         },
         "flavor": "Con due assi e una mezza idea crafta comunque una soluzione."
       },
       "passive": {
         "name": "Redstone d'Emergenza",
-        "text": "+3 danni se almeno 2 tue difese vengono colpite.",
+        "text": "+2 danni se almeno 2 tue difese vengono colpite.",
         "effect": {
           "type": "defense-hit-bonus",
           "count": 2,
-          "value": 3
+          "value": 2
         },
         "flavor": "Quando finisce l'inventario, parte il circuito segreto."
       },
@@ -1126,27 +1198,27 @@
         "voxel"
       ],
       "valerio": {
-        "V": 6,
-        "A": 5,
-        "L": 6,
-        "E": 4,
-        "R": 7,
-        "I": 5,
-        "O": 7
+        "V": 5,
+        "A": 4,
+        "L": 5,
+        "E": 5,
+        "R": 6,
+        "I": 4,
+        "O": 6
       },
       "combat": {
-        "attackPower": 70,
-        "defensePower": 85,
-        "draftCost": 4
+        "attackPower": 55,
+        "defensePower": 65,
+        "draftCost": 2
       },
-      "rarityRule": "minimo epica per draftCost 4; rarità originale mantenuta se più alta"
+      "rarityRule": "rarità non_comune: draftCost 2; target combat 120; VALERIO target 35"
     },
     {
       "id": "valdemort",
       "image": "valdemort.png",
       "name": "Valdemort",
       "subtitle": "Colui che non deve essere taggato.",
-      "rarity": "leggendaria",
+      "rarity": "rara",
       "archetype": "mago oscuro",
       "theme": "nero • verde • serpentcore",
       "frame": {
@@ -1156,11 +1228,11 @@
       },
       "active": {
         "name": "Maledizione Senza Nome",
-        "cost": 3,
-        "text": "+5 danni oltre il cap.",
+        "cost": 2,
+        "text": "+3 danni oltre il cap.",
         "effect": {
           "type": "damage",
-          "value": 5
+          "value": 3
         },
         "flavor": "Non la pronuncia nessuno, ma il ticket sparisce lo stesso."
       },
@@ -1181,20 +1253,20 @@
         "serpente"
       ],
       "valerio": {
-        "V": 4,
-        "A": 5,
-        "L": 8,
-        "E": 8,
-        "R": 5,
-        "I": 7,
-        "O": 3
+        "V": 3,
+        "A": 4,
+        "L": 7,
+        "E": 7,
+        "R": 4,
+        "I": 6,
+        "O": 6
       },
       "combat": {
-        "attackPower": 80,
-        "defensePower": 80,
-        "draftCost": 4
+        "attackPower": 70,
+        "defensePower": 70,
+        "draftCost": 3
       },
-      "rarityRule": "minimo epica per draftCost 4; rarità originale mantenuta se più alta"
+      "rarityRule": "rarità rara: draftCost 3; target combat 140; VALERIO target 37"
     },
     {
       "id": "valerio",
@@ -1211,7 +1283,7 @@
       },
       "active": {
         "name": "Viaggio dell'Eroe",
-        "cost": 2,
+        "cost": 3,
         "text": "+5 danni oltre il cap.",
         "effect": {
           "type": "damage",
@@ -1245,18 +1317,18 @@
         "O": 6
       },
       "combat": {
-        "attackPower": 95,
+        "attackPower": 100,
         "defensePower": 90,
         "draftCost": 6
       },
-      "rarityRule": "speciale: rarità unica mantenuta; costo draft comunque alto"
+      "rarityRule": "rarità speciale: draftCost 6; target combat 190; VALERIO target 40"
     },
     {
       "id": "vally",
       "image": "vally.png",
       "name": "Vally Allen",
       "subtitle": "Il PM più veloce vivo, almeno in stand‑up.",
-      "rarity": "leggendaria",
+      "rarity": "rara",
       "archetype": "speedster",
       "theme": "fulmine • rosso • speed force",
       "frame": {
@@ -1266,7 +1338,7 @@
       },
       "active": {
         "name": "Corsa nella Speed Force",
-        "cost": 1,
+        "cost": 2,
         "text": "+3 danni oltre il cap.",
         "effect": {
           "type": "damage",
@@ -1291,20 +1363,20 @@
         "fulmine"
       ],
       "valerio": {
-        "V": 4,
-        "A": 6,
-        "L": 6,
-        "E": 6,
-        "R": 5,
-        "I": 6,
-        "O": 7
+        "V": 7,
+        "A": 5,
+        "L": 5,
+        "E": 5,
+        "R": 4,
+        "I": 5,
+        "O": 6
       },
       "combat": {
-        "attackPower": 95,
-        "defensePower": 70,
-        "draftCost": 5
+        "attackPower": 80,
+        "defensePower": 60,
+        "draftCost": 3
       },
-      "rarityRule": "minimo leggendaria per draftCost 5; rarità originale mantenuta se più alta"
+      "rarityRule": "rarità rara: draftCost 3; target combat 140; VALERIO target 37"
     },
     {
       "id": "vratos",
@@ -1331,11 +1403,11 @@
       },
       "passive": {
         "name": "Rabbia di Sparta",
-        "text": "+2 danni se attacchi con Rigore.",
+        "text": "+3 danni se attacchi con Rigore.",
         "effect": {
           "type": "attack-stat-bonus",
           "stat": "R",
-          "value": 2
+          "value": 3
         },
         "flavor": "Più la call si allunga, più il suo silenzio fa danni."
       },
@@ -1355,18 +1427,18 @@
         "O": 4
       },
       "combat": {
-        "attackPower": 100,
+        "attackPower": 95,
         "defensePower": 95,
         "draftCost": 6
       },
-      "rarityRule": "minimo mitica per draftCost 6; rarità originale mantenuta se più alta"
+      "rarityRule": "rarità mitica: draftCost 6; target combat 190; VALERIO target 40"
     },
     {
       "id": "vatriota",
       "image": "vatriota.png",
       "name": "Vatriota",
       "subtitle": "Supereroe nazionale del follow‑up.",
-      "rarity": "leggendaria",
+      "rarity": "rara",
       "archetype": "leader patriottico",
       "theme": "stelle • mantello • briefing aereo",
       "frame": {
@@ -1377,10 +1449,10 @@
       "active": {
         "name": "Scudo della Patria",
         "cost": 2,
-        "text": "+4 danni oltre il cap.",
+        "text": "+3 danni oltre il cap.",
         "effect": {
           "type": "damage",
-          "value": 4
+          "value": 3
         },
         "flavor": "Si mette davanti al team e para anche le richieste non stimate."
       },
@@ -1401,27 +1473,27 @@
         "leadership"
       ],
       "valerio": {
-        "V": 5,
-        "A": 6,
-        "L": 6,
-        "E": 6,
-        "R": 6,
-        "I": 6,
-        "O": 5
+        "V": 8,
+        "A": 5,
+        "L": 5,
+        "E": 5,
+        "R": 5,
+        "I": 5,
+        "O": 4
       },
       "combat": {
-        "attackPower": 95,
-        "defensePower": 75,
-        "draftCost": 5
+        "attackPower": 80,
+        "defensePower": 65,
+        "draftCost": 3
       },
-      "rarityRule": "minimo leggendaria per draftCost 5; rarità originale mantenuta se più alta"
+      "rarityRule": "rarità rara: draftCost 3; target combat 145; VALERIO target 37"
     },
     {
       "id": "the_veep",
       "image": "ChatGPT Image 21 mag 2026, 16_59_02.png",
       "name": "The Veep",
       "subtitle": "Re degli abissi e delle escalation.",
-      "rarity": "epica",
+      "rarity": "comune",
       "archetype": "guardiano marino",
       "theme": "oceano • corazzata • tridente invisibile",
       "frame": {
@@ -1431,21 +1503,21 @@
       },
       "active": {
         "name": "Marea del Re",
-        "cost": 2,
-        "text": "+4 danni oltre il cap.",
+        "cost": 1,
+        "text": "+2 danni oltre il cap.",
         "effect": {
           "type": "damage",
-          "value": 4
+          "value": 2
         },
         "flavor": "Quando la pressione sale, lui risponde con un'onda più alta."
       },
       "passive": {
         "name": "Sentinella degli Abissi",
-        "text": "+2 danni se attacchi con Istinto.",
+        "text": "+1 danni se attacchi con Istinto.",
         "effect": {
           "type": "attack-stat-bonus",
           "stat": "I",
-          "value": 2
+          "value": 1
         },
         "flavor": "Vede arrivare l'escalation molto prima che tocchi riva."
       },
@@ -1456,27 +1528,27 @@
         "controllo"
       ],
       "valerio": {
-        "V": 6,
-        "A": 5,
-        "L": 5,
-        "E": 6,
-        "R": 6,
-        "I": 7,
-        "O": 5
+        "V": 7,
+        "A": 4,
+        "L": 4,
+        "E": 4,
+        "R": 4,
+        "I": 5,
+        "O": 4
       },
       "combat": {
-        "attackPower": 70,
-        "defensePower": 80,
-        "draftCost": 4
+        "attackPower": 50,
+        "defensePower": 55,
+        "draftCost": 1
       },
-      "rarityRule": "minimo epica per draftCost 4; rarità originale mantenuta se più alta"
+      "rarityRule": "rarità comune: draftCost 1; target combat 105; VALERIO target 32"
     },
     {
       "id": "v_train",
       "image": "ChatGPT Image 21 mag 2026, 16_59_08.png",
       "name": "V‑Train",
       "subtitle": "Allenamento funzionale alla sopravvivenza in call.",
-      "rarity": "epica",
+      "rarity": "comune",
       "archetype": "atleta tech",
       "theme": "sport • blue armor • palestra futuristica",
       "frame": {
@@ -1486,21 +1558,21 @@
       },
       "active": {
         "name": "Sprint da Record",
-        "cost": 2,
-        "text": "+4 danni oltre il cap.",
+        "cost": 1,
+        "text": "+2 danni oltre il cap.",
         "effect": {
           "type": "damage",
-          "value": 4
+          "value": 2
         },
         "flavor": "Carica il task come fosse l'ultima ripetizione della serie."
       },
       "passive": {
         "name": "Fiato da Maratoneta",
-        "text": "+2 danni se attacchi con Rigore.",
+        "text": "+1 danni se attacchi con Rigore.",
         "effect": {
           "type": "attack-stat-bonus",
           "stat": "R",
-          "value": 2
+          "value": 1
         },
         "flavor": "Gli altri chiedono pausa, lui aumenta l'inclinazione del tapis roulant."
       },
@@ -1511,27 +1583,27 @@
         "rigore"
       ],
       "valerio": {
-        "V": 5,
-        "A": 6,
-        "L": 6,
-        "E": 6,
-        "R": 6,
-        "I": 6,
-        "O": 5
+        "V": 4,
+        "A": 8,
+        "L": 4,
+        "E": 4,
+        "R": 4,
+        "I": 4,
+        "O": 4
       },
       "combat": {
-        "attackPower": 70,
-        "defensePower": 75,
-        "draftCost": 4
+        "attackPower": 50,
+        "defensePower": 55,
+        "draftCost": 1
       },
-      "rarityRule": "minimo epica per draftCost 4; rarità originale mantenuta se più alta"
+      "rarityRule": "rarità comune: draftCost 1; target combat 105; VALERIO target 32"
     },
     {
       "id": "fire_project",
       "image": "ChatGPT Image 21 mag 2026, 16_59_16.png",
       "name": "Fire Project",
       "subtitle": "Quando il progetto brucia, lui posa.",
-      "rarity": "epica",
+      "rarity": "comune",
       "archetype": "piromane gestionale",
       "theme": "rosso • fuoco • city disaster",
       "frame": {
@@ -1541,21 +1613,21 @@
       },
       "active": {
         "name": "Incendio Controllato",
-        "cost": 2,
-        "text": "+4 danni oltre il cap.",
+        "cost": 1,
+        "text": "+2 danni oltre il cap.",
         "effect": {
           "type": "damage",
-          "value": 4
+          "value": 2
         },
         "flavor": "Il progetto brucia, ma almeno lo fa seguendo una strategia."
       },
       "passive": {
         "name": "Sorriso tra le Fiamme",
-        "text": "+2 danni se attacchi con Ego.",
+        "text": "+1 danni se attacchi con Ego.",
         "effect": {
           "type": "attack-stat-bonus",
           "stat": "E",
-          "value": 2
+          "value": 1
         },
         "flavor": "Rassicura tutti mentre il Gantt diventa cenere."
       },
@@ -1566,27 +1638,27 @@
         "crisi"
       ],
       "valerio": {
-        "V": 6,
-        "A": 6,
-        "L": 4,
-        "E": 7,
-        "R": 7,
-        "I": 5,
-        "O": 5
+        "V": 7,
+        "A": 4,
+        "L": 3,
+        "E": 5,
+        "R": 5,
+        "I": 4,
+        "O": 4
       },
       "combat": {
-        "attackPower": 85,
-        "defensePower": 65,
-        "draftCost": 4
+        "attackPower": 60,
+        "defensePower": 50,
+        "draftCost": 1
       },
-      "rarityRule": "minimo epica per draftCost 4; rarità originale mantenuta se più alta"
+      "rarityRule": "rarità comune: draftCost 1; target combat 110; VALERIO target 32"
     },
     {
       "id": "project_boy",
       "image": "ChatGPT Image 21 mag 2026, 16_59_30.png",
       "name": "Project Boy",
       "subtitle": "Lo scudo blocca i bug, non le richieste.",
-      "rarity": "rara",
+      "rarity": "comune",
       "archetype": "difensore",
       "theme": "post‑apocalisse • scudo • morale basso",
       "frame": {
@@ -1596,21 +1668,21 @@
       },
       "active": {
         "name": "Scudo del Wasteland",
-        "cost": 2,
-        "text": "+4 danni oltre il cap.",
+        "cost": 1,
+        "text": "+2 danni oltre il cap.",
         "effect": {
           "type": "damage",
-          "value": 4
+          "value": 2
         },
         "flavor": "Blocca radiazioni, bug e richieste arrivate dopo la fine del mondo."
       },
       "passive": {
         "name": "Sopravvissuto del Vault",
-        "text": "+2 danni se attacchi con Istinto.",
+        "text": "+1 danni se attacchi con Istinto.",
         "effect": {
           "type": "attack-stat-bonus",
           "stat": "I",
-          "value": 2
+          "value": 1
         },
         "flavor": "Nel silenzio delle rovine sente ancora vibrare un rischio."
       },
@@ -1621,27 +1693,27 @@
         "wasteland"
       ],
       "valerio": {
-        "V": 6,
-        "A": 5,
-        "L": 6,
-        "E": 5,
-        "R": 7,
-        "I": 7,
-        "O": 4
+        "V": 7,
+        "A": 4,
+        "L": 4,
+        "E": 4,
+        "R": 5,
+        "I": 5,
+        "O": 3
       },
       "combat": {
-        "attackPower": 55,
-        "defensePower": 70,
-        "draftCost": 3
+        "attackPower": 50,
+        "defensePower": 60,
+        "draftCost": 1
       },
-      "rarityRule": "minimo rara per draftCost 3; rarità originale mantenuta se più alta"
+      "rarityRule": "rarità comune: draftCost 1; target combat 110; VALERIO target 32"
     },
     {
       "id": "starproject",
       "image": "ChatGPT Image 21 mag 2026, 17_10_58.png",
       "name": "Starproject",
       "subtitle": "Splende così tanto che acceca la deadline.",
-      "rarity": "mitica",
+      "rarity": "epica",
       "archetype": "campione solare",
       "theme": "oro • luce • skyline",
       "frame": {
@@ -1651,11 +1723,11 @@
       },
       "active": {
         "name": "Supernova del Project Plan",
-        "cost": 3,
-        "text": "+5 danni oltre il cap.",
+        "cost": 2,
+        "text": "+4 danni oltre il cap.",
         "effect": {
           "type": "damage",
-          "value": 5
+          "value": 4
         },
         "flavor": "Quando esplode, illumina roadmap, stakeholder e responsabilità nascoste."
       },
@@ -1676,27 +1748,27 @@
         "eroe"
       ],
       "valerio": {
-        "V": 5,
-        "A": 5,
-        "L": 6,
-        "E": 6,
-        "R": 6,
-        "I": 6,
-        "O": 6
+        "V": 10,
+        "A": 4,
+        "L": 5,
+        "E": 5,
+        "R": 5,
+        "I": 5,
+        "O": 5
       },
       "combat": {
         "attackPower": 80,
-        "defensePower": 90,
-        "draftCost": 5
+        "defensePower": 85,
+        "draftCost": 4
       },
-      "rarityRule": "minimo leggendaria per draftCost 5; rarità originale mantenuta se più alta"
+      "rarityRule": "rarità epica: draftCost 4; target combat 165; VALERIO target 39"
     },
     {
       "id": "black_val",
       "image": "ChatGPT Image 21 mag 2026, 17_11_17.png",
       "name": "Black Val",
       "subtitle": "Il lato oscuro della project board.",
-      "rarity": "leggendaria",
+      "rarity": "rara",
       "archetype": "anti‑eroe",
       "theme": "nero • metallo • battaglia finale",
       "frame": {
@@ -1706,11 +1778,11 @@
       },
       "active": {
         "name": "Operazione Blackout",
-        "cost": 3,
-        "text": "+5 danni oltre il cap.",
+        "cost": 2,
+        "text": "+3 danni oltre il cap.",
         "effect": {
           "type": "damage",
-          "value": 5
+          "value": 3
         },
         "flavor": "Spegne le luci, chiude il problema, lascia solo il risultato."
       },
@@ -1731,27 +1803,27 @@
         "antihero"
       ],
       "valerio": {
-        "V": 6,
-        "A": 6,
-        "L": 6,
-        "E": 5,
-        "R": 6,
-        "I": 7,
-        "O": 4
+        "V": 5,
+        "A": 5,
+        "L": 5,
+        "E": 4,
+        "R": 5,
+        "I": 6,
+        "O": 7
       },
       "combat": {
-        "attackPower": 80,
-        "defensePower": 90,
-        "draftCost": 5
+        "attackPower": 70,
+        "defensePower": 75,
+        "draftCost": 3
       },
-      "rarityRule": "minimo leggendaria per draftCost 5; rarità originale mantenuta se più alta"
+      "rarityRule": "rarità rara: draftCost 3; target combat 145; VALERIO target 37"
     },
     {
       "id": "valarot",
       "image": "dragonball/valarot.png",
       "name": "Valarot",
       "subtitle": "Saiyan del backlog infinito.",
-      "rarity": "mitica",
+      "rarity": "leggendaria",
       "archetype": "saiyan",
       "theme": "aura dorata • sfere del drago • potenza",
       "frame": {
@@ -1795,18 +1867,18 @@
         "O": 6
       },
       "combat": {
-        "attackPower": 95,
+        "attackPower": 100,
         "defensePower": 85,
-        "draftCost": 5
+        "draftCost": 6
       },
-      "rarityRule": "minimo leggendaria per draftCost 5; rarità originale mantenuta se più alta"
+      "rarityRule": "rarità leggendaria: draftCost 6; target combat 185; VALERIO target 40"
     },
     {
       "id": "buulerio",
       "image": "dragonball/buulerio.png",
       "name": "Buulerio",
       "subtitle": "Assorbe snack, bug e responsabilità.",
-      "rarity": "leggendaria",
+      "rarity": "non_comune",
       "archetype": "majin",
       "theme": "rosa • caramelle • caos cosmico",
       "frame": {
@@ -1816,21 +1888,21 @@
       },
       "active": {
         "name": "Raggio Caramella",
-        "cost": 2,
-        "text": "+4 danni oltre il cap.",
+        "cost": 1,
+        "text": "+2 danni oltre il cap.",
         "effect": {
           "type": "damage",
-          "value": 4
+          "value": 2
         },
         "flavor": "Trasforma il problema in dolce e lo assorbe senza aprire Jira."
       },
       "passive": {
         "name": "Rigenerazione Majin",
-        "text": "+2 danni se attacchi con Rigore.",
+        "text": "+1 danni se attacchi con Rigore.",
         "effect": {
           "type": "attack-stat-bonus",
           "stat": "R",
-          "value": 2
+          "value": 1
         },
         "flavor": "Lo buttano giù in call, torna rosa e più pericoloso."
       },
@@ -1841,27 +1913,27 @@
         "meme"
       ],
       "valerio": {
-        "V": 7,
-        "A": 4,
-        "L": 4,
-        "E": 7,
-        "R": 7,
-        "I": 4,
-        "O": 7
+        "V": 6,
+        "A": 5,
+        "L": 3,
+        "E": 6,
+        "R": 6,
+        "I": 3,
+        "O": 6
       },
       "combat": {
-        "attackPower": 85,
-        "defensePower": 70,
-        "draftCost": 4
+        "attackPower": 70,
+        "defensePower": 55,
+        "draftCost": 2
       },
-      "rarityRule": "minimo epica per draftCost 4; rarità originale mantenuta se più alta"
+      "rarityRule": "rarità non_comune: draftCost 2; target combat 125; VALERIO target 35"
     },
     {
       "id": "valinyu_squad",
       "image": "dragonball/valinyu_squad.png",
       "name": "Valinyu Squad",
       "subtitle": "Cinque pose, una sola retrospettiva.",
-      "rarity": "mitica",
+      "rarity": "epica",
       "archetype": "team combo",
       "theme": "namek • squadra • pose impossibili",
       "frame": {
@@ -1871,11 +1943,11 @@
       },
       "active": {
         "name": "Posa Speciale Valinyu",
-        "cost": 3,
-        "text": "+5 danni oltre il cap.",
+        "cost": 2,
+        "text": "+4 danni oltre il cap.",
         "effect": {
           "type": "damage",
-          "value": 5
+          "value": 4
         },
         "flavor": "La posa dura troppo, ma nessuno osa interromperla."
       },
@@ -1896,27 +1968,27 @@
         "namek"
       ],
       "valerio": {
-        "V": 5,
-        "A": 6,
-        "L": 5,
-        "E": 6,
-        "R": 6,
-        "I": 6,
-        "O": 6
+        "V": 10,
+        "A": 5,
+        "L": 4,
+        "E": 5,
+        "R": 5,
+        "I": 5,
+        "O": 5
       },
       "combat": {
-        "attackPower": 80,
-        "defensePower": 100,
-        "draftCost": 5
+        "attackPower": 75,
+        "defensePower": 90,
+        "draftCost": 4
       },
-      "rarityRule": "minimo leggendaria per draftCost 5; rarità originale mantenuta se più alta"
+      "rarityRule": "rarità epica: draftCost 4; target combat 165; VALERIO target 39"
     },
     {
       "id": "cellerio",
       "image": "dragonball/cellerio.png",
       "name": "Cellerio",
       "subtitle": "Bio‑android del refactoring perfetto.",
-      "rarity": "mitica",
+      "rarity": "leggendaria",
       "archetype": "bio‑android",
       "theme": "verde • bio‑organic • perfezione",
       "frame": {
@@ -1961,17 +2033,17 @@
       },
       "combat": {
         "attackPower": 90,
-        "defensePower": 100,
+        "defensePower": 95,
         "draftCost": 6
       },
-      "rarityRule": "minimo mitica per draftCost 6; rarità originale mantenuta se più alta"
+      "rarityRule": "rarità leggendaria: draftCost 6; target combat 185; VALERIO target 40"
     },
     {
       "id": "vallicolo",
       "image": "dragonball/vallicolo.png",
       "name": "Vallicolo",
       "subtitle": "Namecciano del silenzio giudicante.",
-      "rarity": "leggendaria",
+      "rarity": "non_comune",
       "archetype": "maestro",
       "theme": "namek • mantello bianco • aura verde",
       "frame": {
@@ -1981,21 +2053,21 @@
       },
       "active": {
         "name": "Makankosappo Mentale",
-        "cost": 2,
-        "text": "+4 danni oltre il cap.",
+        "cost": 1,
+        "text": "+2 danni oltre il cap.",
         "effect": {
           "type": "damage",
-          "value": 4
+          "value": 2
         },
         "flavor": "Concentra tutto in un punto e buca il requisito ambiguo."
       },
       "passive": {
         "name": "Meditazione Namecciana",
-        "text": "+2 danni se attacchi con Rigore.",
+        "text": "+1 danni se attacchi con Rigore.",
         "effect": {
           "type": "attack-stat-bonus",
           "stat": "R",
-          "value": 2
+          "value": 1
         },
         "flavor": "Resta immobile, ma intanto regge metà dello scope."
       },
@@ -2006,20 +2078,20 @@
         "mentor"
       ],
       "valerio": {
-        "V": 6,
-        "A": 6,
-        "L": 6,
-        "E": 5,
-        "R": 6,
-        "I": 7,
-        "O": 4
+        "V": 5,
+        "A": 5,
+        "L": 5,
+        "E": 4,
+        "R": 5,
+        "I": 6,
+        "O": 5
       },
       "combat": {
-        "attackPower": 70,
-        "defensePower": 80,
-        "draftCost": 4
+        "attackPower": 60,
+        "defensePower": 65,
+        "draftCost": 2
       },
-      "rarityRule": "minimo epica per draftCost 4; rarità originale mantenuta se più alta"
+      "rarityRule": "rarità non_comune: draftCost 2; target combat 125; VALERIO target 35"
     },
     {
       "id": "gogerio",
@@ -2071,10 +2143,10 @@
       },
       "combat": {
         "attackPower": 100,
-        "defensePower": 75,
-        "draftCost": 5
+        "defensePower": 95,
+        "draftCost": 6
       },
-      "rarityRule": "minimo leggendaria per draftCost 5; rarità originale mantenuta se più alta"
+      "rarityRule": "rarità mitica: draftCost 6; target combat 195; VALERIO target 40"
     }
   ]
 }

@@ -9,7 +9,8 @@ export const CLIENT_EVENTS = Object.freeze({
   SUBMIT_PLAN: "submitPlan",
   NEXT_ROUND: "nextRound",
   RESTART_LOBBY: "restartLobby",
-  SEND_CHAT: "sendChat"
+  SEND_CHAT: "sendChat",
+  LATENCY_PROBE: "latencyProbe"
 });
 
 export const SERVER_EVENTS = Object.freeze({

@@ -9,6 +9,7 @@ import {
   getStatTooltip,
   getTraitPreview,
   phaseLabel,
+  selectedStats,
   splitValerioText,
   VALERIO_KEYS,
   VALERIO_LABELS,
@@ -27,12 +28,14 @@ export function ActionDock({ lobby, plan, selectedCardId, previewCard, canSubmit
   const trait = selectedCard ? getTraitPreview(selectedCard, plan) : null;
   const activeCost = Number(selectedCard?.active?.cost ?? 0);
   const activeAffordable = Boolean(selectedCard?.active && self?.mana >= activeCost);
+  const attackSummary = formatPlanSummary(plan.attacks);
+  const defenseSummary = formatPlanSummary(plan.defenses);
 
   let action = null;
   if (lobby?.phase === "lobby" && self?.id === lobby.hostId) {
     action = (
-      <button type="button" onClick={() => emit(CLIENT_EVENTS.START_GAME)}>
-        Avvia
+      <button type="button" className="dock-primary" onClick={() => emit(CLIENT_EVENTS.START_GAME)}>
+        Avvia partita
       </button>
     );
   } else if (lobby?.phase === "draft") {
@@ -40,6 +43,7 @@ export function ActionDock({ lobby, plan, selectedCardId, previewCard, canSubmit
     action = (
       <button
         type="button"
+        className={canDraft ? "dock-primary" : "dock-secondary"}
         disabled={!canDraft}
         onClick={() => selectedCard && emit(CLIENT_EVENTS.DRAFT_CARD, { cardId: selectedCard.id })}
       >
@@ -50,10 +54,11 @@ export function ActionDock({ lobby, plan, selectedCardId, previewCard, canSubmit
     action = (
       <button
         type="button"
+        className="dock-primary"
         disabled={!self?.isActive || !selectedCardId}
         onClick={() => emit(CLIENT_EVENTS.SELECT_CARD, { cardId: selectedCardId })}
       >
-        {self?.isActive ? "Seleziona" : "Aspetta"}
+        {self?.isActive ? "Seleziona carta" : "Aspetta"}
       </button>
     );
   } else if (lobby?.phase === "plan") {
@@ -61,7 +66,7 @@ export function ActionDock({ lobby, plan, selectedCardId, previewCard, canSubmit
       <>
         <button
           type="button"
-          className={`dock-active rich-tooltip${plan.useActive ? " is-on" : ""}`}
+          className={`dock-active dock-secondary rich-tooltip${plan.useActive ? " is-on" : ""}`}
           data-tooltip=""
           disabled={!activeAffordable || self?.selected?.attacks}
           onClick={onToggleActive}
@@ -77,17 +82,18 @@ export function ActionDock({ lobby, plan, selectedCardId, previewCard, canSubmit
         </button>
         <button
           type="button"
+          className="dock-primary"
           disabled={!canSubmitPlan || self?.selected?.attacks}
           onClick={() => emit(CLIENT_EVENTS.SUBMIT_PLAN, compactPlan(plan))}
         >
-          Conferma
+          Conferma configurazione
         </button>
       </>
     );
   } else if (lobby?.phase === "reveal" && self?.id === lobby.hostId) {
     action = (
-      <button type="button" onClick={() => emit(CLIENT_EVENTS.NEXT_ROUND)}>
-        Prossimo
+      <button type="button" className="dock-primary" onClick={() => emit(CLIENT_EVENTS.NEXT_ROUND)}>
+        Prossimo round
       </button>
     );
   }
@@ -124,22 +130,34 @@ export function ActionDock({ lobby, plan, selectedCardId, previewCard, canSubmit
       <div className="hud-main">
         <DockCard card={selectedCard} />
         <div className="action-dock">
-          <DockStats card={selectedCard} plan={plan} />
-          <div className="dock-actions">{action}</div>
-          <div className="dock-bars">
-            <ResourceBar type="health" label="PV" value={self?.health ?? 0} max={self?.maxHealth ?? 50} />
-            <ResourceBar type="mana" label="Mana" value={self?.mana ?? 0} max={10} />
-          </div>
           {validation ? (
             <div className="dock-meter-row">
-              <span>ATT {validation.attackTotal}/{validation.attackPool}</span>
-              <span>DIF {validation.defenseTotal}/{validation.defensePool}</span>
+              <span className="is-attack">
+                <i>ATT</i>
+                <b>{attackSummary || `${validation.attackTotal}/${validation.attackPool}`}</b>
+              </span>
+              <span className="is-defense">
+                <i>DIF</i>
+                <b>{defenseSummary || `${validation.defenseTotal}/${validation.defensePool}`}</b>
+              </span>
             </div>
           ) : null}
+          <DockStats card={selectedCard} plan={plan} />
+          <div className={`dock-actions${lobby?.phase === "plan" && selectedCard?.active ? " has-active" : " is-single"}`}>{action}</div>
+          <div className="dock-bars">
+            <ResourceBar type="health" label="PV" value={self?.health ?? 0} max={self?.maxHealth ?? 50} compact />
+            <ResourceBar type="mana" label="Mana" value={self?.mana ?? 0} max={10} compact />
+          </div>
         </div>
       </div>
     </section>
   );
+}
+
+function formatPlanSummary(distribution) {
+  return selectedStats(distribution)
+    .map((key) => `${key}${Number(distribution[key] ?? 0)}`)
+    .join(" · ");
 }
 
 function DockCard({ card }) {

@@ -59,7 +59,14 @@ io.on("connection", (socket) => {
   broadcastLobbyList();
 
   for (const eventName of [...CLIENT_EVENT_NAMES, "submitPlay", "submitFight"]) {
-    socket.on(eventName, (payload = {}) => {
+    socket.on(eventName, (payload = {}, ack) => {
+      if (eventName === CLIENT_EVENTS.LATENCY_PROBE) {
+        if (typeof ack === "function") {
+          ack({ receivedAt: Date.now() });
+        }
+        return;
+      }
+
       handleMessage(client, { type: eventName, payload });
     });
   }
@@ -1007,7 +1014,9 @@ function normalizePlan(payload) {
 
 function normalizeDistribution(distribution) {
   return Object.fromEntries(
-    Object.entries(distribution ?? {}).map(([key, value]) => [key, Number(value)])
+    Object.entries(distribution ?? {})
+      .map(([key, value]) => [key, Number(value)])
+      .filter(([, value]) => value !== 0)
   );
 }
 

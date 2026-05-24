@@ -119,6 +119,7 @@ export interface ClientEventPayloads {
   nextRound: Record<string, never>;
   restartLobby: Record<string, never>;
   sendChat: { text: string };
+  latencyProbe: { sentAt: number };
 }
 
 export interface ServerEventPayloads {

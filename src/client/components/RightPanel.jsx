@@ -1,6 +1,13 @@
 "use client";
 
-import { cardImageSrc, currentOpponent } from "../ui.js";
+import {
+  cardImageSrc,
+  currentOpponent,
+  getAttackPool,
+  getDefensePool,
+  getDraftCost,
+  rarityLabel
+} from "../ui.js";
 import { AbilityBox, GameCard } from "./Card.jsx";
 import { ResourceBar } from "./PlayerRail.jsx";
 
@@ -31,9 +38,18 @@ export function RightPanel({ lobby, previewCard, planPreview }) {
 
       {card ? (
         <section className="side-summary">
-          <GameCard card={card} disabled mini />
+          <div className="panel-heading">
+            <span>{previewCard ? "Carta selezionata" : "Carta avversaria"}</span>
+          </div>
+          <GameCard card={card} disabled />
           <AbilityBox ability={card.active} kind="Attiva" />
           <AbilityBox ability={card.passive} kind="Passiva" />
+          <div className="card-info-grid">
+            <span>Costo <b>{getDraftCost(card)}</b></span>
+            <span>ATT <b>{card.combat?.attackPower ?? 0}% · {getAttackPool(card)}</b></span>
+            <span>DIF <b>{card.combat?.defensePower ?? 0}% · {getDefensePool(card)}</b></span>
+            <span>Rarità <b>{rarityLabel(card.rarity)}</b></span>
+          </div>
         </section>
       ) : (
         <section className="panel">
@@ -43,6 +59,9 @@ export function RightPanel({ lobby, previewCard, planPreview }) {
 
       {planPreview?.length ? (
         <section className="preview-stack">
+          <div className="panel-heading">
+            <span>Preview breccia</span>
+          </div>
           {planPreview.map((line) => (
             <div key={line.key} className="preview-line">
               <strong>{line.title}</strong>
@@ -51,6 +70,7 @@ export function RightPanel({ lobby, previewCard, planPreview }) {
           ))}
         </section>
       ) : null}
+
     </aside>
   );
 }

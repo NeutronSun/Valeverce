@@ -41,7 +41,7 @@ export function ActionDock({ lobby, plan, selectedCardId, previewCard, canSubmit
       <button
         type="button"
         disabled={!canDraft}
-        onClick={() => emit(CLIENT_EVENTS.DRAFT_CARD, { cardId: selectedCard.id })}
+        onClick={() => selectedCard && emit(CLIENT_EVENTS.DRAFT_CARD, { cardId: selectedCard.id })}
       >
         {self?.isCurrentDrafter ? (selectedCard ? "Drafta" : "Scegli carta") : "Aspetta turno"}
       </button>

@@ -15,9 +15,9 @@ import {
   RevealView,
   SelectView
 } from "./PhaseViews.jsx";
-import { clampValue, currentOpponent, emptyPlan, selectedStats, sumDistribution, validatePlanDraft } from "../ui.js";
+import { clampValue, currentOpponent, emptyPlan, phasePath, selectedStats, sumDistribution, validatePlanDraft } from "../ui.js";
 
-export function GameApp() {
+export function GameApp({ initialLobbyId = "" }) {
   const { snapshot, connectionState, lastError, clearError, emit, setName } = useGameSocket();
   const lobby = snapshot?.lobby ?? null;
   const [name, setNameState] = useState("");
@@ -27,11 +27,21 @@ export function GameApp() {
   const [planPreview, setPlanPreview] = useState([]);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuDialogRef = useRef(null);
+  const autoJoinRef = useRef(false);
 
   useEffect(() => {
     const savedName = window.localStorage.getItem("valeverce.playerName") ?? "";
     setNameState(savedName);
   }, []);
+
+  useEffect(() => {
+    if (!initialLobbyId || lobby || autoJoinRef.current || connectionState !== "connected") {
+      return;
+    }
+
+    autoJoinRef.current = true;
+    emit(CLIENT_EVENTS.JOIN_LOBBY, { lobbyId: initialLobbyId });
+  }, [connectionState, emit, initialLobbyId, lobby]);
 
   useEffect(() => {
     setSelectedCardId("");
@@ -52,6 +62,25 @@ export function GameApp() {
       dialog.close();
     }
   }, [menuOpen]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    if (lobby?.id) {
+      const phaseSegment = phasePath(lobby.phase);
+      const nextPath = phaseSegment ? `/lobby/${lobby.id}/${phaseSegment}` : `/lobby/${lobby.id}`;
+      if (window.location.pathname !== nextPath) {
+        window.history.replaceState(null, "", nextPath);
+      }
+      return;
+    }
+
+    if (!initialLobbyId && window.location.pathname !== "/") {
+      window.history.replaceState(null, "", "/");
+    }
+  }, [initialLobbyId, lobby?.id, lobby?.phase]);
 
   useEffect(() => {
     const onKeyDown = (event) => {
@@ -110,19 +139,6 @@ export function GameApp() {
     <div className={shellClass}>
       {lobby ? <PlayerRail lobby={lobby} /> : null}
       <main className={lobby ? "main-stage" : ""}>
-        <header className="topbar is-compact app-topbar">
-          <div>
-            <p className="eyebrow">valeverce</p>
-            <h1>valeverce</h1>
-          </div>
-          <span className={`connection ${connectionState === "connected" ? "is-online" : ""}`}>{connectionState}</span>
-          {lobby ? (
-            <button type="button" className="ghost" onClick={() => setMenuOpen(true)}>
-              Menu
-            </button>
-          ) : null}
-        </header>
-
         {lastError ? (
           <button type="button" className="toast" onClick={clearError}>
             {lastError}
@@ -130,7 +146,7 @@ export function GameApp() {
         ) : null}
 
         {!lobby ? (
-          <HomeView snapshot={snapshot} name={name} onNameChange={updateName} emit={emit} />
+          <HomeView snapshot={snapshot} name={name} onNameChange={updateName} emit={emit} connectionState={connectionState} />
         ) : (
           <>
             {lobby.phase === "lobby" ? <LobbyView lobby={lobby} /> : null}

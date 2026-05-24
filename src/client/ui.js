@@ -327,3 +327,74 @@ export function validatePlanDraft(plan, card) {
       defenseTotal <= defensePool
   };
 }
+
+export const RARITY_ORDER = ["mitica", "speciale", "leggendaria", "epica", "rara", "comune"];
+
+export function normalizeRarity(rarity) {
+  return String(rarity ?? "comune")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+}
+
+export function rarityLabel(rarity) {
+  const normalized = normalizeRarity(rarity);
+  return {
+    comune: "Comune",
+    rara: "Rara",
+    epica: "Epica",
+    leggendaria: "Leggendaria",
+    mitica: "Mitica",
+    speciale: "Speciale"
+  }[normalized] ?? normalized;
+}
+
+export function rarityClass(rarity) {
+  return `rarity-${normalizeRarity(rarity)}`;
+}
+
+export function rarityRank(rarity) {
+  const index = RARITY_ORDER.indexOf(normalizeRarity(rarity));
+  return index >= 0 ? index : RARITY_ORDER.length;
+}
+
+export function sortCardsByRarity(cards) {
+  return [...(cards ?? [])].sort((left, right) => {
+    const rankDiff = rarityRank(left.rarity) - rarityRank(right.rarity);
+    if (rankDiff !== 0) return rankDiff;
+    return String(left.name ?? left.id).localeCompare(String(right.name ?? right.id));
+  });
+}
+
+export function sortDraftItemsByRarity(items) {
+  return [...(items ?? [])].sort((left, right) => {
+    const rankDiff = rarityRank(left.card?.rarity) - rarityRank(right.card?.rarity);
+    if (rankDiff !== 0) return rankDiff;
+    return String(left.card?.name ?? left.card?.id).localeCompare(String(right.card?.name ?? right.card?.id));
+  });
+}
+
+export function groupDraftItemsByRarity(items) {
+  const groups = [];
+  for (const item of sortDraftItemsByRarity(items)) {
+    const rarity = normalizeRarity(item.card?.rarity);
+    let group = groups.find((candidate) => candidate.rarity === rarity);
+    if (!group) {
+      group = { rarity, label: rarityLabel(rarity), items: [] };
+      groups.push(group);
+    }
+    group.items.push(item);
+  }
+  return groups;
+}
+
+export function phasePath(phase) {
+  return {
+    lobby: "",
+    draft: "drafting",
+    select: "select",
+    plan: "fight",
+    reveal: "reveal",
+    ended: "ended"
+  }[phase] ?? "";
+}

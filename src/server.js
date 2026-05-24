@@ -1065,6 +1065,7 @@ function sendState(client) {
     selfId: client.id,
     settings: SETTINGS,
     valerioLabels: VALERIO_LABELS,
+    onlinePlayers: clients.size,
     lobbies: serializeLobbyList(),
     lobby: lobby ? serializeLobby(lobby, client.id) : null
   });
@@ -1074,8 +1075,10 @@ function serializeLobbyList() {
   return [...lobbies.values()].map((lobby) => ({
     id: lobby.id,
     phase: lobby.phase,
+    hostName: lobby.players.get(lobby.hostId)?.name ?? "Host",
     players: lobby.players.size,
     maxPlayers: SETTINGS.maxPlayers,
+    isJoinable: lobby.phase === "lobby" && lobby.players.size < SETTINGS.maxPlayers,
     round: lobby.round,
     names: [...lobby.players.values()].map((player) => player.name)
   }));

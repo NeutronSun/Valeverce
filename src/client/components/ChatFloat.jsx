@@ -114,7 +114,6 @@ export function ChatFloat({ lobby, emit }) {
     >
       <div className="chat-head" onMouseDown={startDrag}>
         <span>chat</span>
-        <strong>{lobby.chat.length}</strong>
         <button type="button" className="chat-close" onClick={() => setVisible(false)} aria-label="Nascondi chat">
           x
         </button>

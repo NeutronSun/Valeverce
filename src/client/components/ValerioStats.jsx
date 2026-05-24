@@ -19,7 +19,7 @@ export function ValerioStats({ card, hot = [], cool = [], compact = false }) {
           .join(" ");
 
         return (
-          <span key={key} className={className} data-tooltip={`${formatStatName(key)}: ${valerio[key] ?? 0}`}>
+          <span key={key} className={`stat-${key.toLowerCase()} ${className}`} data-tooltip={`${formatStatName(key)}: ${valerio[key] ?? 0}`}>
             <b>{valerio[key] ?? 0}</b>
             <small>{key}</small>
           </span>

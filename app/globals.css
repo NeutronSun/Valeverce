@@ -2961,3 +2961,349 @@ game-card p,
     grid-template-columns: 1fr;
   }
 }
+
+.home-dashboard {
+  min-height: calc(100vh - 28px);
+  align-content: center;
+  grid-template-columns: minmax(300px, 0.8fr) minmax(360px, 1.2fr);
+}
+
+.home-hero,
+.home-lobbies {
+  display: grid;
+  gap: 14px;
+}
+
+.home-hero h1 {
+  margin: 0;
+  color: var(--accent);
+  font-size: clamp(2.5rem, 8vw, 7rem);
+  line-height: 0.9;
+  letter-spacing: 0;
+}
+
+.home-status-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.home-status-grid span {
+  display: grid;
+  gap: 3px;
+  border: 1px solid rgba(241, 243, 232, 0.14);
+  border-radius: 8px;
+  padding: 10px;
+  color: var(--muted);
+  background: rgba(17, 19, 16, 0.54);
+  font-size: 0.72rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.home-status-grid span.is-online {
+  border-color: rgba(149, 224, 108, 0.55);
+}
+
+.home-status-grid strong {
+  color: var(--text);
+  font-size: 1rem;
+  text-transform: none;
+}
+
+.home-lobbies .lobby-list {
+  gap: 8px;
+}
+
+.home-lobbies .lobby-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  width: 100%;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
+}
+
+.home-lobbies .lobby-row:disabled {
+  opacity: 0.5;
+}
+
+.phase-pill {
+  display: inline-grid;
+  min-width: 68px;
+  min-height: 28px;
+  place-items: center;
+  border: 1px solid rgba(241, 243, 232, 0.14);
+  border-radius: 999px;
+  padding: 0 10px;
+  color: var(--muted);
+  background: rgba(17, 19, 16, 0.72);
+  font-size: 0.68rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.phase-pill.is-lobby {
+  color: #11200f;
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.rarity-comune {
+  --rarity-color: #aeb5a0;
+  --rarity-bg: rgba(174, 181, 160, 0.08);
+}
+
+.rarity-rara {
+  --rarity-color: #5fb7ff;
+  --rarity-bg: rgba(95, 183, 255, 0.1);
+}
+
+.rarity-epica {
+  --rarity-color: #b99cff;
+  --rarity-bg: rgba(185, 156, 255, 0.11);
+}
+
+.rarity-leggendaria {
+  --rarity-color: var(--accent);
+  --rarity-bg: rgba(246, 195, 69, 0.12);
+}
+
+.rarity-mitica {
+  --rarity-color: #ff6f61;
+  --rarity-bg: rgba(255, 111, 97, 0.12);
+}
+
+.rarity-speciale {
+  --rarity-color: #61ffd1;
+  --rarity-bg: rgba(97, 255, 209, 0.1);
+}
+
+.game-card[class*="rarity-"] > button,
+.draft-card-wrap[class*="rarity-"] {
+  border-color: color-mix(in srgb, var(--rarity-color), transparent 42%);
+}
+
+.game-card[class*="rarity-"] > button {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--rarity-color), transparent 86%);
+}
+
+.rarity-tag {
+  color: var(--rarity-color);
+  font-size: 0.68rem;
+  font-style: normal;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.draft-pool.is-grouped {
+  grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+  align-items: start;
+  gap: 8px;
+}
+
+.rarity-separator {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border: 1px solid color-mix(in srgb, var(--rarity-color), transparent 52%);
+  border-radius: 8px;
+  padding: 6px 9px;
+  color: var(--rarity-color);
+  background: var(--rarity-bg);
+  font-size: 0.72rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.rarity-separator i {
+  display: grid;
+  min-width: 24px;
+  min-height: 22px;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--rarity-color), transparent 48%);
+  border-radius: 999px;
+  color: var(--text);
+  background: rgba(17, 19, 16, 0.64);
+  font-style: normal;
+}
+
+.draft-card-wrap {
+  background:
+    linear-gradient(180deg, var(--rarity-bg, rgba(255, 255, 255, 0.03)), rgba(0, 0, 0, 0.06)),
+    rgba(17, 19, 16, 0.62);
+}
+
+.draft-card-wrap.is-previewed {
+  border-color: var(--rarity-color, var(--accent));
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--rarity-color, var(--accent)), transparent 64%),
+    0 0 22px color-mix(in srgb, var(--rarity-color, var(--accent)), transparent 84%);
+}
+
+.draft-card-wrap.is-previewed .game-card > button {
+  border-color: var(--rarity-color, var(--accent));
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--rarity-color, var(--accent)), transparent 72%);
+}
+
+.draft-card-wrap.is-previewed .card-full-image {
+  filter: saturate(1.12) contrast(1.06);
+}
+
+.draft-card-wrap.is-taken .taken-label.is-overlay {
+  inset: 0;
+  border-radius: 6px;
+  color: var(--text);
+  background: rgba(13, 16, 12, 0.76);
+  font-size: 0.76rem;
+  font-weight: 950;
+}
+
+.draft-card-wrap .taken-label.is-overlay {
+  pointer-events: none;
+}
+
+.app-layout {
+  grid-template-columns: 250px minmax(0, 1fr) 340px;
+  gap: 10px;
+  width: min(1920px, calc(100vw - 10px));
+  padding-bottom: 156px;
+}
+
+.main-stage {
+  min-width: 0;
+  padding-bottom: 164px;
+}
+
+.right-rail {
+  max-height: calc(100vh - 14px);
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding-bottom: 166px;
+  scrollbar-gutter: stable;
+}
+
+.right-panel {
+  align-content: start;
+}
+
+.right-panel .side-summary {
+  min-width: 0;
+}
+
+.right-panel .side-summary > .game-card {
+  width: min(100%, 220px);
+  justify-self: center;
+}
+
+.right-panel .side-summary > .game-card > button:disabled {
+  opacity: 1;
+  cursor: default;
+}
+
+.right-panel .ability-box {
+  min-width: 0;
+}
+
+.duel-planner.is-grid {
+  grid-template-columns: minmax(0, 0.96fr) minmax(0, 1.04fr);
+  gap: 10px;
+}
+
+.duel-zone {
+  min-width: 0;
+  overflow: hidden;
+  padding: 10px;
+}
+
+.duel-zone .choice-panel,
+.choice-panel {
+  min-width: 0;
+}
+
+.duel-zone-head .stats,
+.duel-zone-head .valerio-bubbles {
+  min-width: 0;
+}
+
+.plan-stat {
+  display: grid;
+  grid-template-columns: 30px minmax(70px, 0.72fr) auto minmax(104px, 1fr) 34px;
+  min-width: 0;
+}
+
+.plan-stat > span[class*="stat-"],
+.valerio-bubbles > span[class*="stat-"] {
+  color: var(--stat-color);
+  border-color: var(--stat-border);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(0, 0, 0, 0.08)),
+    var(--stat-bg);
+}
+
+.valerio-bubbles > span small {
+  border: 1px solid var(--stat-border);
+  background: var(--stat-color);
+}
+
+.dock-trait .trait-mark {
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.055);
+  border-color: rgba(241, 243, 232, 0.16);
+  box-shadow: none;
+}
+
+.dock-trait.is-active .trait-mark {
+  color: #111310;
+  background: #ff8a4c;
+  border-color: #ff8a4c;
+  box-shadow: 0 0 16px rgba(255, 138, 76, 0.22);
+}
+
+.chat-float {
+  bottom: auto;
+}
+
+.chat-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+dialog.menu-modal {
+  z-index: 2147483000;
+}
+
+dialog.menu-modal::backdrop {
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(8px);
+}
+
+@media (max-width: 1100px) {
+  .home-dashboard,
+  .app-layout,
+  .duel-planner.is-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .home-status-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .left-rail,
+  .right-rail {
+    position: static;
+    max-height: none;
+    padding-bottom: 0;
+  }
+
+  .plan-stat {
+    grid-template-columns: 30px minmax(60px, 1fr) 52px;
+  }
+
+  .plan-stat small,
+  .plan-stat input[type="range"] {
+    grid-column: 1 / -1;
+  }
+}

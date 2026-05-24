@@ -14,20 +14,38 @@ import {
   cardImageSrc,
   getPlanLineInfluence,
   getPlanLineTooltip,
+  groupDraftItemsByRarity,
+  rarityClass,
+  rarityLabel,
   selectedStats,
   splitValerioText,
+  sortCardsByRarity,
   sumDistribution,
   validatePlanDraft
 } from "../ui.js";
 import { AbilityBox, GameCard } from "./Card.jsx";
 import { ValerioStats } from "./ValerioStats.jsx";
 
-export function HomeView({ snapshot, name, onNameChange, emit }) {
+export function HomeView({ snapshot, name, onNameChange, emit, connectionState }) {
+  const lobbies = snapshot?.lobbies ?? [];
+  const totalPlayers = Number(snapshot?.onlinePlayers ?? lobbies.reduce((total, lobby) => total + Number(lobby.players ?? 0), 0));
+
   return (
-    <main className="home-grid">
-      <section className="panel">
+    <main className="home-grid home-dashboard">
+      <section className="panel home-hero">
         <p className="eyebrow">valeverce</p>
         <h1>valeverce</h1>
+        <div className="home-status-grid">
+          <span className={connectionState === "connected" ? "is-online" : ""}>
+            Stato <strong>{connectionState}</strong>
+          </span>
+          <span>
+            Player online <strong>{totalPlayers}</strong>
+          </span>
+          <span>
+            Lobby pubbliche <strong>{lobbies.length}</strong>
+          </span>
+        </div>
         <label>
           Nome player
           <input value={name} onChange={(event) => onNameChange(event.target.value)} placeholder="Nome" />
@@ -38,18 +56,30 @@ export function HomeView({ snapshot, name, onNameChange, emit }) {
           </button>
         </div>
       </section>
-      <section className="panel">
-        <h2>Lobby</h2>
+      <section className="panel home-lobbies">
+        <div className="section-title">
+          <h2>Lobby pubbliche</h2>
+          <span>{lobbies.length}</span>
+        </div>
         <JoinLobby emit={emit} />
         <div className="lobby-list">
-          {(snapshot?.lobbies ?? []).map((lobby) => (
-            <button key={lobby.id} type="button" className="ghost lobby-row" onClick={() => emit(CLIENT_EVENTS.JOIN_LOBBY, { lobbyId: lobby.id })}>
-              <strong>{lobby.id}</strong>
-              <span>
-                {lobby.players}/{lobby.maxPlayers} - {lobby.phase}
-              </span>
+          {lobbies.map((lobby) => (
+            <button
+              key={lobby.id}
+              type="button"
+              className="ghost lobby-row"
+              disabled={!lobby.isJoinable}
+              onClick={() => emit(CLIENT_EVENTS.JOIN_LOBBY, { lobbyId: lobby.id })}
+            >
+              <div>
+                <strong>{lobby.id}</strong>
+                <small>Host: {lobby.hostName ?? "-"}</small>
+              </div>
+              <span>{lobby.players}/{lobby.maxPlayers}</span>
+              <span className={`phase-pill is-${lobby.phase}`}>{lobby.phase === "lobby" ? "aperta" : "in game"}</span>
             </button>
           ))}
+          {lobbies.length === 0 ? <p className="empty">Nessuna lobby pubblica.</p> : null}
         </div>
       </section>
     </main>
@@ -95,6 +125,8 @@ export function LobbyView({ lobby }) {
 
 export function DraftView({ lobby, previewCard, onPreviewCard, emit }) {
   const self = lobby.self;
+  const groups = groupDraftItemsByRarity(lobby.draft?.pool ?? []);
+
   return (
     <section className="draft-view">
       <div className="phase-strip">
@@ -103,41 +135,56 @@ export function DraftView({ lobby, previewCard, onPreviewCard, emit }) {
           Budget {self?.draftSpent ?? 0}/{self?.draftBudget ?? SETTINGS.draftBudget} - carte {self?.deckCount ?? 0}/{lobby.draft?.target ?? SETTINGS.draftSize}
         </span>
       </div>
-      <div className="draft-pool">
-        {(lobby.draft?.pool ?? []).map((item) => {
-          const disabled = !item.canPick;
-          return (
-            <div
-              key={item.card.id}
-              className={[
-                "draft-card-wrap",
-                previewCard?.id === item.card.id ? "is-previewed" : "",
-                item.takenByName ? "is-taken" : "",
-                !item.canAfford ? "is-too-expensive" : ""
-              ]
-                .filter(Boolean)
-                .join(" ")}
-              onMouseEnter={() => onPreviewCard(item.card)}
-            >
-              <GameCard
-                card={item.card}
-                mini
-                disabled={disabled}
-                takenByName={item.takenByName}
-                selected={previewCard?.id === item.card.id}
-                onClick={() => onPreviewCard(item.card)}
-              />
-              <div className="draft-card-meta">
-                <span>Costo {item.cost}</span>
-                <span>ATT {item.card.combat?.attackPower ?? 0}% ({item.attackPool})</span>
-                <span>DIF {item.card.combat?.defensePower ?? 0}% ({item.defensePool})</span>
-              </div>
-              {item.isAvailable && !item.canAfford ? <span className="taken-label is-overlay">Troppo costosa</span> : null}
+      <div className="draft-pool is-grouped">
+        {groups.map((group) => (
+          <React.Fragment key={group.rarity}>
+            <div className={`rarity-separator ${rarityClass(group.rarity)}`}>
+              <span>{group.label}</span>
+              <i>{group.items.length}</i>
             </div>
-          );
-        })}
+            {group.items.map((item) => (
+              <DraftCardItem
+                key={item.card.id}
+                item={item}
+                selected={previewCard?.id === item.card.id}
+                onPreviewCard={onPreviewCard}
+              />
+            ))}
+          </React.Fragment>
+        ))}
       </div>
     </section>
+  );
+}
+
+function DraftCardItem({ item, selected, onPreviewCard }) {
+  return (
+    <div
+      className={[
+        "draft-card-wrap",
+        rarityClass(item.card.rarity),
+        selected ? "is-previewed" : "",
+        item.takenByName ? "is-taken" : "",
+        !item.canAfford ? "is-too-expensive" : ""
+      ]
+        .filter(Boolean)
+        .join(" ")}
+    >
+      <GameCard
+        card={item.card}
+        mini
+        takenByName={item.takenByName}
+        selected={selected}
+        onClick={() => onPreviewCard(item.card)}
+      />
+      <div className="draft-card-meta">
+        <span>{rarityLabel(item.card.rarity)}</span>
+        <span>Costo {item.cost}</span>
+        <span>ATT {item.card.combat?.attackPower ?? 0}% ({item.attackPool})</span>
+        <span>DIF {item.card.combat?.defensePower ?? 0}% ({item.defensePool})</span>
+      </div>
+      {item.isAvailable && !item.canAfford ? <span className="taken-label is-overlay">Troppo costosa</span> : null}
+    </div>
   );
 }
 
@@ -150,7 +197,7 @@ export function SelectView({ lobby, selectedCardId, onSelectedCardId, emit }) {
         <span>{lobby.players.filter((player) => player.hasSelected).length}/{lobby.activePair.length} pronte</span>
       </div>
       <div className="hand">
-        {(self?.deck ?? []).map((card) => {
+        {sortCardsByRarity(self?.deck ?? []).map((card) => {
           const cooldown = Number(self.cooldowns?.[card.id] ?? 0);
           const disabled = !self.isActive || cooldown > 0 || Boolean(self.selected?.cardId);
           return (

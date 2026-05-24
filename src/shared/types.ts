@@ -21,6 +21,7 @@ export interface Card {
   id: string;
   name: string;
   image?: string;
+  rarity?: string;
   valerio: ValerioMap;
   combat: {
     attackPower: number;
@@ -127,7 +128,17 @@ export interface ServerEventPayloads {
     selfId: string;
     settings: Record<string, unknown>;
     valerioLabels: Record<ValerioKey, string>;
-    lobbies: Array<{ id: string; phase: GamePhase; players: number; maxPlayers: number; round: number; names: string[] }>;
+    onlinePlayers: number;
+    lobbies: Array<{
+      id: string;
+      phase: GamePhase;
+      hostName: string;
+      players: number;
+      maxPlayers: number;
+      isJoinable: boolean;
+      round: number;
+      names: string[];
+    }>;
     lobby: LobbySnapshot | null;
   };
   error: { type: "error"; message: string };

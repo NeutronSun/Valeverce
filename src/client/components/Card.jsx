@@ -1,6 +1,6 @@
 "use client";
 
-import { cardImageSrc, getAttackPool, getDefensePool, getDraftCost } from "../ui.js";
+import { cardImageSrc, getAttackPool, getDefensePool, getDraftCost, rarityClass, rarityLabel } from "../ui.js";
 import { ValerioStats } from "./ValerioStats.jsx";
 
 export function GameCard({
@@ -20,6 +20,7 @@ export function GameCard({
     <div
       className={[
         "game-card",
+        rarityClass(card.rarity),
         selected ? "is-selected" : "",
         mini ? "is-draft-mini" : "",
         takenByName ? "is-taken" : ""
@@ -34,6 +35,7 @@ export function GameCard({
         {takenByName ? <span className="taken-label is-overlay">Presa da {takenByName}</span> : null}
         <span className="card-overlay card-body">
           <strong>{card.name}</strong>
+          <em className="rarity-tag">{rarityLabel(card.rarity)}</em>
           <ValerioStats card={card} compact />
           <span className="combat-stats">
             <span>Costo {getDraftCost(card)}</span>

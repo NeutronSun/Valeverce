@@ -1,4 +1,6 @@
-const url = process.env.SMOKE_URL ?? "ws://localhost:3000";
+import { io } from "socket.io-client";
+
+const url = process.env.SMOKE_URL ?? "http://localhost:3000";
 const valerioKeys = ["V", "A", "L", "E", "R", "I", "O"];
 
 const playerOne = await connectPlayer("Smoke One");
@@ -37,34 +39,37 @@ if (!reveal.lobby.lastResult.plays.every((play) => play.attackLines?.length === 
 
 console.log(`ok lobby=${lobbyId} phase=${reveal.lobby.phase} winner=${reveal.lobby.lastResult.winnerId ?? "tie"}`);
 
-playerOne.ws.close();
-playerTwo.ws.close();
+playerOne.socket.close();
+playerTwo.socket.close();
 
 async function connectPlayer(name) {
-  const ws = new WebSocket(url);
+  const socket = io(url, {
+    transports: ["websocket"],
+    reconnection: false
+  });
   const client = {
     name,
-    ws,
+    socket,
     states: [],
     waiters: []
   };
 
-  ws.addEventListener("message", (event) => {
-    const message = JSON.parse(event.data);
+  socket.on("state", (message) => {
     if (message.type === "state") {
       client.states.push(message);
       for (const waiter of client.waiters.splice(0)) {
         waiter();
       }
     }
-    if (message.type === "error") {
-      throw new Error(message.message);
-    }
+  });
+
+  socket.on("error", (message) => {
+    throw new Error(message.message);
   });
 
   await new Promise((resolve, reject) => {
-    ws.addEventListener("open", resolve, { once: true });
-    ws.addEventListener("error", reject, { once: true });
+    socket.once("connect", () => resolve());
+    socket.once("connect_error", reject);
   });
 
   send(client, "setName", { name });
@@ -73,7 +78,7 @@ async function connectPlayer(name) {
 }
 
 function send(client, type, payload = {}) {
-  client.ws.send(JSON.stringify({ type, payload }));
+  client.socket.emit(type, payload);
 }
 
 async function runDraft(...players) {

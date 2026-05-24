@@ -1,6 +1,6 @@
 # valeverce
 
-Gioco di carte locale per 2-4 player sulla stessa rete. Il server Node serve la pagina e gestisce lobby, WebSocket, draft, PV, mana, cooldown e turni.
+Gioco di carte locale per 2-4 player sulla stessa rete. Il server Node avvia Next.js e Socket.IO, serve la UI React e gestisce lobby in memoria, draft, PV, mana, cooldown e turni.
 
 ## Avvio
 
@@ -9,6 +9,14 @@ PORT=3000 npm run dev
 ```
 
 Apri `http://localhost:3000` sul computer host. Gli altri player entrano usando uno degli indirizzi `Network` stampati dal server, per esempio `http://192.168.1.20:3000`.
+
+Per deploy su VPS o macchina LAN con Docker:
+
+```bash
+docker compose up --build
+```
+
+Il client usa Socket.IO same-origin di default. Se serve un endpoint separato, imposta `NEXT_PUBLIC_SOCKET_URL`.
 
 ## Regole
 
@@ -52,6 +60,7 @@ public/cards/Athene.png
 
 ```bash
 npm run check
+npm run build
 npm run validate:cards
 npm run smoke
 ```

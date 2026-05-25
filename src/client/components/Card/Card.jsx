@@ -1,7 +1,7 @@
 "use client";
 
 import { cardImageSrc, getAttackPool, getDefensePool, getDraftCost, normalizeRarity, rarityLabel } from "../../ui.js";
-import { ValerioStats } from "../ValerioStats/index.js";
+import { ValerioStats } from "../ValerioStats/ValerioStats.jsx";
 import styles from "./Card.module.css";
 
 const rarityClasses = {

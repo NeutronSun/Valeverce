@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { CLIENT_EVENTS } from "../../shared/events.js";
+import { CLIENT_EVENTS } from "../../../shared/events.js";
 import {
   SETTINGS,
   VALERIO_KEYS,
@@ -22,9 +22,54 @@ import {
   sortCardsByRarity,
   sumDistribution,
   validatePlanDraft
-} from "../ui.js";
-import { AbilityBox, GameCard } from "./Card/index.js";
-import { ValerioStats } from "./ValerioStats/index.js";
+} from "../../ui.js";
+import { AbilityBox, GameCard } from "../Card/Card.jsx";
+import { ValerioStats } from "../ValerioStats/ValerioStats.jsx";
+import styles from "./PhaseViews.module.css";
+
+const statClasses = {
+  V: styles.statV,
+  A: styles.statA,
+  L: styles.statL,
+  E: styles.statE,
+  R: styles.statR,
+  I: styles.statI,
+  O: styles.statO
+};
+
+const rarityClasses = {
+  comune: styles.rarityCommon,
+  rara: styles.rarityRare,
+  epica: styles.rarityEpic,
+  leggendaria: styles.rarityLegendary,
+  mitica: styles.rarityMythic,
+  speciale: styles.raritySpecial
+};
+
+function classNames(...items) {
+  return items.filter(Boolean).join(" ");
+}
+
+function normalizedRarity(value) {
+  return String(value ?? "comune")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+}
+
+function rarityStyleClass(rarity) {
+  return rarityClasses[normalizedRarity(rarity)] ?? styles.rarityCommon;
+}
+
+function ratioStyle(value, max, property = "--pool-ratio") {
+  const safeMax = Math.max(1, Number(max ?? 1));
+  const ratio = Math.max(0, Math.min(1, Number(value ?? 0) / safeMax));
+  return /** @type {import("react").CSSProperties} */ (
+    /** @type {unknown} */ ({
+      [property]: ratio
+    })
+  );
+}
 
 export function HomeView({ snapshot, name, onNameChange, emit, connectionState, pingMs }) {
   const lobbies = snapshot?.lobbies ?? [];
@@ -32,18 +77,18 @@ export function HomeView({ snapshot, name, onNameChange, emit, connectionState, 
   const pingLabel = Number.isFinite(pingMs) ? `${pingMs} ms` : "-- ms";
 
   return (
-    <main className="home-menu">
-      <section className="home-menu-hero">
-        <div className="home-brand-lockup">
+    <main className={styles.home}>
+      <section className={styles.homeHero}>
+        <div className={styles.brand}>
           <span>V</span>
           <div>
-            <p className="eyebrow">card tactics locale</p>
+            <p className={styles.eyebrow}>card tactics locale</p>
             <h1>VALEVERCE</h1>
           </div>
         </div>
 
-        <div className="home-menu-status">
-          <span className={`home-signal is-${connectionState}`} title={`Ping: ${pingLabel}`} aria-label={`Ping: ${pingLabel}`}>
+        <div className={styles.homeStatus}>
+          <span className={styles.signal} title={`Ping: ${pingLabel}`} aria-label={`Ping: ${pingLabel}`}>
             <i />
             <i />
             <i />
@@ -57,25 +102,25 @@ export function HomeView({ snapshot, name, onNameChange, emit, connectionState, 
           </span>
         </div>
 
-        <label className="home-name-field">
+        <label className={styles.field}>
           Nome player
           <input value={name} onChange={(event) => onNameChange(event.target.value)} placeholder="Scrivi il tuo nome" />
         </label>
 
-        <div className="home-primary-actions">
-          <button type="button" className="home-create-button" onClick={() => emit(CLIENT_EVENTS.CREATE_LOBBY)}>
+        <div className={styles.actions}>
+          <button type="button" className={styles.button} onClick={() => emit(CLIENT_EVENTS.CREATE_LOBBY)}>
             Crea lobby
           </button>
           <JoinLobby emit={emit} />
         </div>
       </section>
 
-      <section className="home-menu-panel home-rules-preview">
-        <div className="section-title">
+      <section className={styles.homePanel}>
+        <div className={styles.sectionTitle}>
           <strong>Regole rapide</strong>
           <span>VALERIO</span>
         </div>
-        <div className="home-rule-list">
+        <div className={styles.ruleList}>
           <span><b>{SETTINGS.draftBudget}</b> budget draft</span>
           <span><b>{SETTINGS.draftSize}</b> carte nel mazzo</span>
           <span><b>{SETTINGS.startingHealth}</b> PV iniziali</span>
@@ -83,17 +128,17 @@ export function HomeView({ snapshot, name, onNameChange, emit, connectionState, 
         </div>
       </section>
 
-      <section className="home-menu-panel home-lobbies">
-        <div className="section-title">
+      <section className={styles.homePanel}>
+        <div className={styles.sectionTitle}>
           <strong>Lobby pubbliche</strong>
           <span>{lobbies.length}</span>
         </div>
-        <div className="home-lobby-list">
+        <div className={styles.list}>
           {lobbies.map((lobby) => (
             <button
               key={lobby.id}
               type="button"
-              className="ghost lobby-row home-lobby-row"
+              className={classNames(styles.ghost, styles.lobbyRow)}
               disabled={!lobby.isJoinable}
               onClick={() => emit(CLIENT_EVENTS.JOIN_LOBBY, { lobbyId: lobby.id })}
             >
@@ -101,11 +146,11 @@ export function HomeView({ snapshot, name, onNameChange, emit, connectionState, 
                 <strong>{lobby.id}</strong>
                 <small>Host: {lobby.hostName ?? "-"}</small>
               </div>
-              <span className="home-lobby-count">{lobby.players}/{lobby.maxPlayers}</span>
-              <span className={`phase-pill is-${lobby.phase}`}>{lobby.phase === "lobby" ? "aperta" : "in game"}</span>
+              <span>{lobby.players}/{lobby.maxPlayers}</span>
+              <span className={styles.phasePill}>{lobby.phase === "lobby" ? "aperta" : "in game"}</span>
             </button>
           ))}
-          {lobbies.length === 0 ? <p className="empty home-empty">Nessuna lobby pubblica. Crea una stanza e invita gli altri dalla stessa rete.</p> : null}
+          {lobbies.length === 0 ? <p className={styles.empty}>Nessuna lobby pubblica. Crea una stanza e invita gli altri dalla stessa rete.</p> : null}
         </div>
       </section>
     </main>
@@ -116,7 +161,7 @@ function JoinLobby({ emit }) {
   const [lobbyId, setLobbyId] = React.useState("");
   return (
     <form
-      className="inline-form home-join-form"
+      className={styles.inlineForm}
       onSubmit={(event) => {
         event.preventDefault();
         emit(CLIENT_EVENTS.JOIN_LOBBY, { lobbyId });
@@ -132,27 +177,27 @@ export function LobbyView({ lobby }) {
   const readyPlayers = lobby.players.filter((player) => player.alive !== false);
 
   return (
-    <section className="lobby-panel lobby-dashboard-panel">
-      <div className="lobby-hero">
+    <section className={styles.lobbyPanel}>
+      <div className={styles.lobbyHero}>
         <div>
-          <p className="eyebrow">Lobby {lobby.id}</p>
+          <p className={styles.eyebrow}>Lobby {lobby.id}</p>
           <h2>Stanza di preparazione</h2>
           <small>{readyPlayers.length}/{SETTINGS.maxPlayers} player connessi</small>
         </div>
-        <div className="lobby-code-chip">
+        <div className={styles.codeChip}>
           <span>Codice</span>
           <strong>{lobby.id}</strong>
         </div>
       </div>
 
-      <div className="lobby-grid">
-        <section className="lobby-roster">
-          <div className="section-title">
+      <div className={styles.grid}>
+        <section className={styles.panel}>
+          <div className={styles.sectionTitle}>
             <strong>Partecipanti</strong>
             <span>{lobby.players.length}/{SETTINGS.maxPlayers}</span>
           </div>
           {lobby.players.map((player) => (
-            <article key={player.id} className={`lobby-player-card${player.id === lobby.self?.id ? " is-self" : ""}`}>
+            <article key={player.id} className={styles.lobbyPlayer}>
               <span>{player.deckCount ?? 0}</span>
               <div>
                 <strong>{player.name}</strong>
@@ -163,12 +208,12 @@ export function LobbyView({ lobby }) {
           ))}
         </section>
 
-        <section className="lobby-rules-card">
-          <div className="section-title">
+        <section className={styles.panel}>
+          <div className={styles.sectionTitle}>
             <strong>Regole</strong>
             <span>VALERIO</span>
           </div>
-          <div className="lobby-rule-grid">
+          <div className={styles.ruleGrid}>
             <span>
               <b>{SETTINGS.draftBudget}</b> budget draft
             </span>
@@ -213,24 +258,24 @@ export function DraftView({ lobby, previewCard, onPreviewCard, emit }) {
   const spent = self?.draftSpent ?? 0;
 
   return (
-    <section className="draft-view">
-      <div className="phase-strip draft-header">
+    <section className={styles.phase}>
+      <div className={styles.phaseStrip}>
         <div>
           <strong>Draft · {currentDrafter?.name ?? "-"}</strong>
           <small>Pick {Math.min(draftedCount + 1, lobby.players.length * draftTarget)} di {lobby.players.length * draftTarget}</small>
         </div>
-        <div className="phase-metrics">
+        <div className={styles.metrics}>
           <span>Budget <b>{spent}/{budget}</b></span>
           <span>Carte <b>{self?.deckCount ?? 0}/{draftTarget}</b></span>
-          <span className="is-connected">Connesso</span>
+          <span>Connesso</span>
         </div>
       </div>
-      <div className="draft-tools">
-        <label>
+      <div className={styles.tools}>
+        <label className={styles.field}>
           Cerca
           <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Nome, ID, rarità..." />
         </label>
-        <label>
+        <label className={styles.field}>
           Ordine
           <select value={sortMode} onChange={(event) => setSortMode(event.target.value)}>
             <option value="rarity">Rarità</option>
@@ -238,16 +283,16 @@ export function DraftView({ lobby, previewCard, onPreviewCard, emit }) {
           </select>
         </label>
       </div>
-      <div className={`draft-pool ${sortMode === "rarity" ? "is-grouped" : "is-flat"}`}>
+      <div className={classNames(styles.draftPool, sortMode === "alpha" && styles.flat)}>
         {sortMode === "rarity" ? (
           groups.map((group) => (
-            <details key={group.rarity} className={`rarity-accordion ${rarityClass(group.rarity)}`} open>
-              <summary className="rarity-separator">
+            <details key={group.rarity} className={classNames(styles.accordion, rarityStyleClass(group.rarity))} open>
+              <summary className={styles.separator}>
                 <span>{group.label}</span>
                 <b>{rarityFlavor(group.rarity)}</b>
                 <i>{group.items.length}</i>
               </summary>
-              <div className="rarity-cards">
+              <div className={styles.cards}>
                 {group.items.map((item) => (
                   <DraftCardItem
                     key={item.card.id}
@@ -269,7 +314,7 @@ export function DraftView({ lobby, previewCard, onPreviewCard, emit }) {
             />
           ))
         )}
-        {draftItems.length === 0 ? <p className="empty">Nessuna carta trovata.</p> : null}
+        {draftItems.length === 0 ? <p className={styles.empty}>Nessuna carta trovata.</p> : null}
       </div>
     </section>
   );
@@ -289,11 +334,11 @@ function DraftCardItem({ item, selected, onPreviewCard }) {
   return (
     <div
       className={[
-        "draft-card-wrap",
-        rarityClass(item.card.rarity),
-        selected ? "is-previewed" : "",
-        item.takenByName ? "is-taken" : "",
-        !item.canAfford ? "is-too-expensive" : ""
+        styles.draftCard,
+        rarityStyleClass(item.card.rarity),
+        selected ? styles.previewed : "",
+        item.takenByName ? styles.taken : "",
+        !item.canAfford ? styles.expensive : ""
       ]
         .filter(Boolean)
         .join(" ")}
@@ -305,7 +350,7 @@ function DraftCardItem({ item, selected, onPreviewCard }) {
         selected={selected}
         onClick={() => onPreviewCard(item.card)}
       />
-      {item.isAvailable && !item.canAfford ? <span className="taken-label is-overlay">Troppo costosa</span> : null}
+      {item.isAvailable && !item.canAfford ? <span className={styles.overlay}>Troppo costosa</span> : null}
     </div>
   );
 }
@@ -313,12 +358,12 @@ function DraftCardItem({ item, selected, onPreviewCard }) {
 export function SelectView({ lobby, selectedCardId, onSelectedCardId, emit }) {
   const self = lobby.self;
   return (
-    <section className="select-view">
-      <div className="phase-strip">
+    <section className={styles.phase}>
+      <div className={styles.phaseStrip}>
         <strong>{self?.isActive ? "Scegli carta coperta" : "Stai guardando il duello"}</strong>
         <span>{lobby.players.filter((player) => player.hasSelected).length}/{lobby.activePair.length} pronte</span>
       </div>
-      <div className="hand">
+      <div className={styles.hand}>
         {sortCardsByRarity(self?.deck ?? []).map((card) => {
           const cooldown = Number(self.cooldowns?.[card.id] ?? 0);
           const disabled = !self.isActive || cooldown > 0 || Boolean(self.selected?.cardId);
@@ -364,20 +409,20 @@ export function PlanFightView({ lobby, plan, onPlanValue, onPreviewLines }) {
   }, [plan, selfCard, opponentCard, onPreviewLines]);
 
   if (!selfCard || !opponentCard) {
-    return <section className="panel">Carte in reveal...</section>;
+    return <section className={styles.panel}>Carte in reveal...</section>;
   }
 
   return (
-    <section className="plan-controls fight-layout">
-      <section className="fight-config-panel">
-        <div className="fight-config-head">
+    <section className={styles.fight}>
+      <section className={styles.fightPanel}>
+        <div className={styles.fightHead}>
           <span>Fight · round {lobby.round}</span>
           <strong>Configura attacco e difesa</strong>
           <small>La configurazione avversaria resta nascosta fino al reveal.</small>
         </div>
 
-        <div className="duel-planner is-grid is-tactical">
-          <section className="duel-zone own-zone defense-zone">
+        <div className={styles.planner}>
+          <section>
             <PlanDistribution
               kind="defenses"
               card={selfCard}
@@ -389,7 +434,7 @@ export function PlanFightView({ lobby, plan, onPlanValue, onPreviewLines }) {
               onChange={(key, value) => onPlanValue("defenses", key, value)}
             />
           </section>
-          <section className="duel-zone enemy-zone attack-zone">
+          <section>
             <PlanDistribution
               kind="attacks"
               card={selfCard}
@@ -403,15 +448,15 @@ export function PlanFightView({ lobby, plan, onPlanValue, onPreviewLines }) {
           </section>
         </div>
 
-        <div className="fight-preview">
-          <div className="fight-preview-head">
+        <div className={styles.preview}>
+          <div className={styles.sectionTitle}>
             <strong>Preview risultato</strong>
             <span>breccia parziale</span>
           </div>
-          <div className="preview-stack is-main">
+          <div className={styles.list}>
             {selectedStats(plan.attacks).length ? (
               selectedStats(plan.attacks).map((key) => (
-                <div key={key} className="preview-line">
+                <div key={key} className={styles.previewLine}>
                   <strong>{formatStatName(key)}</strong>
                   <small>
                     {plan.attacks[key]} + {getCardValerio(selfCard)[key] ?? 0} - {getCardValerio(opponentCard)[key] ?? 0}
@@ -419,12 +464,12 @@ export function PlanFightView({ lobby, plan, onPlanValue, onPreviewLines }) {
                 </div>
               ))
             ) : (
-              <div className="preview-empty">Distribuisci punti attacco.</div>
+              <div className={styles.previewEmpty}>Distribuisci punti attacco.</div>
             )}
           </div>
         </div>
 
-        {validation?.canSubmit ? null : <p className="notice">Servono 3 attacchi e 3 difese entro i pool disponibili.</p>}
+        {validation?.canSubmit ? null : <p className={styles.notice}>Metti punti in attacco e difesa entro i pool disponibili.</p>}
       </section>
 
     </section>
@@ -440,19 +485,22 @@ function PlanDistribution({ kind, card, opponentCard, values, pool, selected, pl
   const maxSlots = isAttack ? SETTINGS.attackSlots : SETTINGS.defenseSlots;
 
   return (
-    <div className="choice-panel" data-plan-kind={kind}>
-      <div className="section-title">
+    <div className={styles.choice} data-plan-kind={kind}>
+      <div className={styles.sectionTitle}>
         <div>
           <strong>{isAttack ? "Scegli 1-3 statistiche di attacco" : "Scegli 1-3 statistiche di difesa"}</strong>
           <small>{isAttack ? "Punti rossi contro la carta avversaria" : "Punti blu per proteggere la tua carta"}</small>
         </div>
         <span>{selected.length}/{maxSlots} · {total}/{pool}</span>
       </div>
-      <div className={`pool-meter${remaining <= 0 ? " is-full" : ""}`}>
-        <i style={{ width: `${pool > 0 ? Math.min(100, (total / pool) * 100) : 0}%` }} />
+      <div
+        className={styles.pool}
+        style={ratioStyle(total, pool)}
+      >
+        <i />
         <span>{remaining <= 0 ? "Pool massimo raggiunto" : `${remaining} punti rimasti`}</span>
       </div>
-      <div className="plan-stat-list">
+      <div className={styles.statList}>
         {VALERIO_KEYS.map((key) => {
           const value = Number(values[key] ?? 0);
           const disabled = value === 0 && selected.length >= maxSlots;
@@ -461,10 +509,14 @@ function PlanDistribution({ kind, card, opponentCard, values, pool, selected, pl
           return (
             <label
               key={key}
-              className={`plan-stat rich-tooltip ${value > 0 ? "is-selected" : ""} ${disabled ? "is-locked" : ""} ${influence ? `is-${influence}-line` : ""}`}
-              data-tooltip=""
+              className={classNames(
+                styles.planStat,
+                statClasses[key],
+                value > 0 && styles.selected,
+                disabled && styles.locked
+              )}
             >
-              <span className={`stat-${key.toLowerCase()}`}>{key}</span>
+              <span>{key}</span>
               <strong>{formatStatName(key)}</strong>
               <small>
                 {valerio[key] ?? 0} vs {opponentValerio[key] ?? 0}
@@ -480,7 +532,7 @@ function PlanDistribution({ kind, card, opponentCard, values, pool, selected, pl
                 onChange={(event) => onChange(key, Number(event.target.value))}
               />
               <b>{value}</b>
-              {influence ? <em className={`line-effect is-${influence}`}>{lineEffectLabel(influence)}</em> : null}
+              {influence ? <em className={styles.lineEffect}>{lineEffectLabel(influence)}</em> : null}
               <TooltipContent>
                 <RichText text={tooltip} />
               </TooltipContent>
@@ -501,12 +553,12 @@ function lineEffectLabel(influence) {
 
 function PlanCardPanel({ title, card, tone, statsTone, highlighted }) {
   return (
-    <aside className={`fight-card-panel is-${tone}`}>
-      <div className="panel-heading">
+    <aside className={styles.panel}>
+      <div className={styles.sectionTitle}>
         <span>{title}</span>
       </div>
       <GameCard card={card} disabled />
-      <div className="fight-valerio-block">
+      <div className={styles.panel}>
         <small>VALERIO base</small>
         <ValerioStats card={card} hot={statsTone === "attack" ? highlighted : []} cool={statsTone === "defense" ? highlighted : []} />
       </div>
@@ -517,7 +569,7 @@ function PlanCardPanel({ title, card, tone, statsTone, highlighted }) {
 }
 
 function TooltipContent({ children }) {
-  return <div className="tooltip-content">{children}</div>;
+  return <div>{children}</div>;
 }
 
 function RichText({ text }) {
@@ -525,7 +577,7 @@ function RichText({ text }) {
     <span>
       {splitValerioText(text).map((chunk, index) =>
         chunk.stat ? (
-          <strong key={`${chunk.text}-${index}`} className={`valerio-term stat-${chunk.stat.toLowerCase()}`}>
+          <strong key={`${chunk.text}-${index}`} className={classNames(styles.term, statClasses[chunk.stat])}>
             {chunk.text}
           </strong>
         ) : (
@@ -539,7 +591,7 @@ function RichText({ text }) {
 export function RevealView({ lobby }) {
   const result = lobby.lastResult;
   if (!result) {
-    return <section className="panel">Reveal in corso...</section>;
+    return <section className={styles.panel}>Reveal in corso...</section>;
   }
 
   const selfPlay = result.plays.find((play) => play.playerId === lobby.self?.id);
@@ -547,13 +599,13 @@ export function RevealView({ lobby }) {
   const heroClass = result.isTie ? "is-tie" : result.winnerId === lobby.self?.id ? "is-win" : "is-lose";
 
   return (
-    <section className="reveal-view reveal-tactical">
-      <div className={`reveal-hero ${heroClass}`}>
+    <section className={styles.reveal}>
+      <div className={classNames(styles.revealHero, styles[heroClass.replace("is-", "")])}>
         <span>Reveal · round {result.round}</span>
         <strong>{outcome}</strong>
         <p>{result.summary?.reason ?? "Round risolto."}</p>
         {selfPlay ? (
-          <div className="reveal-hero-metrics">
+          <div className={styles.heroMetrics}>
             <span>Breccia <b>{selfPlay.breach}</b></span>
             <span>Danno fatto <b>{selfPlay.finalDamage}</b></span>
             <span>Danno subito <b>{selfPlay.damageTaken}</b></span>
@@ -561,7 +613,7 @@ export function RevealView({ lobby }) {
         ) : null}
       </div>
 
-      <div className="reveal-scoreboard">
+      <div className={styles.scoreboard}>
         {result.plays.map((play) => (
           <RevealPlayerReport
             key={play.playerId}
@@ -577,9 +629,9 @@ export function RevealView({ lobby }) {
 
 function RevealPlayerReport({ play, isSelf, isWinner }) {
   return (
-    <article className={`reveal-report is-${play.outcome}${isSelf ? " is-self" : ""}${isWinner ? " is-winner" : ""}`}>
-      <div className="reveal-report-head">
-        <div className="reveal-card-thumb">
+    <article className={styles.report}>
+      <div className={styles.reportHead}>
+        <div className={styles.thumb}>
           <img src={cardImageSrc(play.card)} alt={play.cardName} />
         </div>
         <div>
@@ -590,7 +642,7 @@ function RevealPlayerReport({ play, isSelf, isWinner }) {
         <strong>{play.outcome === "win" ? "Vittoria" : play.outcome === "lose" ? "Sconfitta" : "Pareggio"}</strong>
       </div>
 
-      <div className="reveal-metric-grid">
+      <div className={styles.metricGrid}>
         <RevealMetric label="Breccia" value={play.breach} />
         <RevealMetric label="Cap normale" value={play.normalDamageCap} />
         <RevealMetric label="Danno cap" value={play.normalDamage} />
@@ -599,20 +651,20 @@ function RevealPlayerReport({ play, isSelf, isWinner }) {
         <RevealMetric label="Danno subito" value={play.damageTaken} />
       </div>
 
-      <div className="reveal-state-grid">
+      <div className={styles.stateGrid}>
         <span>PV <b>{play.healthBefore}{" -> "}{play.healthAfter}</b></span>
         <span>Mana <b>{play.manaBefore}{" -> "}{play.manaAfter}</b></span>
         <span>Attacco <b>{formatDistribution(play.attacks)} / {play.attackPool}</b></span>
         <span>Difesa <b>{formatDistribution(play.defenses)} / {play.defensePool}</b></span>
       </div>
 
-      <div className="reveal-ability-row">
-        <span className={play.activeApplied ? "is-on" : ""}>Attiva {play.useActive ? `-${play.manaCost}` : "off"}</span>
-        <span className={play.traitApplied ? "is-on" : ""}>Tratto {play.traitApplied ? "attivo" : "non attivo"}</span>
+      <div className={styles.abilityRow}>
+        <span>Attiva {play.useActive ? `-${play.manaCost}` : "off"}</span>
+        <span>Tratto {play.traitApplied ? "attivo" : "non attivo"}</span>
       </div>
 
       {play.traitNotes?.length ? (
-        <div className="reveal-notes">
+        <div className={styles.panel}>
           {play.traitNotes.map((note, index) => (
             <p key={`${play.playerId}-note-${index}`}>
               <RichText text={note} />
@@ -621,24 +673,24 @@ function RevealPlayerReport({ play, isSelf, isWinner }) {
         </div>
       ) : null}
 
-      <div className="reveal-lines">
-        <div className="reveal-lines-head">
+      <div className={styles.lines}>
+        <div className={styles.sectionTitle}>
           <strong>Calcolo Breccia</strong>
           <span>attacco + VAL tuo - VAL avversario - difesa</span>
         </div>
         {play.attackLines.map((line) => (
-          <div key={`${play.playerId}-${line.stat}`} className={`reveal-line stat-${line.stat.toLowerCase()}${line.lineDamage > 0 ? " is-hit" : ""}`}>
+          <div key={`${play.playerId}-${line.stat}`} className={classNames(styles.line, statClasses[line.stat])}>
             <strong>{line.stat}</strong>
-            <span className="calc-strip">
-              <i className="calc-atk">{line.attackPoints}</i>
-              <i className="calc-plus">+</i>
-              <i className="calc-own">{line.attackerValerio}</i>
-              <i className="calc-minus">-</i>
-              <i className="calc-enemy">{line.defenderValerio}</i>
-              <i className="calc-minus">-</i>
-              <i className="calc-def">{line.defensePoints}</i>
-              <i className="calc-equals">=</i>
-              <i className="calc-result">{line.lineDamage}</i>
+            <span className={styles.calc}>
+              <i>{line.attackPoints}</i>
+              <i>+</i>
+              <i>{line.attackerValerio}</i>
+              <i>-</i>
+              <i>{line.defenderValerio}</i>
+              <i>-</i>
+              <i>{line.defensePoints}</i>
+              <i>=</i>
+              <i>{line.lineDamage}</i>
             </span>
             <b>{line.lineDamage}</b>
           </div>

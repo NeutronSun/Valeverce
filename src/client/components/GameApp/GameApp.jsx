@@ -1,12 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { CLIENT_EVENTS } from "../../shared/events.js";
-import { useGameSocket } from "../useGameSocket.js";
-import { ActionDock } from "./ActionDock.jsx";
-import { ChatFloat } from "./ChatFloat/index.js";
-import { PlayerRail } from "./PlayerRail/index.js";
-import { RightPanel } from "./RightPanel.jsx";
+import { CLIENT_EVENTS } from "../../../shared/events.js";
+import { useGameSocket } from "../../useGameSocket.js";
+import { ActionDock } from "../ActionDock/ActionDock.jsx";
+import { ChatFloat } from "../ChatFloat/ChatFloat.jsx";
+import { PlayerRail } from "../PlayerRail/PlayerRail.jsx";
+import { RightPanel } from "../RightPanel/RightPanel.jsx";
 import {
   DraftView,
   HomeView,
@@ -14,8 +14,9 @@ import {
   PlanFightView,
   RevealView,
   SelectView
-} from "./PhaseViews.jsx";
-import { SETTINGS, clampValue, emptyPlan, phaseLabel, phasePath, selectedStats, sumDistribution, validatePlanDraft } from "../ui.js";
+} from "../PhaseViews/PhaseViews.jsx";
+import { SETTINGS, clampValue, emptyPlan, phaseLabel, phasePath, selectedStats, sumDistribution, validatePlanDraft } from "../../ui.js";
+import styles from "./GameApp.module.css";
 
 export function GameApp({ initialLobbyId = "" }) {
   const { snapshot, connectionState, pingMs, lastError, clearError, emit, setName } = useGameSocket();
@@ -133,14 +134,14 @@ export function GameApp({ initialLobbyId = "" }) {
     [lobby, plan]
   );
 
-  const shellClass = lobby ? "shell app-layout is-match-focus" : "shell";
+  const shellClass = lobby ? `${styles.shell} ${styles.layout}` : styles.shell;
   return (
     <div className={shellClass}>
       {lobby ? <MatchHeader lobby={lobby} connectionState={connectionState} pingMs={pingMs} /> : null}
       {lobby ? <PlayerRail lobby={lobby} /> : null}
-      <main className={lobby ? "main-stage" : ""}>
+      <main className={lobby ? styles.main : ""}>
         {lastError ? (
-          <button type="button" className="toast" onClick={clearError}>
+          <button type="button" className={styles.toast} onClick={clearError}>
             {lastError}
           </button>
         ) : null}
@@ -187,7 +188,7 @@ export function GameApp({ initialLobbyId = "" }) {
 
       <dialog
         ref={menuDialogRef}
-        className="menu-modal"
+        className={styles.menu}
         onCancel={(event) => {
           event.preventDefault();
           setMenuOpen(false);
@@ -195,14 +196,14 @@ export function GameApp({ initialLobbyId = "" }) {
         onClose={() => setMenuOpen(false)}
       >
         <h2>Menu</h2>
-        <div className="menu-actions">
-          <button type="button" className="ghost" onClick={() => setMenuOpen(false)}>
+        <div className={styles.menuActions}>
+          <button type="button" className={styles.ghost} onClick={() => setMenuOpen(false)}>
             Torna
           </button>
           {lobby ? (
             <button
               type="button"
-              className="ghost"
+              className={styles.ghost}
               onClick={() => {
                 emit(CLIENT_EVENTS.LEAVE_LOBBY);
                 setMenuOpen(false);
@@ -222,18 +223,18 @@ function MatchHeader({ lobby, connectionState, pingMs }) {
   const pingLabel = Number.isFinite(pingMs) ? `${pingMs} ms` : "-- ms";
 
   return (
-    <header className="match-header">
-      <div className="match-brand">
+    <header className={styles.header}>
+      <div className={styles.brand}>
         <span>V</span>
         <strong>VALEVERCE</strong>
       </div>
-      <div className="match-meta">
+      <div className={styles.meta}>
         <span>Lobby <b>{lobby.id}</b></span>
         <span>Player <b>{self?.name ?? "-"}</b></span>
         <span>Fase <b>{phaseLabel(lobby.phase)}</b></span>
         <span>Round <b>{lobby.round ?? 0}</b></span>
       </div>
-      <div className={`match-signal is-${connectionState}`} title={`Ping: ${pingLabel}`} aria-label={`Ping: ${pingLabel}`}>
+      <div className={`${styles.signal} ${styles[connectionState] ?? ""}`} title={`Ping: ${pingLabel}`} aria-label={`Ping: ${pingLabel}`}>
         <i />
         <i />
         <i />

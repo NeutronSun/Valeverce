@@ -53,11 +53,11 @@ export function GameCard({
         {cooldown > 0 ? <span className={styles.cooldown}>{cooldown}</span> : null}
         {takenByName ? <span className={styles.takenBadge}>Presa da {takenByName}</span> : null}
         <span className={styles.combat}>
-          <span>ATT {getAttackPool(card)}</span>
-          <span>DIF {getDefensePool(card)}</span>
+          <span className={styles.combatValue}>ATT {getAttackPool(card)}</span>
+          <span className={styles.combatValue}>DIF {getDefensePool(card)}</span>
         </span>
         <span className={styles.body}>
-          <strong>{card.name}</strong>
+          <strong className={styles.name}>{card.name}</strong>
           <em className={styles.rarityText}>{rarityLabel(card.rarity)}</em>
           <span className={styles.valerio}>
             <ValerioStats card={card} compact />
@@ -77,9 +77,9 @@ export function AbilityBox({ ability, kind = "Attiva" }) {
 
   return (
     <div className={classNames(styles.ability, styles[normalizedKind])}>
-      <span>{kind}{ability.cost ? ` - ${ability.cost} mana` : ""}</span>
-      <strong>{ability.name}</strong>
-      <p>{ability.text}</p>
+      <span className={styles.abilityLabel}>{kind}{ability.cost ? ` - ${ability.cost} mana` : ""}</span>
+      <strong className={styles.abilityName}>{ability.name}</strong>
+      <p className={styles.abilityText}>{ability.text}</p>
     </div>
   );
 }

@@ -230,53 +230,6 @@
   gap: 6px;
 }
 
-.stat {
-  --stat-color: var(--color-gold);
-
-  position: relative;
-  display: grid;
-  min-height: 24px;
-  place-items: center;
-  border: 1px solid color-mix(in srgb, var(--stat-color), transparent 44%);
-  border-radius: 7px;
-  color: var(--color-text);
-  background: color-mix(in srgb, var(--stat-color), transparent 88%);
-  font-weight: 950;
-
-  &.traitBoosted {
-    box-shadow: 0 0 14px rgba(214, 174, 82, 0.26);
-  }
-
-  &.activeBoosted {
-    box-shadow: 0 0 14px rgba(52, 150, 255, 0.26);
-  }
-
-  &.bothBoosted {
-    box-shadow:
-      0 0 14px rgba(52, 150, 255, 0.2),
-      0 0 18px rgba(214, 174, 82, 0.18);
-  }
-
-  & b {
-    color: color-mix(in srgb, var(--stat-color), white 30%);
-    font-size: 0.76rem;
-  }
-
-  & small {
-    position: absolute;
-    right: -4px;
-    bottom: -5px;
-    display: grid;
-    width: 14px;
-    height: 14px;
-    place-items: center;
-    border-radius: 50%;
-    color: #10120f;
-    background: var(--stat-color);
-    font-size: 0.48rem;
-  }
-}
-
 .bars {
   display: grid;
   grid-template-columns: 1fr;
@@ -463,8 +416,7 @@
 }
 
 .ability:hover .tooltip,
-.floatingAbility:hover .tooltip,
-.stat:hover .tooltip {
+.floatingAbility:hover .tooltip {
   display: grid;
   gap: 4px;
 }
@@ -478,18 +430,6 @@
     color: var(--color-health);
   }
 }
-
-.term {
-  color: var(--term-color, var(--color-text));
-}
-
-.statV { --stat-color: var(--stat-v); --term-color: var(--stat-v); }
-.statA { --stat-color: var(--stat-a); --term-color: var(--stat-a); }
-.statL { --stat-color: var(--stat-l); --term-color: var(--stat-l); }
-.statE { --stat-color: var(--stat-e); --term-color: var(--stat-e); }
-.statR { --stat-color: var(--stat-r); --term-color: var(--stat-r); }
-.statI { --stat-color: var(--stat-i); --term-color: var(--stat-i); }
-.statO { --stat-color: var(--stat-o); --term-color: var(--stat-o); }
 
 @media (max-width: 1100px) {
   .root {

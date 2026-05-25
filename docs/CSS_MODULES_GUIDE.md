@@ -61,6 +61,32 @@ Use nested CSS inside modules:
 
 Do not create long global selectors to override another component.
 
+Do not style raw child elements inside a component module.
+
+Avoid:
+
+```css
+.body {
+  & > strong {
+    font-size: 1rem;
+  }
+}
+```
+
+Use explicit classes:
+
+```jsx
+<strong className={styles.title}>...</strong>
+```
+
+```css
+.title {
+  font-size: 1rem;
+}
+```
+
+This is mandatory because nested components can render the same tags internally. Styling raw descendants from the parent can break popovers, icons, and shared components.
+
 ## Dynamic Values
 
 Use CSS custom properties for dynamic numbers.

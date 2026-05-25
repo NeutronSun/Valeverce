@@ -59,11 +59,11 @@
         rgba(8, 8, 7, 0.9);
     }
 
-    & .body strong {
+    & .name {
       display: -webkit-box;
       overflow: hidden;
-      font-size: 0.82rem;
-      line-height: 0.98;
+      font-size: 11px;
+      line-height: 1.08;
       text-align: left;
       text-overflow: unset;
       white-space: normal;
@@ -74,7 +74,7 @@
     & .combat {
       font-size: 0.68rem;
 
-      & span {
+      & .combatValue {
         padding: 3px 8px;
       }
     }
@@ -106,7 +106,7 @@
         rgba(8, 8, 7, 0.91);
     }
 
-    & .body strong {
+    & .name {
       font-size: 1rem;
       line-height: 1.08;
       white-space: normal;
@@ -152,7 +152,7 @@
   width: 100%;
   aspect-ratio: var(--card-ratio, 2 / 3);
   min-height: 0;
-  overflow: hidden;
+  overflow: visible;
   border: 1px solid color-mix(in srgb, var(--rarity-color), transparent 18%);
   border-radius: 10px;
   padding: 0;
@@ -202,6 +202,7 @@
 
 .image {
   z-index: 1;
+  clip-path: inset(0 round 10px);
   object-fit: cover;
   transition:
     filter 160ms ease,
@@ -294,15 +295,16 @@
   font-weight: 950;
   pointer-events: none;
 
-  & span {
-    border: 1px solid rgba(255, 255, 255, 0.16);
-    border-radius: 999px;
-    padding: 4px 10px;
-    background: rgba(4, 5, 4, 0.9);
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.35);
-    text-shadow: 0 1px 2px #000;
-    white-space: nowrap;
-  }
+}
+
+.combatValue {
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  padding: 4px 10px;
+  background: rgba(4, 5, 4, 0.9);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.35);
+  text-shadow: 0 1px 2px #000;
+  white-space: nowrap;
 }
 
 .body {
@@ -323,7 +325,7 @@
     linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(0, 0, 0, 0.14)),
     rgba(8, 8, 7, 0.86);
   opacity: 0;
-  overflow: hidden;
+  overflow: visible;
   backdrop-filter: blur(7px);
   transform: translateY(8px);
   transition:
@@ -331,18 +333,19 @@
     transform 160ms ease;
   text-align: left;
 
-  & strong {
-    overflow: hidden;
-    max-width: 100%;
-    color: var(--color-text);
-    font-size: 0.88rem;
-    font-weight: 950;
-    line-height: 1.05;
-    text-overflow: ellipsis;
-    text-shadow: 0 1px 2px #000;
-    text-transform: uppercase;
-    white-space: nowrap;
-  }
+}
+
+.name {
+  overflow: hidden;
+  max-width: 100%;
+  color: var(--color-text);
+  font-size: 0.88rem;
+  font-weight: 950;
+  line-height: 1.05;
+  text-overflow: ellipsis;
+  text-shadow: 0 1px 2px #000;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .rarityText {
@@ -382,23 +385,24 @@
     --ability-color: #a855f7;
   }
 
-  & span {
-    color: var(--color-muted);
-    font-size: 0.68rem;
-    font-weight: 950;
-    text-transform: uppercase;
-  }
+}
 
-  & strong {
-    color: var(--color-text);
-    font-size: 0.94rem;
-    line-height: 1.1;
-  }
+.abilityLabel {
+  color: var(--color-muted);
+  font-size: 0.68rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
 
-  & p {
-    margin: 0;
-    color: var(--color-muted);
-    font-size: 0.78rem;
-    line-height: 1.28;
-  }
+.abilityName {
+  color: var(--color-text);
+  font-size: 0.94rem;
+  line-height: 1.1;
+}
+
+.abilityText {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.78rem;
+  line-height: 1.28;
 }

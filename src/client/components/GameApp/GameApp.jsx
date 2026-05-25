@@ -5,6 +5,7 @@ import { CLIENT_EVENTS } from "../../../shared/events.js";
 import { useGameSocket } from "../../useGameSocket.js";
 import { ActionDock } from "../ActionDock/ActionDock.jsx";
 import { ChatFloat } from "../ChatFloat/ChatFloat.jsx";
+import { ConnectionSignal } from "../ConnectionSignal/ConnectionSignal.jsx";
 import { PlayerRail } from "../PlayerRail/PlayerRail.jsx";
 import { RightPanel } from "../RightPanel/RightPanel.jsx";
 import {
@@ -160,16 +161,28 @@ export function GameApp({ initialLobbyId = "" }) {
   );
 
   const shellClass = lobby ? `${styles.shell} ${styles.layout}` : styles.shell;
+  const shellStyle = /** @type {import("react").CSSProperties} */ (
+    /** @type {unknown} */ ({
+      "--header-height": `${height}px`
+    })
+  );
 
   return (
-    <div ref={shellRef} className={shellClass} style={{ "--header-height": `${height}px` }}>
+    <div ref={shellRef} className={shellClass} style={shellStyle}>
       {lobby ? <MatchHeader lobby={lobby} connectionState={connectionState} pingMs={pingMs} /> : null}
       {lobby ? <PlayerRail lobby={lobby} /> : null}
       <main className={lobby ? styles.main : ""}>
         {lastError ? (
-          <button type="button" className={styles.toast} onClick={clearError}>
-            {lastError}
-          </button>
+          <aside className={styles.toast} role="status" aria-live="polite">
+            <span className={styles.toastIcon}>!</span>
+            <div className={styles.toastCopy}>
+              <span className={styles.toastLabel}>Errore</span>
+              <p className={styles.toastText}>{lastError}</p>
+            </div>
+            <button type="button" className={styles.toastClose} onClick={clearError} aria-label="Chiudi errore">
+              x
+            </button>
+          </aside>
         ) : null}
 
         {!lobby ? (
@@ -221,15 +234,22 @@ export function GameApp({ initialLobbyId = "" }) {
         }}
         onClose={() => setMenuOpen(false)}
       >
-        <h2>Menu</h2>
+        <div className={styles.menuHeader}>
+          <span className={styles.menuMark}>V</span>
+          <div className={styles.menuHeading}>
+            <p className={styles.menuEyebrow}>pausa</p>
+            <h2 className={styles.menuTitle}>Menu partita</h2>
+          </div>
+        </div>
+        <p className={styles.menuText}>Gestisci la stanza o torna al gioco. Esc chiude questa finestra.</p>
         <div className={styles.menuActions}>
-          <button type="button" className={styles.ghost} onClick={() => setMenuOpen(false)}>
+          <button type="button" className={styles.menuSecondary} onClick={() => setMenuOpen(false)}>
             Torna
           </button>
           {lobby ? (
             <button
               type="button"
-              className={styles.ghost}
+              className={styles.menuDanger}
               onClick={() => {
                 emit(CLIENT_EVENTS.LEAVE_LOBBY);
                 setMenuOpen(false);
@@ -246,38 +266,32 @@ export function GameApp({ initialLobbyId = "" }) {
 
 function MatchHeader({ lobby, connectionState, pingMs }) {
   const self = lobby.self;
-  const pingLabel = Number.isFinite(pingMs) ? `${pingMs} ms` : "-- ms";
 
   return (
     <header className={styles.header}>
       <div className={styles.brand}>
-        <span>V</span>
-        <strong>VALEVERCE</strong>
+        <span className={styles.brandMark}>V</span>
+        <strong className={styles.brandName}>VALEVERCE</strong>
       </div>
       <div className={styles.meta}>
-        <span>
-          Lobby <b>{lobby.id}</b>
+        <span className={styles.metaItem}>
+          <span className={styles.metaLabel}>Lobby</span>
+          <b className={styles.metaValue}>{lobby.id}</b>
         </span>
-        <span>
-          Player <b>{self?.name ?? "-"}</b>
+        <span className={styles.metaItem}>
+          <span className={styles.metaLabel}>Player</span>
+          <b className={styles.metaValue}>{self?.name ?? "-"}</b>
         </span>
-        <span>
-          Fase <b>{phaseLabel(lobby.phase)}</b>
+        <span className={styles.metaItem}>
+          <span className={styles.metaLabel}>Fase</span>
+          <b className={styles.metaValue}>{phaseLabel(lobby.phase)}</b>
         </span>
-        <span>
-          Round <b>{lobby.round ?? 0}</b>
+        <span className={styles.metaItem}>
+          <span className={styles.metaLabel}>Round</span>
+          <b className={styles.metaValue}>{lobby.round ?? 0}</b>
         </span>
       </div>
-      <div
-        className={`${styles.signal} ${styles[connectionState] ?? ""}`}
-        title={`Ping: ${pingLabel}`}
-        aria-label={`Ping: ${pingLabel}`}
-      >
-        <i />
-        <i />
-        <i />
-        <i />
-      </div>
+      <ConnectionSignal connectionState={connectionState} pingMs={pingMs} />
     </header>
   );
 }

@@ -1,17 +1,13 @@
 "use client";
 
 import { VALERIO_KEYS, formatStatName, getCardValerio } from "../../ui.js";
+import {
+  ValerioStatIcon,
+  ValerioStatTerm,
+  ValerioStatTooltipLine,
+  ValerioStatTooltipTitle
+} from "../ValerioStatIcon/ValerioStatIcon.jsx";
 import styles from "./ValerioStats.module.css";
-
-const statClasses = {
-  V: styles.statV,
-  A: styles.statA,
-  L: styles.statL,
-  E: styles.statE,
-  R: styles.statR,
-  I: styles.statI,
-  O: styles.statO
-};
 
 function classNames(...items) {
   return items.filter(Boolean).join(" ");
@@ -25,24 +21,35 @@ export function ValerioStats({ card, hot = [], cool = [], compact = false }) {
   return (
     <div className={classNames(styles.root, compact && styles.compact)}>
       {VALERIO_KEYS.map((key) => {
+        const value = valerio[key] ?? 0;
+        const statName = formatStatName(key);
         const isHot = hotSet.has(key);
         const isCool = coolSet.has(key);
 
         return (
-          <span
+          <ValerioStatIcon
             key={key}
-            className={classNames(
-              styles.item,
-              statClasses[key],
-              isHot && styles.active,
-              isCool && styles.trait,
-              isHot && isCool && styles.both
-            )}
-            title={`${formatStatName(key)}: ${valerio[key] ?? 0}`}
-          >
-            <b className={styles.value}>{valerio[key] ?? 0}</b>
-            <small className={styles.key}>{key}</small>
-          </span>
+            statKey={key}
+            value={value}
+            active={isHot}
+            trait={isCool}
+            compact={compact}
+            title={`${statName}: ${value}`}
+            tooltip={
+              <>
+                <ValerioStatTooltipTitle statKey={key}>
+                  {key} - {statName}
+                </ValerioStatTooltipTitle>
+
+                <ValerioStatTooltipLine>
+                  <ValerioStatTerm statKey={key}>
+                    {statName}
+                  </ValerioStatTerm>
+                  <span> originale: {value}</span>
+                </ValerioStatTooltipLine>
+              </>
+            }
+          />
         );
       })}
     </div>

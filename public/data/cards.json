@@ -1216,7 +1216,7 @@
       "image": "valerio.png",
       "name": "Valerio Prime",
       "subtitle": "Semplicemente Valerio.",
-      "rarity": "speciale",
+      "rarity": "comune",
       "archetype": "jolly",
       "theme": "viaggio • mare • plot armor",
       "frame": {
@@ -1264,7 +1264,7 @@
         "defensePower": 90,
         "draftCost": 6
       },
-      "rarityRule": "speciale: costo draft 6 secondo bilanciamento v7; rarità precedente: speciale"
+      "rarityRule": "comune: costo draft 6 secondo bilanciamento v7; rarità precedente: epica"
     },
     {
       "id": "vally",

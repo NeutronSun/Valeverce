@@ -16,17 +16,8 @@ import {
   validatePlanDraft
 } from "../../ui.js";
 import { ResourceBar } from "../PlayerRail/PlayerRail.jsx";
+import { ValerioStatIcon, ValerioStatTerm } from "../ValerioStatIcon/ValerioStatIcon.jsx";
 import styles from "./ActionDock.module.css";
-
-const statClasses = {
-  V: styles.statV,
-  A: styles.statA,
-  L: styles.statL,
-  E: styles.statE,
-  R: styles.statR,
-  I: styles.statI,
-  O: styles.statO
-};
 
 function classNames(...items) {
   return items.filter(Boolean).join(" ");
@@ -237,25 +228,21 @@ function DockStats({ card, plan }) {
           const influence = influences[key] ?? "";
           const value = Number(valerio[key] ?? 0);
           return (
-            <span
+            <ValerioStatIcon
               key={key}
-              className={classNames(
-                styles.stat,
-                statClasses[key],
-                influence === "trait" && styles.traitBoosted,
-                influence === "active" && styles.activeBoosted,
-                influence === "both" && styles.bothBoosted
-              )}
-            >
-              <b>{value}</b>
-              <small>{key}</small>
-              <TooltipContent>
-                <strong className={classNames(styles.term, statClasses[key])}>
+              statKey={key}
+              value={value}
+              trait={influence === "trait" || influence === "both"}
+              active={influence === "active" || influence === "both"}
+              tooltip={
+                <>
+                  <ValerioStatTerm statKey={key}>
                   {key} - {VALERIO_LABELS[key]}
-                </strong>
-                <RichText text={card ? getStatTooltip(card, key, plan) : `${VALERIO_LABELS[key]}: nessuna carta selezionata.`} />
-              </TooltipContent>
-            </span>
+                  </ValerioStatTerm>
+                  <RichText text={card ? getStatTooltip(card, key, plan) : `${VALERIO_LABELS[key]}: nessuna carta selezionata.`} />
+                </>
+              }
+            />
           );
         })}
       </div>
@@ -272,9 +259,9 @@ function RichText({ text }) {
     <span>
       {splitValerioText(text).map((chunk, index) =>
         chunk.stat ? (
-          <strong key={`${chunk.text}-${index}`} className={classNames(styles.term, statClasses[chunk.stat])}>
+          <ValerioStatTerm key={`${chunk.text}-${index}`} statKey={chunk.stat}>
             {chunk.text}
-          </strong>
+          </ValerioStatTerm>
         ) : (
           <span key={`${chunk.text}-${index}`}>{chunk.text}</span>
         )

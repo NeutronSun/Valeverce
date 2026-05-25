@@ -24,6 +24,7 @@ import {
   validatePlanDraft
 } from "../../ui.js";
 import { AbilityBox, GameCard } from "../Card/Card.jsx";
+import { ConnectionSignal } from "../ConnectionSignal/ConnectionSignal.jsx";
 import { ValerioStats } from "../ValerioStats/ValerioStats.jsx";
 import styles from "./PhaseViews.module.css";
 
@@ -71,86 +72,150 @@ function ratioStyle(value, max, property = "--pool-ratio") {
   );
 }
 
+function sortPublicLobbies(lobbies) {
+  return [...lobbies].sort((a, b) => {
+    const joinableDiff = Number(b.isJoinable) - Number(a.isJoinable);
+    if (joinableDiff) {
+      return joinableDiff;
+    }
+
+    const phaseDiff = String(a.phase ?? "").localeCompare(String(b.phase ?? ""));
+    if (phaseDiff) {
+      return phaseDiff;
+    }
+
+    const playerDiff = Number(b.players ?? 0) - Number(a.players ?? 0);
+    if (playerDiff) {
+      return playerDiff;
+    }
+
+    return String(a.id ?? "").localeCompare(String(b.id ?? ""));
+  });
+}
+
 export function HomeView({ snapshot, name, onNameChange, emit, connectionState, pingMs }) {
   const lobbies = snapshot?.lobbies ?? [];
+  const publicLobbies = sortPublicLobbies(lobbies);
+  const openLobbyCount = lobbies.filter((lobby) => lobby.isJoinable).length;
   const totalPlayers = Number(snapshot?.onlinePlayers ?? lobbies.reduce((total, lobby) => total + Number(lobby.players ?? 0), 0));
-  const pingLabel = Number.isFinite(pingMs) ? `${pingMs} ms` : "-- ms";
 
   return (
     <main className={styles.home}>
-      <section className={styles.homeHero}>
-        <div className={styles.brand}>
-          <span>V</span>
-          <div>
-            <p className={styles.eyebrow}>card tactics locale</p>
-            <h1>VALEVERCE</h1>
+      <section className={styles.homeIntro}>
+        <div className={styles.homeBrand}>
+          <span className={styles.homeMark}>V</span>
+          <div className={styles.homeBrandCopy}>
+            <p className={styles.homeEyebrow}>card tactics locale</p>
+            <h1 className={styles.homeTitle}>VALEVERCE</h1>
+            <p className={styles.homeSubtitle}>Draft, duelli VALERIO e lobby sulla stessa rete.</p>
           </div>
         </div>
 
-        <div className={styles.homeStatus}>
-          <span className={styles.signal} title={`Ping: ${pingLabel}`} aria-label={`Ping: ${pingLabel}`}>
-            <i />
-            <i />
-            <i />
-            <i />
+        <div className={styles.homeStats}>
+          <ConnectionSignal connectionState={connectionState} pingMs={pingMs} />
+          <span className={styles.homeStat}>
+            <span className={styles.homeStatLabel}>online</span>
+            <b className={styles.homeStatValue}>{totalPlayers}</b>
           </span>
-          <span>
-            Online <b>{totalPlayers}</b>
-          </span>
-          <span>
-            Lobby <b>{lobbies.length}</b>
+          <span className={styles.homeStat}>
+            <span className={styles.homeStatLabel}>aperte</span>
+            <b className={styles.homeStatValue}>{openLobbyCount}</b>
           </span>
         </div>
+      </section>
 
-        <label className={styles.field}>
-          Nome player
-          <input value={name} onChange={(event) => onNameChange(event.target.value)} placeholder="Scrivi il tuo nome" />
+      <section className={styles.homeAccess}>
+        <div className={styles.homePanelHeader}>
+          <div className={styles.homePanelTitleGroup}>
+            <p className={styles.homePanelEyebrow}>accesso rapido</p>
+            <h2 className={styles.homePanelTitle}>Entra in partita</h2>
+          </div>
+          <span className={styles.homePanelMeta}>{connectionState === "connected" ? "socket ok" : "offline"}</span>
+        </div>
+
+        <label className={styles.homeField}>
+          <span className={styles.homeFieldLabel}>Nome player</span>
+          <input
+            className={styles.homeInput}
+            value={name}
+            onChange={(event) => onNameChange(event.target.value)}
+            placeholder="Scrivi il tuo nome"
+          />
         </label>
 
-        <div className={styles.actions}>
-          <button type="button" className={styles.button} onClick={() => emit(CLIENT_EVENTS.CREATE_LOBBY)}>
+        <div className={styles.homeActions}>
+          <button type="button" className={styles.homePrimaryButton} onClick={() => emit(CLIENT_EVENTS.CREATE_LOBBY)}>
             Crea lobby
           </button>
           <JoinLobby emit={emit} />
         </div>
       </section>
 
-      <section className={styles.homePanel}>
-        <div className={styles.sectionTitle}>
-          <strong>Regole rapide</strong>
-          <span>VALERIO</span>
+      <section className={styles.publicLobbyPanel}>
+        <div className={styles.publicLobbyHeader}>
+          <div className={styles.homePanelTitleGroup}>
+            <p className={styles.homePanelEyebrow}>stanze disponibili</p>
+            <h2 className={styles.homePanelTitle}>Lobby pubbliche</h2>
+          </div>
+          <span className={styles.publicLobbyCount}>{publicLobbies.length}</span>
         </div>
-        <div className={styles.ruleList}>
-          <span><b>{SETTINGS.draftBudget}</b> budget draft</span>
-          <span><b>{SETTINGS.draftSize}</b> carte nel mazzo</span>
-          <span><b>{SETTINGS.startingHealth}</b> PV iniziali</span>
-          <span><b>{SETTINGS.maxMana}</b> mana massimo</span>
-        </div>
-      </section>
 
-      <section className={styles.homePanel}>
-        <div className={styles.sectionTitle}>
-          <strong>Lobby pubbliche</strong>
-          <span>{lobbies.length}</span>
-        </div>
-        <div className={styles.list}>
-          {lobbies.map((lobby) => (
+        <div className={styles.publicLobbyTable}>
+          <div className={styles.publicLobbyTableHead}>
+            <span className={styles.publicLobbyHeadCell}>Lobby</span>
+            <span className={styles.publicLobbyHeadCell}>Host</span>
+            <span className={styles.publicLobbyHeadCell}>Player</span>
+            <span className={styles.publicLobbyHeadCell}>Stato</span>
+          </div>
+          {publicLobbies.map((lobby) => (
             <button
               key={lobby.id}
               type="button"
-              className={classNames(styles.ghost, styles.lobbyRow)}
+              className={classNames(styles.publicLobbyRow, !lobby.isJoinable && styles.publicLobbyLocked)}
               disabled={!lobby.isJoinable}
               onClick={() => emit(CLIENT_EVENTS.JOIN_LOBBY, { lobbyId: lobby.id })}
             >
-              <div>
-                <strong>{lobby.id}</strong>
-                <small>Host: {lobby.hostName ?? "-"}</small>
-              </div>
-              <span>{lobby.players}/{lobby.maxPlayers}</span>
-              <span className={styles.phasePill}>{lobby.phase === "lobby" ? "aperta" : "in game"}</span>
+              <span className={styles.publicLobbyCode}>{lobby.id}</span>
+              <span className={styles.publicLobbyHost}>{lobby.hostName ?? "-"}</span>
+              <span className={styles.publicLobbyPlayers}>
+                {lobby.players}/{lobby.maxPlayers}
+              </span>
+              <span className={classNames(styles.publicLobbyStatus, lobby.isJoinable ? styles.publicLobbyOpen : styles.publicLobbyClosed)}>
+                {lobby.isJoinable ? "aperta" : "in game"}
+              </span>
             </button>
           ))}
-          {lobbies.length === 0 ? <p className={styles.empty}>Nessuna lobby pubblica. Crea una stanza e invita gli altri dalla stessa rete.</p> : null}
+          {publicLobbies.length === 0 ? (
+            <p className={styles.publicLobbyEmpty}>Nessuna lobby pubblica. Crea una stanza e invita gli altri dalla stessa rete.</p>
+          ) : null}
+        </div>
+      </section>
+
+      <section className={styles.homeRules}>
+        <div className={styles.homePanelHeader}>
+          <div className={styles.homePanelTitleGroup}>
+            <p className={styles.homePanelEyebrow}>setup base</p>
+            <h2 className={styles.homePanelTitle}>Regole rapide</h2>
+          </div>
+          <span className={styles.homePanelMeta}>VALERIO</span>
+        </div>
+        <div className={styles.homeRuleGrid}>
+          <span className={styles.homeRule}>
+            <b className={styles.homeRuleValue}>{SETTINGS.draftBudget}</b>
+            <span className={styles.homeRuleLabel}>budget draft</span>
+          </span>
+          <span className={styles.homeRule}>
+            <b className={styles.homeRuleValue}>{SETTINGS.draftSize}</b>
+            <span className={styles.homeRuleLabel}>carte mazzo</span>
+          </span>
+          <span className={styles.homeRule}>
+            <b className={styles.homeRuleValue}>{SETTINGS.startingHealth}</b>
+            <span className={styles.homeRuleLabel}>PV iniziali</span>
+          </span>
+          <span className={styles.homeRule}>
+            <b className={styles.homeRuleValue}>{SETTINGS.maxMana}</b>
+            <span className={styles.homeRuleLabel}>mana max</span>
+          </span>
         </div>
       </section>
     </main>
@@ -167,8 +232,13 @@ function JoinLobby({ emit }) {
         emit(CLIENT_EVENTS.JOIN_LOBBY, { lobbyId });
       }}
     >
-      <input value={lobbyId} placeholder="Codice lobby" onChange={(event) => setLobbyId(event.target.value.toUpperCase())} />
-      <button type="submit">Entra</button>
+      <input
+        className={styles.joinInput}
+        value={lobbyId}
+        placeholder="Codice lobby"
+        onChange={(event) => setLobbyId(event.target.value.toUpperCase())}
+      />
+      <button type="submit" className={styles.joinButton}>Entra</button>
     </form>
   );
 }
@@ -265,19 +335,28 @@ export function DraftView({ lobby, previewCard, onPreviewCard, emit }) {
           <small>Pick {Math.min(draftedCount + 1, lobby.players.length * draftTarget)} di {lobby.players.length * draftTarget}</small>
         </div>
         <div className={styles.metrics}>
-          <span>Budget <b>{spent}/{budget}</b></span>
-          <span>Carte <b>{self?.deckCount ?? 0}/{draftTarget}</b></span>
-          <span>Connesso</span>
+          <span className={styles.metricPill}>
+            Budget <b className={styles.metricValue}>{spent}/{budget}</b>
+          </span>
+          <span className={styles.metricPill}>
+            Carte <b className={styles.metricValue}>{self?.deckCount ?? 0}/{draftTarget}</b>
+          </span>
+          <span className={styles.metricPill}>Connesso</span>
         </div>
       </div>
       <div className={styles.tools}>
         <label className={styles.field}>
-          Cerca
-          <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Nome, ID, rarità..." />
+          <span className={styles.fieldLabel}>Cerca</span>
+          <input
+            className={styles.fieldControl}
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Nome, ID, rarità..."
+          />
         </label>
         <label className={styles.field}>
-          Ordine
-          <select value={sortMode} onChange={(event) => setSortMode(event.target.value)}>
+          <span className={styles.fieldLabel}>Ordine</span>
+          <select className={styles.fieldControl} value={sortMode} onChange={(event) => setSortMode(event.target.value)}>
             <option value="rarity">Rarità</option>
             <option value="alpha">Alfabetico</option>
           </select>

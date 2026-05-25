@@ -8,8 +8,8 @@ import {
   getDraftCost,
   rarityLabel
 } from "../ui.js";
-import { AbilityBox, GameCard } from "./Card.jsx";
-import { ResourceBar } from "./PlayerRail.jsx";
+import { AbilityBox, GameCard } from "./Card/index.js";
+import { ResourceBar } from "./PlayerRail/index.js";
 
 export function RightPanel({ lobby, previewCard, planPreview }) {
   const opponent = currentOpponent(lobby);

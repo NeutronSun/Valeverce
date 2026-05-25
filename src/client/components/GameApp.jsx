@@ -4,8 +4,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CLIENT_EVENTS } from "../../shared/events.js";
 import { useGameSocket } from "../useGameSocket.js";
 import { ActionDock } from "./ActionDock.jsx";
-import { ChatFloat } from "./ChatFloat.jsx";
-import { PlayerRail } from "./PlayerRail.jsx";
+import { ChatFloat } from "./ChatFloat/index.js";
+import { PlayerRail } from "./PlayerRail/index.js";
 import { RightPanel } from "./RightPanel.jsx";
 import {
   DraftView,

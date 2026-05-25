@@ -15,7 +15,7 @@ import {
   VALERIO_LABELS,
   validatePlanDraft
 } from "../ui.js";
-import { ResourceBar } from "./PlayerRail.jsx";
+import { ResourceBar } from "./PlayerRail/index.js";
 
 export function ActionDock({ lobby, plan, selectedCardId, previewCard, canSubmitPlan, emit, onToggleActive }) {
   const self = lobby?.self;

@@ -23,8 +23,8 @@ import {
   sumDistribution,
   validatePlanDraft
 } from "../ui.js";
-import { AbilityBox, GameCard } from "./Card.jsx";
-import { ValerioStats } from "./ValerioStats.jsx";
+import { AbilityBox, GameCard } from "./Card/index.js";
+import { ValerioStats } from "./ValerioStats/index.js";
 
 export function HomeView({ snapshot, name, onNameChange, emit, connectionState, pingMs }) {
   const lobbies = snapshot?.lobbies ?? [];

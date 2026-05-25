@@ -2199,6 +2199,827 @@
         "draftCost": 6
       },
       "rarityRule": "mitica: costo draft 6 secondo bilanciamento v7; rarità precedente: mitica"
+    },
+    {
+      "id": "boss",
+      "image": "boss.png",
+      "name": "Valerio Massimo Bossetti",
+      "subtitle": "L'innocente",
+      "rarity": "rara",
+      "archetype": "boss noir",
+      "theme": "rosso • noir • indagini infinite",
+      "frame": {
+        "preset": "crime_noir_crimson",
+        "accent": "#7f1d1d",
+        "icon": "gavel"
+      },
+      "active": {
+        "name": "Rapimento",
+        "cost": 2,
+        "text": "+3 danni oltre il cap se vinci il fight.",
+        "effect": {
+          "type": "damage",
+          "value": 3
+        },
+        "flavor": "La sentenza arriva prima della retrospettiva."
+      },
+      "passive": {
+        "name": "Innocenza",
+        "text": "+2 Breccia se attacchi con Astuzia.",
+        "effect": {
+          "type": "attack-stat-bonus",
+          "stat": "A",
+          "value": 2
+        },
+        "flavor": "Trova un dettaglio nascosto anche nel requisito più vuoto."
+      },
+      "quote": "Il caso è chiuso. Il ticket no.",
+      "tags": [
+        "noir",
+        "astuzia",
+        "boss"
+      ],
+      "valerio": {
+        "V": 5,
+        "A": 8,
+        "L": 6,
+        "E": 7,
+        "R": 5,
+        "I": 4,
+        "O": 3
+      },
+      "combat": {
+        "attackPower": 75,
+        "defensePower": 70,
+        "draftCost": 3
+      },
+      "rarityRule": "rara: costo draft 3 secondo bilanciamento v7; nuova carta extra"
+    },
+    {
+      "id": "droid",
+      "image": "droid.png",
+      "name": "George Droid",
+      "subtitle": "The Niggasoft Project",
+      "rarity": "epica",
+      "archetype": "cyborg esecutore",
+      "theme": "metallo • rosso • città in rovina",
+      "frame": {
+        "preset": "cyber_war_red",
+        "accent": "#991b1b",
+        "icon": "cpu"
+      },
+      "active": {
+        "name": "Fent Reactor",
+        "cost": 2,
+        "text": "Ignora la difesa avversaria su Rigore.",
+        "effect": {
+          "type": "ignore-defense",
+          "stat": "R"
+        },
+        "flavor": "La macchina non interpreta: esegue."
+      },
+      "passive": {
+        "name": "Nigga-Link",
+        "text": "+2 Breccia se attacchi con Vigore.",
+        "effect": {
+          "type": "attack-stat-bonus",
+          "stat": "V",
+          "value": 2
+        },
+        "flavor": "Ogni colpo installa una patch più pesante."
+      },
+      "quote": "Vivo, morto o deployato: vieni con me.",
+      "tags": [
+        "cyber",
+        "rigore",
+        "metallo"
+      ],
+      "valerio": {
+        "V": 8,
+        "A": 4,
+        "L": 5,
+        "E": 3,
+        "R": 8,
+        "I": 6,
+        "O": 4
+      },
+      "combat": {
+        "attackPower": 90,
+        "defensePower": 70,
+        "draftCost": 4
+      },
+      "rarityRule": "epica: costo draft 4 secondo bilanciamento v7; nuova carta extra"
+    },
+    {
+      "id": "turetta",
+      "image": "turetta.png",
+      "name": "Valerio Turetta",
+      "subtitle": "The Goat",
+      "rarity": "comune",
+      "archetype": "regista di campo",
+      "theme": "sport • maglia blu • spogliatoio",
+      "frame": {
+        "preset": "stadium_blue_gold",
+        "accent": "#1d4ed8",
+        "icon": "jersey"
+      },
+      "active": {
+        "name": "75 coltellate",
+        "cost": 1,
+        "text": "+2 danni oltre il cap se vinci il fight.",
+        "effect": {
+          "type": "damage",
+          "value": 2
+        },
+        "flavor": "Parte da lontano e finisce comunque nel backlog."
+      },
+      "passive": {
+        "name": "Stalking",
+        "text": "+1 Breccia se attacchi con Astuzia.",
+        "effect": {
+          "type": "attack-stat-bonus",
+          "stat": "A",
+          "value": 1
+        },
+        "flavor": "Vede il corridoio libero prima degli altri."
+      },
+      "quote": "Palla al centro, problema in produzione.",
+      "tags": [
+        "sport",
+        "astuzia",
+        "campo"
+      ],
+      "valerio": {
+        "V": 6,
+        "A": 6,
+        "L": 5,
+        "E": 4,
+        "R": 5,
+        "I": 6,
+        "O": 4
+      },
+      "combat": {
+        "attackPower": 60,
+        "defensePower": 65,
+        "draftCost": 2
+      },
+      "rarityRule": "comune: costo draft 2 secondo bilanciamento v7; nuova carta extra"
+    },
+    {
+      "id": "valemorph",
+      "image": "valemorph.png",
+      "name": "Valemorph",
+      "subtitle": "Nessuno lo sente arrivare finché non è già in produzione.",
+      "rarity": "mitica",
+      "archetype": "predatore alieno",
+      "theme": "xeno • acido • corridoi bui",
+      "frame": {
+        "preset": "xeno_biomech_blue",
+        "accent": "#0e7490",
+        "icon": "alien"
+      },
+      "active": {
+        "name": "Acido",
+        "cost": 3,
+        "text": "Ignora la difesa avversaria su Istinto.",
+        "effect": {
+          "type": "ignore-defense",
+          "stat": "I"
+        },
+        "flavor": "Quando capisci da dove arriva, il pavimento è già sciolto."
+      },
+      "passive": {
+        "name": "Predatore Perfetto",
+        "text": "+3 Breccia se attacchi con Vigore.",
+        "effect": {
+          "type": "attack-stat-bonus",
+          "stat": "V",
+          "value": 3
+        },
+        "flavor": "Non negozia. Nidifica."
+      },
+      "quote": "Nel backlog nessuno può sentirti urlare.",
+      "tags": [
+        "alien",
+        "istinto",
+        "horror"
+      ],
+      "valerio": {
+        "V": 8,
+        "A": 4,
+        "L": 4,
+        "E": 3,
+        "R": 7,
+        "I": 9,
+        "O": 5
+      },
+      "combat": {
+        "attackPower": 100,
+        "defensePower": 95,
+        "draftCost": 6
+      },
+      "rarityRule": "mitica: costo draft 6 secondo bilanciamento v7; nuova carta extra"
+    },
+    {
+      "id": "valeryahu",
+      "image": "Valeryahu.png",
+      "name": "Valeryahu",
+      "subtitle": "Iron strategist",
+      "rarity": "epica",
+      "archetype": "stratega politico",
+      "theme": "blu • bianco • diplomazia dura",
+      "frame": {
+        "preset": "statecraft_blue_white",
+        "accent": "#1d4ed8",
+        "icon": "star"
+      },
+      "active": {
+        "name": "Genocidio",
+        "cost": 3,
+        "text": "Se vinci, puoi infliggere tutta la Breccia oltre il cap.",
+        "effect": {
+          "type": "break-cap"
+        },
+        "flavor": "Convoca tutti, decide prima che entrino."
+      },
+      "passive": {
+        "name": "Popolo prescelto",
+        "text": "+2 Breccia se attacchi con Rigore.",
+        "effect": {
+          "type": "attack-stat-bonus",
+          "stat": "R",
+          "value": 2
+        },
+        "flavor": "Ogni compromesso passa da tre controlli di sicurezza."
+      },
+      "quote": "La pace è una feature. La priorità è un'altra.",
+      "tags": [
+        "politico",
+        "rigore",
+        "strategia"
+      ],
+      "valerio": {
+        "V": 5,
+        "A": 8,
+        "L": 7,
+        "E": 7,
+        "R": 6,
+        "I": 4,
+        "O": 3
+      },
+      "combat": {
+        "attackPower": 70,
+        "defensePower": 90,
+        "draftCost": 4
+      },
+      "rarityRule": "epica: costo draft 4 secondo bilanciamento v7; nuova carta extra"
+    },
+    {
+      "id": "vanged",
+      "image": "vanged.png",
+      "name": "Vanged",
+      "subtitle": "What about it mix",
+      "rarity": "rara",
+      "archetype": "assassino d'ombra",
+      "theme": "verde • ninja • veleno",
+      "frame": {
+        "preset": "shadow_venom_green",
+        "accent": "#16a34a",
+        "icon": "dagger"
+      },
+      "active": {
+        "name": "Poison Trail",
+        "cost": 2,
+        "text": "Ignora la difesa avversaria su Istinto.",
+        "effect": {
+          "type": "ignore-defense",
+          "stat": "I"
+        },
+        "flavor": "Non appare in riunione, ma lascia il danno firmato."
+      },
+      "passive": {
+        "name": "Noxious Slipstream",
+        "text": "+2 Breccia se attacchi con Opportunismo.",
+        "effect": {
+          "type": "attack-stat-bonus",
+          "stat": "O",
+          "value": 2
+        },
+        "flavor": "Sfrutta ogni apertura, anche quella sbagliata."
+      },
+      "quote": "Se mi vedi, è già troppo tardi.",
+      "tags": [
+        "ninja",
+        "istinto",
+        "veleno"
+      ],
+      "valerio": {
+        "V": 5,
+        "A": 6,
+        "L": 5,
+        "E": 4,
+        "R": 5,
+        "I": 7,
+        "O": 6
+      },
+      "combat": {
+        "attackPower": 80,
+        "defensePower": 65,
+        "draftCost": 3
+      },
+      "rarityRule": "rara: costo draft 3 secondo bilanciamento v7; nuova carta extra"
+    },
+    {
+      "id": "vassin",
+      "image": "vassin.png",
+      "name": "Vassin",
+      "subtitle": "Non guarda il problema: lo sente respirare.",
+      "rarity": "rara",
+      "archetype": "monaco cieco",
+      "theme": "tempio • benda rossa • calcio volante",
+      "frame": {
+        "preset": "blind_monk_sand",
+        "accent": "#b45309",
+        "icon": "fist"
+      },
+      "active": {
+        "name": "Dragon's Rage",
+        "cost": 2,
+        "text": "Ignora la difesa avversaria su Vigore.",
+        "effect": {
+          "type": "ignore-defense",
+          "stat": "V"
+        },
+        "flavor": "Il target non è visibile, ma il dolore sì."
+      },
+      "passive": {
+        "name": "Flurry",
+        "text": "+2 Breccia se attacchi con Istinto.",
+        "effect": {
+          "type": "attack-stat-bonus",
+          "stat": "I",
+          "value": 2
+        },
+        "flavor": "Schiva la domanda prima che venga fatta."
+      },
+      "quote": "La visione è sopravvalutata. Il danno no.",
+      "tags": [
+        "monaco",
+        "vigore",
+        "istinto"
+      ],
+      "valerio": {
+        "V": 7,
+        "A": 5,
+        "L": 4,
+        "E": 3,
+        "R": 6,
+        "I": 8,
+        "O": 5
+      },
+      "combat": {
+        "attackPower": 80,
+        "defensePower": 65,
+        "draftCost": 3
+      },
+      "rarityRule": "rara: costo draft 3 secondo bilanciamento v7; nuova carta extra"
+    },
+    {
+      "id": "vasuo",
+      "image": "vasuo.png",
+      "name": "Vasuo",
+      "subtitle": "Ha il vento contro, quindi lo usa come feature.",
+      "rarity": "rara",
+      "archetype": "spadaccino errante",
+      "theme": "vento • katana • dash infinito",
+      "frame": {
+        "preset": "wind_samurai_blue",
+        "accent": "#38bdf8",
+        "icon": "wind"
+      },
+      "active": {
+        "name": "Windwall",
+        "cost": 2,
+        "text": "Ignora la difesa avversaria su Astuzia.",
+        "effect": {
+          "type": "ignore-defense",
+          "stat": "A"
+        },
+        "flavor": "Un colpo, tre dash, una build rotta."
+      },
+      "passive": {
+        "name": "Way of the Wandered",
+        "text": "+2 Breccia se attacchi con Istinto.",
+        "effect": {
+          "type": "attack-stat-bonus",
+          "stat": "I",
+          "value": 2
+        },
+        "flavor": "Sta perdendo solo per aumentare la tensione narrativa."
+      },
+      "quote": "Il vento non intasa mai la pipeline.",
+      "tags": [
+        "vento",
+        "astuzia",
+        "duello"
+      ],
+      "valerio": {
+        "V": 6,
+        "A": 6,
+        "L": 4,
+        "E": 5,
+        "R": 4,
+        "I": 8,
+        "O": 5
+      },
+      "combat": {
+        "attackPower": 80,
+        "defensePower": 65,
+        "draftCost": 3
+      },
+      "rarityRule": "rara: costo draft 3 secondo bilanciamento v7; nuova carta extra"
+    },
+    {
+      "id": "vhaco",
+      "image": "vhaco.png",
+      "name": "Vhaco",
+      "subtitle": "Ride dietro la maschera mentre il piano esplode.",
+      "rarity": "epica",
+      "archetype": "giullare assassino",
+      "theme": "viola • maschera • caos teatrale",
+      "frame": {
+        "preset": "jester_shadow_purple",
+        "accent": "#7e22ce",
+        "icon": "mask"
+      },
+      "active": {
+        "name": "Jack in the box",
+        "cost": 2,
+        "text": "Ignora la difesa avversaria su Opportunismo.",
+        "effect": {
+          "type": "ignore-defense",
+          "stat": "O"
+        },
+        "flavor": "Apri il task e trovi solo una risata."
+      },
+      "passive": {
+        "name": "Backstab",
+        "text": "+2 Breccia se non usi Rigore nel piano.",
+        "effect": {
+          "type": "missing",
+          "stat": "R",
+          "value": 2
+        },
+        "flavor": "Meno regole ci sono, più si diverte."
+      },
+      "quote": "Perché così serio sulla milestone?",
+      "tags": [
+        "jester",
+        "opportunismo",
+        "caos"
+      ],
+      "valerio": {
+        "V": 4,
+        "A": 8,
+        "L": 4,
+        "E": 6,
+        "R": 3,
+        "I": 7,
+        "O": 8
+      },
+      "combat": {
+        "attackPower": 90,
+        "defensePower": 70,
+        "draftCost": 4
+      },
+      "rarityRule": "epica: costo draft 4 secondo bilanciamento v7; nuova carta extra"
+    },
+    {
+      "id": "vhalface",
+      "image": "vhalface.png",
+      "name": "VhalFace",
+      "subtitle": "The Call Center",
+      "rarity": "epica",
+      "archetype": "slasher gestionale",
+      "theme": "nero • bianco • telefono spento",
+      "frame": {
+        "preset": "slasher_black_white",
+        "accent": "#991b1b",
+        "icon": "knife"
+      },
+      "active": {
+        "name": "Final Call",
+        "cost": 2,
+        "text": "+4 danni oltre il cap se vinci il fight.",
+        "effect": {
+          "type": "damage",
+          "value": 4
+        },
+        "flavor": "Rispondi e scopri che la call era già iniziata."
+      },
+      "passive": {
+        "name": "Panic Mask",
+        "text": "+2 Breccia se attacchi con Ego.",
+        "effect": {
+          "type": "attack-stat-bonus",
+          "stat": "E",
+          "value": 2
+        },
+        "flavor": "La presenza scenica vale più del coltello."
+      },
+      "quote": "Qual è il tuo deliverable preferito?",
+      "tags": [
+        "horror",
+        "ego",
+        "slasher"
+      ],
+      "valerio": {
+        "V": 5,
+        "A": 6,
+        "L": 4,
+        "E": 8,
+        "R": 4,
+        "I": 7,
+        "O": 6
+      },
+      "combat": {
+        "attackPower": 80,
+        "defensePower": 80,
+        "draftCost": 4
+      },
+      "rarityRule": "epica: costo draft 4 secondo bilanciamento v7; nuova carta extra"
+    },
+    {
+      "id": "vone",
+      "image": "Vone.png",
+      "name": "Vone",
+      "subtitle": "Due lame, un solo silenzio giudicante.",
+      "rarity": "leggendaria",
+      "archetype": "duellante spirituale",
+      "theme": "rosso • blu • maschera demoniaca",
+      "frame": {
+        "preset": "spirit_duelist_crimson",
+        "accent": "#dc2626",
+        "icon": "dual-blade"
+      },
+      "active": {
+        "name": "Fate Sealed",
+        "cost": 3,
+        "text": "Se vinci, puoi infliggere tutta la Breccia oltre il cap.",
+        "effect": {
+          "type": "break-cap"
+        },
+        "flavor": "Traccia una linea e il team ci cade dentro."
+      },
+      "passive": {
+        "name": "Way of the Hunter",
+        "text": "+2 Breccia se attacchi con Lucidita.",
+        "effect": {
+          "type": "attack-stat-bonus",
+          "stat": "L",
+          "value": 2
+        },
+        "flavor": "Non alza la voce: basta lo sguardo."
+      },
+      "quote": "La maschera nasconde il volto, non la review.",
+      "tags": [
+        "duellante",
+        "lucidita",
+        "spirituale"
+      ],
+      "valerio": {
+        "V": 7,
+        "A": 6,
+        "L": 7,
+        "E": 4,
+        "R": 6,
+        "I": 7,
+        "O": 3
+      },
+      "combat": {
+        "attackPower": 100,
+        "defensePower": 80,
+        "draftCost": 6
+      },
+      "rarityRule": "leggendaria: costo draft 6 secondo bilanciamento v7; nuova carta extra"
+    },
+    {
+      "id": "vrand",
+      "image": "vrand.png",
+      "name": "Vrand",
+      "subtitle": "Brucia il problema e poi chiede se era urgente.",
+      "rarity": "epica",
+      "archetype": "mago incendiario",
+      "theme": "fuoco • lava • apocalisse",
+      "frame": {
+        "preset": "inferno_orange_black",
+        "accent": "#ea580c",
+        "icon": "flame"
+      },
+      "active": {
+        "name": "Pyroclasm",
+        "cost": 2,
+        "text": "+4 danni oltre il cap se vinci il fight.",
+        "effect": {
+          "type": "damage",
+          "value": 4
+        },
+        "flavor": "La soluzione è calda, instabile e approvata."
+      },
+      "passive": {
+        "name": "Blaze",
+        "text": "+2 Breccia sempre attiva.",
+        "effect": {
+          "type": "flat-damage",
+          "value": 2
+        },
+        "flavor": "Anche quando passa il turno, qualcosa continua a bruciare."
+      },
+      "quote": "Non ho acceso il fuoco. Ho ottimizzato l'ambiente.",
+      "tags": [
+        "fuoco",
+        "danno",
+        "mago"
+      ],
+      "valerio": {
+        "V": 7,
+        "A": 5,
+        "L": 5,
+        "E": 6,
+        "R": 6,
+        "I": 6,
+        "O": 5
+      },
+      "combat": {
+        "attackPower": 90,
+        "defensePower": 70,
+        "draftCost": 4
+      },
+      "rarityRule": "epica: costo draft 4 secondo bilanciamento v7; nuova carta extra"
+    },
+    {
+      "id": "vresh",
+      "image": "vresh.png",
+      "name": "Vresh",
+      "subtitle": "Lanterna accesa, catena pronta, deadline intrappolata.",
+      "rarity": "leggendaria",
+      "archetype": "carceriere spettrale",
+      "theme": "verde • anime • lanterna",
+      "frame": {
+        "preset": "spectral_chain_teal",
+        "accent": "#14b8a6",
+        "icon": "lantern"
+      },
+      "active": {
+        "name": "Death Sentence",
+        "cost": 3,
+        "text": "Ignora la difesa avversaria su Rigore.",
+        "effect": {
+          "type": "ignore-defense",
+          "stat": "R"
+        },
+        "flavor": "Tira dentro il problema anche se era fuori perimetro."
+      },
+      "passive": {
+        "name": "Damnation",
+        "text": "+2 Breccia se attacchi con Opportunismo.",
+        "effect": {
+          "type": "attack-stat-bonus",
+          "stat": "O",
+          "value": 2
+        },
+        "flavor": "Ogni errore altrui diventa una luce in più."
+      },
+      "quote": "Vieni, ti salvo. Forse.",
+      "tags": [
+        "spettrale",
+        "rigore",
+        "catene"
+      ],
+      "valerio": {
+        "V": 6,
+        "A": 7,
+        "L": 6,
+        "E": 5,
+        "R": 8,
+        "I": 4,
+        "O": 4
+      },
+      "combat": {
+        "attackPower": 80,
+        "defensePower": 100,
+        "draftCost": 6
+      },
+      "rarityRule": "leggendaria: costo draft 6 secondo bilanciamento v7; nuova carta extra"
+    },
+    {
+      "id": "vrump",
+      "image": "vrump.png",
+      "name": "Vrump",
+      "subtitle": "Make backlog great again, almeno sul cartellone.",
+      "rarity": "rara",
+      "archetype": "showman politico",
+      "theme": "bandiere • palco • slogan giganti",
+      "frame": {
+        "preset": "campaign_red_blue",
+        "accent": "#dc2626",
+        "icon": "megaphone"
+      },
+      "active": {
+        "name": "Great Wall",
+        "cost": 2,
+        "text": "+3 danni oltre il cap se vinci il fight.",
+        "effect": {
+          "type": "damage",
+          "value": 3
+        },
+        "flavor": "Firma il piano prima di leggerlo."
+      },
+      "passive": {
+        "name": "WTF is a km?",
+        "text": "+2 Breccia se attacchi con Ego.",
+        "effect": {
+          "type": "attack-stat-bonus",
+          "stat": "E",
+          "value": 2
+        },
+        "flavor": "Se lo ripete abbastanza, diventa roadmap."
+      },
+      "quote": "Questo sarà il miglior sprint. Forse il migliore di sempre.",
+      "tags": [
+        "politico",
+        "ego",
+        "showman"
+      ],
+      "valerio": {
+        "V": 5,
+        "A": 6,
+        "L": 4,
+        "E": 9,
+        "R": 3,
+        "I": 5,
+        "O": 6
+      },
+      "combat": {
+        "attackPower": 75,
+        "defensePower": 70,
+        "draftCost": 3
+      },
+      "rarityRule": "rara: costo draft 3 secondo bilanciamento v7; nuova carta extra"
+    },
+    {
+      "id": "vyke",
+      "image": "vyke.png",
+      "name": "Vyke",
+      "subtitle": "Dagli abissi arriva solo per chiudere il conto.",
+      "rarity": "epica",
+      "archetype": "assassino degli abissi",
+      "theme": "mare oscuro • arpione • vendetta",
+      "frame": {
+        "preset": "abyssal_assassin_teal",
+        "accent": "#0f766e",
+        "icon": "harpoon"
+      },
+      "active": {
+        "name": "Death from Below",
+        "cost": 3,
+        "text": "Se vinci, puoi infliggere tutta la Breccia oltre il cap.",
+        "effect": {
+          "type": "break-cap"
+        },
+        "flavor": "Non prende appunti. Prende nomi."
+      },
+      "passive": {
+        "name": "Gift of the drowned ones",
+        "text": "+2 Breccia se attacchi con Opportunismo.",
+        "effect": {
+          "type": "attack-stat-bonus",
+          "stat": "O",
+          "value": 2
+        },
+        "flavor": "Aspetta il momento giusto e poi emerge."
+      },
+      "quote": "Annegato nello scope, risorto per la vendetta.",
+      "tags": [
+        "abisso",
+        "opportunismo",
+        "assassino"
+      ],
+      "valerio": {
+        "V": 6,
+        "A": 6,
+        "L": 4,
+        "E": 5,
+        "R": 5,
+        "I": 7,
+        "O": 7
+      },
+      "combat": {
+        "attackPower": 90,
+        "defensePower": 70,
+        "draftCost": 4
+      },
+      "rarityRule": "epica: costo draft 4 secondo bilanciamento v7; nuova carta extra"
     }
   ]
 }

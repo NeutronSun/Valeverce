@@ -26,7 +26,25 @@
       border-radius: 8px;
     }
 
+    & .rarity {
+      display: none;
+    }
+
+    & .combat {
+      bottom: 6px;
+      font-size: 0.58rem;
+
+      & span {
+        padding: 2px 6px;
+      }
+    }
+
     & .body {
+      right: 6px;
+      bottom: 30px;
+      left: 6px;
+      gap: 4px;
+      max-height: 52%;
       padding: 7px;
     }
   }
@@ -81,8 +99,12 @@
     cursor: default;
   }
 
-  &:hover,
   &:focus-visible {
+    outline: 2px solid var(--rarity-color);
+    outline-offset: 2px;
+  }
+
+  &:hover {
     & .image {
       filter: saturate(1.08) contrast(1.04) brightness(0.96);
       transform: scale(1.018);
@@ -94,7 +116,7 @@
     }
 
     & .combat {
-      bottom: clamp(74px, 18%, 112px);
+      bottom: clamp(86px, 23%, 136px);
     }
   }
 }
@@ -220,19 +242,19 @@
 .body {
   position: absolute;
   right: 8px;
-  bottom: 8px;
+  bottom: 38px;
   left: 8px;
   z-index: 3;
   display: grid;
   gap: 5px;
-  max-height: 40%;
+  max-height: min(156px, 34%);
   border: 1px solid color-mix(in srgb, var(--rarity-color), transparent 58%);
   border-radius: 8px;
   padding: 8px;
   color: var(--color-text);
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(0, 0, 0, 0.14)),
-    rgba(7, 8, 7, 0.82);
+    rgba(7, 8, 7, 0.78);
   opacity: 0;
   overflow: hidden;
   backdrop-filter: blur(8px);

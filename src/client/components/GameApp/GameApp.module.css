@@ -11,12 +11,12 @@
   gap: 12px;
   width: min(1920px, calc(100vw - 12px));
   margin: 0 auto;
-  padding: 96px 0 168px;
+  padding: 82px 0 132px;
 }
 
 .main {
   min-width: 0;
-  padding-bottom: 174px;
+  padding-bottom: 136px;
 }
 
 .toast {

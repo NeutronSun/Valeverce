@@ -569,7 +569,7 @@ function PlanCardPanel({ title, card, tone, statsTone, highlighted }) {
 }
 
 function TooltipContent({ children }) {
-  return <div>{children}</div>;
+  return <div className={styles.tooltip}>{children}</div>;
 }
 
 function RichText({ text }) {

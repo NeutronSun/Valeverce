@@ -10,7 +10,7 @@
     & .item {
       min-height: 22px;
       border-radius: 6px;
-      padding: 0 9px 0 4px;
+      padding: 0 12px 0 5px;
     }
 
     & .value {
@@ -18,11 +18,11 @@
     }
 
     & .key {
-      right: -4px;
-      bottom: -4px;
-      width: 12px;
-      height: 12px;
-      font-size: 0.38rem;
+      right: 2px;
+      bottom: 2px;
+      width: 9px;
+      height: 9px;
+      font-size: 0.3rem;
     }
   }
 }
@@ -76,18 +76,18 @@
 
 .key {
   position: absolute;
-  right: -5px;
-  bottom: -5px;
+  right: 2px;
+  bottom: 2px;
   display: grid;
-  width: 18px;
-  height: 18px;
+  width: 13px;
+  height: 13px;
   place-items: center;
   border: 1px solid rgba(7, 8, 7, 0.78);
   border-radius: 50%;
   color: #10120f;
   background: var(--stat-color);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.38);
-  font-size: 0.62rem;
+  font-size: 0.48rem;
   line-height: 1;
 }
 

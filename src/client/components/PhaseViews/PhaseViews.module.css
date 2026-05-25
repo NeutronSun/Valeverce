@@ -373,6 +373,14 @@
   gap: 12px;
 }
 
+.choice[data-plan-kind="attacks"] {
+  --pool-color: var(--color-attack);
+}
+
+.choice[data-plan-kind="defenses"] {
+  --pool-color: var(--color-defense);
+}
+
 .pool {
   position: relative;
   display: grid;
@@ -401,7 +409,7 @@
 
 .statList {
   display: grid;
-  gap: 8px;
+  gap: 7px;
 }
 
 .planStat {
@@ -409,7 +417,7 @@
 
   position: relative;
   display: grid;
-  grid-template-columns: 34px minmax(92px, 1fr) 52px minmax(120px, 1.2fr) 34px;
+  grid-template-columns: 34px minmax(104px, 1fr) 56px minmax(140px, 1.35fr) 34px;
   align-items: center;
   gap: 8px;
   border: 1px solid var(--color-border-soft);
@@ -466,6 +474,31 @@
   font-size: 0.58rem;
   font-style: normal;
   font-weight: 950;
+}
+
+.tooltip {
+  position: absolute;
+  right: 40px;
+  bottom: calc(100% + 6px);
+  z-index: 20;
+  display: none;
+  max-width: min(320px, 80vw);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  color: var(--color-text);
+  background: rgba(7, 8, 7, 0.96);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.44);
+  font-size: 0.72rem;
+  font-weight: 850;
+  line-height: 1.28;
+  pointer-events: none;
+}
+
+.planStat input:hover ~ .tooltip,
+.planStat input:focus-visible ~ .tooltip,
+.lineEffect:hover ~ .tooltip {
+  display: block;
 }
 
 .previewLine,

@@ -1,8 +1,8 @@
 import "./globals.css";
 
 export const metadata = {
-  title: "valeverce",
-  description: "valeverce card game"
+  title: "Valeverce",
+  description: "Valerio card game"
 };
 
 export default function RootLayout({ children }) {

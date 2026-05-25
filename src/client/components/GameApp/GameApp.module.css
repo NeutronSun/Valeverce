@@ -11,7 +11,7 @@
   gap: 12px;
   width: min(1920px, calc(100vw - 12px));
   margin: 0 auto;
-  padding: 82px 0 132px;
+  padding: var(--header-padding) 0 132px;
 }
 
 .main {

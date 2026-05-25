@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { CLIENT_EVENTS } from "../../../shared/events.js";
 import { useGameSocket } from "../../useGameSocket.js";
 import { ActionDock } from "../ActionDock/ActionDock.jsx";
@@ -27,8 +27,24 @@ export function GameApp({ initialLobbyId = "" }) {
   const [plan, setPlan] = useState(emptyPlan);
   const [planPreview, setPlanPreview] = useState([]);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [height, setHeight] = useState(0);
+  const shellRef = useRef(null);
   const menuDialogRef = useRef(null);
   const autoJoinRef = useRef(false);
+
+  useLayoutEffect(() => {
+    const updateHeight = () => {
+      setHeight(shellRef.current?.getBoundingClientRect().height ?? 0);
+    };
+
+    updateHeight();
+
+    window.addEventListener("resize", updateHeight);
+
+    return () => {
+      window.removeEventListener("resize", updateHeight);
+    };
+  }, []);
 
   useEffect(() => {
     const savedName = window.localStorage.getItem("valeverce.playerName") ?? "";
@@ -90,8 +106,12 @@ export function GameApp({ initialLobbyId = "" }) {
         setMenuOpen((current) => !current);
       }
     };
+
     window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+    };
   }, []);
 
   const selfCard = lobby?.self?.selected?.selectedCard ?? lobby?.self?.deck?.find((card) => card.id === selectedCardId) ?? null;
@@ -99,8 +119,10 @@ export function GameApp({ initialLobbyId = "" }) {
     if (!selfCard || lobby?.phase !== "plan" || lobby.self?.selected?.attacks) {
       return false;
     }
+
     const validation = validatePlanDraft(plan, selfCard);
     const activeCost = Number(selfCard.active?.cost ?? 0);
+
     return validation.canSubmit && (!plan.useActive || Number(lobby.self?.mana ?? 0) >= activeCost);
   }, [lobby, plan, selfCard]);
 
@@ -120,6 +142,7 @@ export function GameApp({ initialLobbyId = "" }) {
       }
 
       const pool = section === "attacks" ? validatePlanDraft(plan, card).attackPool : validatePlanDraft(plan, card).defensePool;
+
       setPlan((current) => {
         const nextSection = { ...current[section] };
         const currentValue = Number(nextSection[key] ?? 0);
@@ -127,7 +150,9 @@ export function GameApp({ initialLobbyId = "" }) {
         const selected = selectedStats(nextSection).filter((stat) => stat !== key);
         const maxSlots = section === "attacks" ? SETTINGS.attackSlots : SETTINGS.defenseSlots;
         const canEnable = currentValue > 0 || value > 0 ? selected.length < maxSlots || currentValue > 0 : true;
+
         nextSection[key] = canEnable ? clampValue(value, 0, Math.max(0, pool - totalWithoutKey)) : 0;
+
         return { ...current, [section]: nextSection };
       });
     },
@@ -135,8 +160,9 @@ export function GameApp({ initialLobbyId = "" }) {
   );
 
   const shellClass = lobby ? `${styles.shell} ${styles.layout}` : styles.shell;
+
   return (
-    <div className={shellClass}>
+    <div ref={shellRef} className={shellClass} style={{ "--header-height": `${height}px` }}>
       {lobby ? <MatchHeader lobby={lobby} connectionState={connectionState} pingMs={pingMs} /> : null}
       {lobby ? <PlayerRail lobby={lobby} /> : null}
       <main className={lobby ? styles.main : ""}>
@@ -229,12 +255,24 @@ function MatchHeader({ lobby, connectionState, pingMs }) {
         <strong>VALEVERCE</strong>
       </div>
       <div className={styles.meta}>
-        <span>Lobby <b>{lobby.id}</b></span>
-        <span>Player <b>{self?.name ?? "-"}</b></span>
-        <span>Fase <b>{phaseLabel(lobby.phase)}</b></span>
-        <span>Round <b>{lobby.round ?? 0}</b></span>
+        <span>
+          Lobby <b>{lobby.id}</b>
+        </span>
+        <span>
+          Player <b>{self?.name ?? "-"}</b>
+        </span>
+        <span>
+          Fase <b>{phaseLabel(lobby.phase)}</b>
+        </span>
+        <span>
+          Round <b>{lobby.round ?? 0}</b>
+        </span>
       </div>
-      <div className={`${styles.signal} ${styles[connectionState] ?? ""}`} title={`Ping: ${pingLabel}`} aria-label={`Ping: ${pingLabel}`}>
+      <div
+        className={`${styles.signal} ${styles[connectionState] ?? ""}`}
+        title={`Ping: ${pingLabel}`}
+        aria-label={`Ping: ${pingLabel}`}
+      >
         <i />
         <i />
         <i />

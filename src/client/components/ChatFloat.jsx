@@ -136,6 +136,7 @@ export function ChatFloat({ lobby, emit }) {
       </div>
       <div className="chat-log" ref={logRef}>
         {lobby.chat.map((message) => {
+          const authorLabel = message.kind === "system" ? "sys" : message.name;
           const messageClass = [
             "chat-message",
             message.kind === "system" ? "is-system" : "",
@@ -147,7 +148,7 @@ export function ChatFloat({ lobby, emit }) {
 
           return (
             <div key={message.id} className={messageClass}>
-              <strong>{message.kind === "system" ? "sys" : message.name}</strong>
+              <strong>[{authorLabel}]:</strong>
               <p>{message.text}</p>
             </div>
           );

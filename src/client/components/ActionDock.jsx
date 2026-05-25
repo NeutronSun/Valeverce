@@ -63,32 +63,14 @@ export function ActionDock({ lobby, plan, selectedCardId, previewCard, canSubmit
     );
   } else if (lobby?.phase === "plan") {
     action = (
-      <>
-        <button
-          type="button"
-          className={`dock-active dock-secondary rich-tooltip${plan.useActive ? " is-on" : ""}`}
-          data-tooltip=""
-          disabled={!activeAffordable || self?.selected?.attacks}
-          onClick={onToggleActive}
-        >
-          Attiva <small>-{activeCost}</small>
-          <TooltipContent>
-            <strong>Attiva</strong>
-            <RichText text={selectedCard.active?.text ?? selectedCard.active?.name ?? ""} />
-            <span className={plan.useActive ? "tooltip-status is-on" : "tooltip-status"}>
-              {plan.useActive ? "Selezionata" : activeAffordable ? "Disponibile" : "Mana insufficiente"}
-            </span>
-          </TooltipContent>
-        </button>
-        <button
-          type="button"
-          className="dock-primary"
-          disabled={!canSubmitPlan || self?.selected?.attacks}
-          onClick={() => emit(CLIENT_EVENTS.SUBMIT_PLAN, compactPlan(plan))}
-        >
-          Conferma configurazione
-        </button>
-      </>
+      <button
+        type="button"
+        className="dock-primary"
+        disabled={!canSubmitPlan || self?.selected?.attacks}
+        onClick={() => emit(CLIENT_EVENTS.SUBMIT_PLAN, compactPlan(plan))}
+      >
+        Conferma configurazione
+      </button>
     );
   } else if (lobby?.phase === "reveal" && self?.id === lobby.hostId) {
     action = (
@@ -98,24 +80,54 @@ export function ActionDock({ lobby, plan, selectedCardId, previewCard, canSubmit
     );
   }
 
+  const activeLocked = lobby?.phase === "plan" && (!activeAffordable || self?.selected?.attacks);
+  const abilityControls = [
+    selectedCard?.active ? (
+      <button
+        key="active"
+        type="button"
+        className={`dock-ability dock-active rich-tooltip${plan.useActive ? " is-on" : ""}${activeLocked ? " is-disabled" : ""}`}
+        data-tooltip=""
+        onClick={() => {
+          if (lobby?.phase === "plan" && !activeLocked) {
+            onToggleActive();
+          }
+        }}
+      >
+        <span>Attiva</span>
+        <small>{lobby?.phase === "plan" ? `-${activeCost}` : "A"}</small>
+        <TooltipContent>
+          <strong>Attiva</strong>
+          <RichText text={selectedCard.active.text ?? selectedCard.active.name ?? ""} />
+          <span className={plan.useActive ? "tooltip-status is-on" : "tooltip-status"}>
+            {lobby?.phase === "plan" ? (plan.useActive ? "Selezionata" : activeAffordable ? "Disponibile" : "Mana insufficiente") : selectedCard.active.name}
+          </span>
+        </TooltipContent>
+      </button>
+    ) : null,
+    selectedCard?.passive ? (
+      <button
+        key="passive"
+        type="button"
+        className={`dock-ability dock-passive rich-tooltip${trait?.applied ? " is-on" : ""}`}
+        data-tooltip=""
+      >
+        <span>Passiva</span>
+        <small>P</small>
+        <TooltipContent>
+          <strong>Passiva</strong>
+          <RichText text={trait?.title ?? selectedCard.passive.text} />
+          <span className={trait?.applied ? "tooltip-status is-on" : "tooltip-status"}>
+            {trait?.applied ? "Attiva ora" : "Non attiva ora"}
+          </span>
+        </TooltipContent>
+      </button>
+    ) : null
+  ].filter(Boolean);
+
   return (
     <section className={`action-hud${selectedCard ? " has-card" : ""}`} data-action-dock>
       <div className="dock-topline">
-        {selectedCard?.passive ? (
-          <div className={`dock-trait rich-tooltip ${trait?.applied ? "is-active" : ""}`} data-tooltip="">
-            <span className="trait-mark">P</span>
-            <strong>{selectedCard.passive.name}</strong>
-            <TooltipContent>
-              <strong>Passiva</strong>
-              <RichText text={trait?.title ?? selectedCard.passive.text} />
-              <span className={trait?.applied ? "tooltip-status is-on" : "tooltip-status"}>
-                {trait?.applied ? "Attiva ora" : "Non attiva ora"}
-              </span>
-            </TooltipContent>
-          </div>
-        ) : (
-          <div className="dock-trait is-empty" />
-        )}
         <div className="dock-state">
           <span>{phaseLabel(lobby?.phase)}</span>
           <small>
@@ -143,11 +155,14 @@ export function ActionDock({ lobby, plan, selectedCardId, previewCard, canSubmit
             </div>
           ) : null}
           <DockStats card={selectedCard} plan={plan} />
-          <div className={`dock-actions${lobby?.phase === "plan" && selectedCard?.active ? " has-active" : " is-single"}`}>{action}</div>
           <div className="dock-bars">
             <ResourceBar type="health" label="PV" value={self?.health ?? 0} max={self?.maxHealth ?? 50} compact />
             <ResourceBar type="mana" label="Mana" value={self?.mana ?? 0} max={10} compact />
           </div>
+        </div>
+        <div className={`dock-actions${abilityControls.length ? " has-abilities" : " is-single"}`}>
+          {abilityControls.length ? <div className={`dock-action-abilities${abilityControls.length === 1 ? " is-single" : ""}`}>{abilityControls}</div> : null}
+          <div className="dock-main-action">{action}</div>
         </div>
       </div>
     </section>

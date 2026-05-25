@@ -22,6 +22,7 @@ export function GameCard({
   disabled = false,
   selected = false,
   mini = false,
+  showDetails = false,
   takenByName = "",
   cooldown = 0,
   onClick = undefined
@@ -39,6 +40,7 @@ export function GameCard({
         rarityClasses[normalizedRarity] ?? styles.rarityCommon,
         selected && styles.selected,
         mini && styles.mini,
+        showDetails && styles.details,
         takenByName && styles.taken
       )}
       data-rarity={normalizedRarity}
@@ -57,7 +59,9 @@ export function GameCard({
         <span className={styles.body}>
           <strong>{card.name}</strong>
           <em className={styles.rarityText}>{rarityLabel(card.rarity)}</em>
-          <ValerioStats card={card} compact />
+          <span className={styles.valerio}>
+            <ValerioStats card={card} compact />
+          </span>
         </span>
       </button>
     </div>

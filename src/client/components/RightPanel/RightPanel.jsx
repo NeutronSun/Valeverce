@@ -42,7 +42,7 @@ export function RightPanel({ lobby, previewCard, planPreview }) {
           <div className={styles.heading}>
             <span>{previewCard ? "Carta selezionata" : "Carta avversaria"}</span>
           </div>
-          <GameCard card={card} disabled />
+          <GameCard card={card} disabled showDetails />
           <AbilityBox ability={card.active} kind="Attiva" />
           <AbilityBox ability={card.passive} kind="Passiva" />
           <div className={styles.infoGrid}>

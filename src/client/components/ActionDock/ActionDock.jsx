@@ -111,27 +111,11 @@ export function ActionDock({ lobby, plan, selectedCardId, previewCard, canSubmit
         <span>Attiva</span>
         <small>{lobby?.phase === "plan" ? `-${activeCost}` : "A"}</small>
         <TooltipContent>
-          <strong>Attiva</strong>
-          <RichText text={selectedCard.active.text ?? selectedCard.active.name ?? ""} />
+          <strong>{selectedCard.active.name ?? "Attiva"}</strong>
+          <RichText text={selectedCard.active.text ?? ""} />
+          <small className={styles.tooltipCost}>{activeCost} mana</small>
           <span className={classNames(styles.status, plan.useActive && styles.on)}>
-            {lobby?.phase === "plan" ? (plan.useActive ? "Selezionata" : activeAffordable ? "Disponibile" : "Mana insufficiente") : selectedCard.active.name}
-          </span>
-        </TooltipContent>
-      </button>
-    ) : null,
-    selectedCard?.passive ? (
-      <button
-        key="passive"
-        type="button"
-        className={classNames(styles.ability, styles.passiveAbility, trait?.applied && styles.on)}
-      >
-        <span>Passiva</span>
-        <small>P</small>
-        <TooltipContent>
-          <strong>Passiva</strong>
-          <RichText text={trait?.title ?? selectedCard.passive.text} />
-          <span className={classNames(styles.status, trait?.applied && styles.on)}>
-            {trait?.applied ? "Attiva ora" : "Non attiva ora"}
+            {lobby?.phase === "plan" ? (plan.useActive ? "Selezionata" : activeAffordable ? "Disponibile" : "Mana insufficiente") : "Mossa attiva"}
           </span>
         </TooltipContent>
       </button>
@@ -141,6 +125,30 @@ export function ActionDock({ lobby, plan, selectedCardId, previewCard, canSubmit
   return (
     <section className={classNames(styles.root, selectedCard && styles.withCard)} data-action-dock>
       <div className={styles.topLine}>
+        <div className={styles.floatingAbilities}>
+          {selectedCard?.passive ? (
+            <FloatingAbility
+              tone="passive"
+              icon="P"
+              title={selectedCard.passive.name ?? "Passiva"}
+              active={trait?.applied}
+            >
+              <strong>Passiva</strong>
+              <RichText text={trait?.title ?? selectedCard.passive.text} />
+              <span className={classNames(styles.status, trait?.applied && styles.on)}>
+                {trait?.applied ? "Attiva ora" : "Non attiva ora"}
+              </span>
+            </FloatingAbility>
+          ) : null}
+          {selectedCard?.active && plan.useActive ? (
+            <FloatingAbility tone="active" icon="A" title={selectedCard.active.name ?? "Attiva"} active>
+              <strong>Attiva selezionata</strong>
+              <RichText text={selectedCard.active.text ?? selectedCard.active.name ?? ""} />
+              <small className={styles.tooltipCost}>{activeCost} mana</small>
+              <span className={classNames(styles.status, styles.on)}>Selezionata</span>
+            </FloatingAbility>
+          ) : null}
+        </div>
         <div className={styles.state}>
           <span>{phaseLabel(lobby?.phase)}</span>
           <small>
@@ -179,6 +187,16 @@ export function ActionDock({ lobby, plan, selectedCardId, previewCard, canSubmit
         </div>
       </div>
     </section>
+  );
+}
+
+function FloatingAbility({ tone, icon, title, active, children }) {
+  return (
+    <div className={classNames(styles.floatingAbility, active && styles.on)} data-tone={tone}>
+      <span>{icon}</span>
+      <strong>{title}</strong>
+      <TooltipContent>{children}</TooltipContent>
+    </div>
   );
 }
 

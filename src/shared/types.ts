@@ -81,6 +81,8 @@ export interface LobbySnapshot {
   settings: {
     pickTimerEnabled: boolean;
     pickTimerSeconds: number;
+    draftSize: number;
+    draftBudget: number;
   };
   activePair: string[];
   deadlineAt: number | null;
@@ -115,6 +117,8 @@ export interface ClientEventPayloads {
   updateLobbySettings: {
     pickTimerEnabled?: boolean;
     pickTimerSeconds?: number;
+    draftSize?: number;
+    draftBudget?: number;
   };
   startGame: Record<string, never>;
   draftCard: { cardId: string };

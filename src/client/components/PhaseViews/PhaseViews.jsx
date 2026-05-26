@@ -247,15 +247,31 @@ function JoinLobby({ emit }) {
 }
 
 export function LobbyView({ lobby, emit }) {
-  const [activeTab, setActiveTab] = React.useState("room");
   const readyPlayers = lobby.players.filter((player) => player.alive !== false);
   const isHost = lobby.self?.id === lobby.hostId;
   const lobbySettings = lobby.settings ?? {};
   const pickTimerEnabled = Boolean(lobbySettings.pickTimerEnabled);
   const pickTimerSeconds = Number(lobbySettings.pickTimerSeconds ?? SETTINGS.actionSeconds);
+  const draftSize = Number(lobbySettings.draftSize ?? SETTINGS.draftSize);
+  const minDraftBudget = draftSize * 2;
+  const maxDraftBudget = draftSize * 6;
+  const draftBudget = Math.max(
+    minDraftBudget,
+    Math.min(maxDraftBudget, Number(lobbySettings.draftBudget ?? SETTINGS.draftBudget))
+  );
 
   function updateLobbySettings(nextSettings) {
-    emit?.(CLIENT_EVENTS.UPDATE_LOBBY_SETTINGS, nextSettings);
+    emit?.(CLIENT_EVENTS.UPDATE_LOBBY_SETTINGS, {
+      pickTimerEnabled,
+      pickTimerSeconds,
+      draftSize,
+      draftBudget,
+      ...nextSettings
+    });
+  }
+
+  function getClampedDraftBudget(value, size = draftSize) {
+    return Math.max(size * 2, Math.min(size * 6, Number(value)));
   }
 
   return (
@@ -272,64 +288,24 @@ export function LobbyView({ lobby, emit }) {
         </div>
       </div>
 
-      <div className={styles.lobbyTabs} role="tablist" aria-label="Lobby">
-        <button
-          type="button"
-          className={classNames(styles.lobbyTab, activeTab === "room" && styles.lobbyTabActive)}
-          onClick={() => setActiveTab("room")}
-        >
-          Stanza
-        </button>
-        <button
-          type="button"
-          className={classNames(styles.lobbyTab, activeTab === "settings" && styles.lobbyTabActive)}
-          onClick={() => setActiveTab("settings")}
-        >
-          Setting
-        </button>
-      </div>
+      <div className={styles.grid}>
+        <section className={styles.panel}>
+          <div className={styles.sectionTitle}>
+            <strong>Partecipanti</strong>
+            <span>{lobby.players.length}/{SETTINGS.maxPlayers}</span>
+          </div>
+          {lobby.players.map((player) => (
+            <article key={player.id} className={styles.lobbyPlayer}>
+              <span>{player.deckCount ?? 0}</span>
+              <div>
+                <strong>{player.name}</strong>
+                <small>{player.id === lobby.hostId ? "Host partita" : "Player"}</small>
+              </div>
+              <b>{player.alive === false ? "out" : "pronto"}</b>
+            </article>
+          ))}
+        </section>
 
-      {activeTab === "room" ? (
-        <div className={styles.grid}>
-          <section className={styles.panel}>
-            <div className={styles.sectionTitle}>
-              <strong>Partecipanti</strong>
-              <span>{lobby.players.length}/{SETTINGS.maxPlayers}</span>
-            </div>
-            {lobby.players.map((player) => (
-              <article key={player.id} className={styles.lobbyPlayer}>
-                <span>{player.deckCount ?? 0}</span>
-                <div>
-                  <strong>{player.name}</strong>
-                  <small>{player.id === lobby.hostId ? "Host partita" : "Player"}</small>
-                </div>
-                <b>{player.alive === false ? "out" : "pronto"}</b>
-              </article>
-            ))}
-          </section>
-
-          <section className={styles.panel}>
-            <div className={styles.sectionTitle}>
-              <strong>Regole</strong>
-              <span>VALERIO</span>
-            </div>
-            <div className={styles.ruleGrid}>
-              <span>
-                <b>{SETTINGS.draftBudget}</b> budget draft
-              </span>
-              <span>
-                <b>{SETTINGS.draftSize}</b> carte max
-              </span>
-              <span>
-                <b>{SETTINGS.startingHealth}</b> PV iniziali
-              </span>
-              <span>
-                <b>{SETTINGS.maxMana}</b> mana max
-              </span>
-            </div>
-          </section>
-        </div>
-      ) : (
         <section className={classNames(styles.panel, styles.settingsPanel)}>
           <div className={styles.sectionTitle}>
             <strong>Setting partita</strong>
@@ -346,7 +322,9 @@ export function LobbyView({ lobby, emit }) {
                 onChange={(event) =>
                   updateLobbySettings({
                     pickTimerEnabled: event.target.checked,
-                    pickTimerSeconds
+                    pickTimerSeconds,
+                    draftSize,
+                    draftBudget
                   })
                 }
               />
@@ -374,7 +352,9 @@ export function LobbyView({ lobby, emit }) {
               onChange={(event) =>
                 updateLobbySettings({
                   pickTimerEnabled,
-                  pickTimerSeconds: Number(event.target.value)
+                  pickTimerSeconds: Number(event.target.value),
+                  draftSize,
+                  draftBudget
                 })
               }
             />
@@ -383,8 +363,83 @@ export function LobbyView({ lobby, emit }) {
               <span className={styles.settingScaleText}>1min</span>
             </div>
           </div>
+
+          <div className={styles.settingGrid}>
+            <div className={styles.settingRow}>
+              <div className={styles.settingHeader}>
+                <span className={styles.settingName}>Carte max</span>
+                <b className={styles.settingValue}>{draftSize}</b>
+              </div>
+              <input
+                className={styles.settingSlider}
+                type="range"
+                min="3"
+                max="10"
+                step="1"
+                value={draftSize}
+                disabled={!isHost}
+                onChange={(event) => {
+                  const nextDraftSize = Number(event.target.value);
+                  updateLobbySettings({
+                    draftSize: nextDraftSize,
+                    draftBudget: getClampedDraftBudget(draftBudget, nextDraftSize)
+                  });
+                }}
+              />
+              <div className={styles.settingScale}>
+                <span className={styles.settingScaleText}>3 carte</span>
+                <span className={styles.settingScaleText}>10 carte</span>
+              </div>
+            </div>
+
+            <div className={styles.settingRow}>
+              <div className={styles.settingHeader}>
+                <span className={styles.settingName}>Budget draft</span>
+                <b className={styles.settingValue}>{draftBudget}</b>
+              </div>
+              <input
+                className={styles.settingSlider}
+                type="range"
+                min={minDraftBudget}
+                max={maxDraftBudget}
+                step="1"
+                value={draftBudget}
+                disabled={!isHost}
+                onChange={(event) =>
+                  updateLobbySettings({
+                    draftBudget: getClampedDraftBudget(event.target.value)
+                  })
+                }
+              />
+              <div className={styles.settingScale}>
+                <span className={styles.settingScaleText}>{minDraftBudget} min</span>
+                <span className={styles.settingScaleText}>{maxDraftBudget} max</span>
+              </div>
+            </div>
+          </div>
         </section>
-      )}
+      </div>
+
+      <section className={styles.panel}>
+        <div className={styles.sectionTitle}>
+          <strong>Regole attive</strong>
+          <span>VALERIO</span>
+        </div>
+        <div className={styles.ruleGrid}>
+          <span>
+            <b>{draftBudget}</b> budget draft
+          </span>
+          <span>
+            <b>{draftSize}</b> carte max
+          </span>
+          <span>
+            <b>{SETTINGS.startingHealth}</b> PV iniziali
+          </span>
+          <span>
+            <b>{SETTINGS.maxMana}</b> mana max
+          </span>
+        </div>
+      </section>
     </section>
   );
 }

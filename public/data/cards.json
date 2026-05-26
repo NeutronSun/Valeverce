@@ -2427,7 +2427,7 @@
       "subtitle": "Iron strategist",
       "rarity": "epica",
       "archetype": "stratega politico",
-      "theme": "Political",
+      "theme": "political",
       "frame": {
         "preset": "statecraft_blue_white",
         "accent": "#1d4ed8",
@@ -2919,7 +2919,7 @@
       "subtitle": "Make backlog great again, almeno sul cartellone.",
       "rarity": "rara",
       "archetype": "showman politico",
-      "theme": "Political",
+      "theme": "political",
       "frame": {
         "preset": "campaign_red_blue",
         "accent": "#dc2626",
@@ -3222,6 +3222,611 @@
       "quote": "The great white Valerio is back.",
       "tags": [
         "speed",
+        "opportunismo",
+        "valerio"
+      ],
+      "valerio": {
+        "V": 6,
+        "A": 6,
+        "L": 4,
+        "E": 5,
+        "R": 5,
+        "I": 7,
+        "O": 7
+      },
+      "combat": {
+        "attackPower": 90,
+        "defensePower": 70,
+        "draftCost": 4
+      },
+      "rarityRule": "epica: costo draft 4 secondo bilanciamento v7; nuova carta extra"
+    },
+    {
+      "id": "bach",
+      "image": "bach.png",
+      "name": "Johan Valastian Qoundabach",
+      "subtitle": "The Bach",
+      "rarity": "leggendaria",
+      "archetype": "piano",
+      "theme": "Musician",
+      "frame": {
+        "preset": "piano_gold",
+        "accent": "#f59e0b",
+        "icon": "piano"
+      },
+      "active": {
+        "name": "Bach's Goldberg Variations",
+        "cost": 3,
+        "text": "+4 danni oltre il cap se vinci il fight.",
+        "effect": {
+          "type": "damage",
+          "value": 4
+        },
+        "flavor": "The great white Valerio is back."
+      },
+      "passive": {
+        "name": "Bach's Goldberg Variations",
+        "text": "+2 Breccia se attacchi con Opportunismo.",
+        "effect": {
+          "type": "attack-stat-bonus",
+          "stat": "O",
+          "value": 2
+        },
+        "flavor": "The great white Valerio is back."
+      },
+      "quote": "The great white Valerio is back.",
+      "tags": [
+        "piano",
+        "opportunismo",
+        "valerio"
+      ],
+      "valerio": {
+        "V": 6,
+        "A": 6,
+        "L": 4,
+        "E": 5,
+        "R": 5,
+        "I": 7,
+        "O": 7
+      },
+      "combat": {
+        "attackPower": 90,
+        "defensePower": 70,
+        "draftCost": 4
+      },
+      "rarityRule": "epica: costo draft 4 secondo bilanciamento v7; nuova carta extra"
+    },
+    {
+      "id": "beeth",
+      "image": "beeth.png",
+      "name": "Ludval van Quondethoven",
+      "subtitle": "The deaf PM",
+      "rarity": "leggendaria",
+      "archetype": "piano",
+      "theme": "Musician",
+      "frame": {
+        "preset": "piano_red",
+        "accent": "#f59e0b",
+        "icon": "piano"
+      },
+      "active": {
+        "name": "Beethovens 4th Symphony",
+        "cost": 3,
+        "text": "+4 danni oltre il cap se vinci il fight.",
+        "effect": {
+          "type": "damage",
+          "value": 4
+        },
+        "flavor": "The great white Valerio is back."
+      },
+      "passive": {
+        "name": "Moonlight",
+        "text": "+2 Breccia se attacchi con Opportunismo.",
+        "effect": {
+          "type": "attack-stat-bonus",
+          "stat": "O",
+          "value": 2
+        },
+        "flavor": "The great white Valerio is back."
+      },
+      "quote": "The great white Valerio is back.",
+      "tags": [
+        "speed",
+        "opportunismo",
+        "valerio"
+      ],
+      "valerio": {
+        "V": 6,
+        "A": 6,
+        "L": 4,
+        "E": 5,
+        "R": 5,
+        "I": 7,
+        "O": 7
+      },
+      "combat": {
+        "attackPower": 90,
+        "defensePower": 70,
+        "draftCost": 4
+      },
+      "rarityRule": "epica: costo draft 4 secondo bilanciamento v7; nuova carta extra"
+    },
+    {
+      "id": "mozart",
+      "image": "mozart.png",
+      "name": "Wolfgang Valadeus Mozart",
+      "subtitle": "The great composer",
+      "rarity": "leggendaria",
+      "archetype": "piano",
+      "theme": "Musician",
+      "frame": {
+        "preset": "piano_green",
+        "accent": "#f59e0b",
+        "icon": "piano"
+      },
+      "active": {
+        "name": "Mozart's Symphony No. 40",
+        "cost": 3,
+        "text": "+4 danni oltre il cap se vinci il fight.",
+        "effect": {
+          "type": "damage",
+          "value": 4
+        },
+        "flavor": "The great white Valerio is back."
+      },
+      "passive": {
+        "name": "Eine kleine Nachtmusik",
+        "text": "+2 Breccia se attacchi con Opportunismo.",
+        "effect": {
+          "type": "attack-stat-bonus",
+          "stat": "O",
+          "value": 2
+        },
+        "flavor": "The great white Valerio is back."
+      },
+      "quote": "The great white Valerio is back.",
+      "tags": [
+        "piano",
+        "opportunismo",
+        "valerio"
+      ],
+      "valerio": {
+        "V": 6,
+        "A": 6,
+        "L": 4,
+        "E": 5,
+        "R": 5,
+        "I": 7,
+        "O": 7
+      },
+      "combat": {
+        "attackPower": 90,
+        "defensePower": 70,
+        "draftCost": 4
+      },
+      "rarityRule": "epica: costo draft 4 secondo bilanciamento v7; nuova carta extra"
+    },
+    {
+      "id": "myers",
+      "image": "myers.png",
+      "name": "Valerio Myers",
+      "subtitle": "The Shape",
+      "rarity": "leggendaria",
+      "archetype": "killer",
+      "theme": "Movies",
+      "frame": {
+        "preset": "killer_white_black",
+        "accent": "#f59e0b",
+        "icon": "killer"
+      },
+      "active": {
+        "name": "Play with Your Food",
+        "cost": 3,
+        "text": "+4 danni oltre il cap se vinci il fight.",
+        "effect": {
+          "type": "damage",
+          "value": 4
+        },
+        "flavor": "The great white Valerio is back."
+      },
+      "passive": {
+        "name": "Save the Best for Last",
+        "text": "+2 Breccia se attacchi con Opportunismo.",
+        "effect": {
+          "type": "attack-stat-bonus",
+          "stat": "O",
+          "value": 2
+        },
+        "flavor": "The great white Valerio is back."
+      },
+      "quote": "The great white Valerio is back.",
+      "tags": [
+        "speed",
+        "opportunismo",
+        "valerio"
+      ],
+      "valerio": {
+        "V": 6,
+        "A": 6,
+        "L": 4,
+        "E": 5,
+        "R": 5,
+        "I": 7,
+        "O": 7
+      },
+      "combat": {
+        "attackPower": 90,
+        "defensePower": 70,
+        "draftCost": 4
+      },
+      "rarityRule": "epica: costo draft 4 secondo bilanciamento v7; nuova carta extra"
+    },
+    {
+      "id": "quondaheimer",
+      "image": "quondaheimer.png",
+      "name": "Robert Quondaheimer",
+      "subtitle": "The destroyer of worlds",
+      "rarity": "leggendaria",
+      "archetype": "bomb",
+      "theme": "scientist",
+      "frame": {
+        "preset": "bomb_red",
+        "accent": "#f59e0b",
+        "icon": "bomb"
+      },
+      "active": {
+        "name": "Fission",
+        "cost": 3,
+        "text": "+4 danni oltre il cap se vinci il fight.",
+        "effect": {
+          "type": "damage",
+          "value": 4
+        },
+        "flavor": "The great white Valerio is back."
+      },
+      "passive": {
+        "name": "u-235",
+        "text": "+2 Breccia se attacchi con Opportunismo.",
+        "effect": {
+          "type": "attack-stat-bonus",
+          "stat": "O",
+          "value": 2
+        },
+        "flavor": "The great white Valerio is back."
+      },
+      "quote": "The great white Valerio is back.",
+      "tags": [
+        "bomb",
+        "opportunismo",
+        "valerio"
+      ],
+      "valerio": {
+        "V": 6,
+        "A": 6,
+        "L": 4,
+        "E": 5,
+        "R": 5,
+        "I": 7,
+        "O": 7
+      },
+      "combat": {
+        "attackPower": 90,
+        "defensePower": 70,
+        "draftCost": 4
+      },
+      "rarityRule": "epica: costo draft 4 secondo bilanciamento v7; nuova carta extra"
+    },
+    {
+      "id": "sole",
+      "image": "sole.png",
+      "name": "Valerio Sole",
+      "subtitle": "Versailles",
+      "rarity": "leggendaria",
+      "archetype": "bomb",
+      "theme": "political",
+      "frame": {
+        "preset": "bomb_red",
+        "accent": "#f59e0b",
+        "icon": "bomb"
+      },
+      "active": {
+        "name": "Diritto Divino",
+        "cost": 3,
+        "text": "+4 danni oltre il cap se vinci il fight.",
+        "effect": {
+          "type": "damage",
+          "value": 4
+        },
+        "flavor": "The great white Valerio is back."
+      },
+      "passive": {
+        "name": "u-235",
+        "text": "+2 Breccia se attacchi con Opportunismo.",
+        "effect": {
+          "type": "attack-stat-bonus",
+          "stat": "O",
+          "value": 2
+        },
+        "flavor": "The great white Valerio is back."
+      },
+      "quote": "The great white Valerio is back.",
+      "tags": [
+        "bomb",
+        "opportunismo",
+        "valerio"
+      ],
+      "valerio": {
+        "V": 6,
+        "A": 6,
+        "L": 4,
+        "E": 5,
+        "R": 5,
+        "I": 7,
+        "O": 7
+      },
+      "combat": {
+        "attackPower": 90,
+        "defensePower": 70,
+        "draftCost": 4
+      },
+      "rarityRule": "epica: costo draft 4 secondo bilanciamento v7; nuova carta extra"
+    },
+    {
+      "id": "valerdi",
+      "image": "valerdi.png",
+      "name": "Antonio Valerdi",
+      "subtitle": "The violin master",
+      "rarity": "leggendaria",
+      "archetype": "violin",
+      "theme": "Musician",
+      "frame": {
+        "preset": "violin_gold",
+        "accent": "#f59e0b",
+        "icon": "violin"
+      },
+      "active": {
+        "name": "Accordo Finale",
+        "cost": 3,
+        "text": "+4 danni oltre il cap se vinci il fight.",
+        "effect": {
+          "type": "damage",
+          "value": 4
+        },
+        "flavor": "The great white Valerio is back."
+      },
+      "passive": {
+        "name": "Le Quattro Stagioni",
+        "text": "+2 Breccia se attacchi con Opportunismo.",
+        "effect": {
+          "type": "attack-stat-bonus",
+          "stat": "O",
+          "value": 2
+        },
+        "flavor": "The great white Valerio is back."
+      },
+      "quote": "The great white Valerio is back.",
+      "tags": [
+        "violin",
+        "opportunismo",
+        "valerio"
+      ],
+      "valerio": {
+        "V": 6,
+        "A": 6,
+        "L": 4,
+        "E": 5,
+        "R": 5,
+        "I": 7,
+        "O": 7
+      },
+      "combat": {
+        "attackPower": 90,
+        "defensePower": 70,
+        "draftCost": 4
+      },
+      "rarityRule": "epica: costo draft 4 secondo bilanciamento v7; nuova carta extra"
+    },
+    {
+      "id": "valerierre",
+      "image": "valerierre.png",
+      "name": "Jean-Pierre Valerierre",
+      "subtitle": "The right",
+      "rarity": "leggendaria",
+      "archetype": "diplomatico",
+      "theme": "political",
+      "frame": {
+        "preset": "violin_gold",
+        "accent": "#f59e0b",
+        "icon": "violin"
+      },
+      "active": {
+        "name": "Ghigliottina Solennee",
+        "cost": 3,
+        "text": "+4 danni oltre il cap se vinci il fight.",
+        "effect": {
+          "type": "damage",
+          "value": 4
+        },
+        "flavor": "The great white Valerio is back."
+      },
+      "passive": {
+        "name": "Club dei Giacobini",
+        "text": "+2 Breccia se attacchi con Opportunismo.",
+        "effect": {
+          "type": "attack-stat-bonus",
+          "stat": "O",
+          "value": 2
+        },
+        "flavor": "The great white Valerio is back."
+      },
+      "quote": "The great white Valerio is back.",
+      "tags": [
+        "diplomatico",
+        "opportunismo",
+        "valerio"
+      ],
+      "valerio": {
+        "V": 6,
+        "A": 6,
+        "L": 4,
+        "E": 5,
+        "R": 5,
+        "I": 7,
+        "O": 7
+      },
+      "combat": {
+        "attackPower": 90,
+        "defensePower": 70,
+        "draftCost": 4
+      },
+      "rarityRule": "epica: costo draft 4 secondo bilanciamento v7; nuova carta extra"
+    },
+    {
+      "id": "valerione",
+      "image": "valerione.png",
+      "name": "Valerione",
+      "subtitle": "The great commander",
+      "rarity": "leggendaria",
+      "archetype": "diplomatico",
+      "theme": "political",
+      "frame": {
+        "preset": "violin_gold",
+        "accent": "#f59e0b",
+        "icon": "violin"
+      },
+      "active": {
+        "name": "Cento Giorni",
+        "cost": 3,
+        "text": "+4 danni oltre il cap se vinci il fight.",
+        "effect": {
+          "type": "damage",
+          "value": 4
+        },
+        "flavor": "The great white Valerio is back."
+      },
+      "passive": {
+        "name": "Waterloo",
+        "text": "+2 Breccia se attacchi con Opportunismo.",
+        "effect": {
+          "type": "attack-stat-bonus",
+          "stat": "O",
+          "value": 2
+        },
+        "flavor": "The great white Valerio is back."
+      },
+      "quote": "The great white Valerio is back.",
+      "tags": [
+        "diplomatico",
+        "opportunismo",
+        "valerio"
+      ],
+      "valerio": {
+        "V": 6,
+        "A": 6,
+        "L": 4,
+        "E": 5,
+        "R": 5,
+        "I": 7,
+        "O": 7
+      },
+      "combat": {
+        "attackPower": 90,
+        "defensePower": 70,
+        "draftCost": 4
+      },
+      "rarityRule": "epica: costo draft 4 secondo bilanciamento v7; nuova carta extra"
+    },
+    {
+      "id": "valhawking",
+      "image": "valhawking.png",
+      "name": "Stephen Hawking",
+      "subtitle": "The great commander",
+      "rarity": "leggendaria",
+      "archetype": "diplomatico",
+      "theme": "scientist",
+      "frame": {
+        "preset": "violin_gold",
+        "accent": "#f59e0b",
+        "icon": "scientist"
+      },
+      "active": {
+        "name": "Morte Stellarei",
+        "cost": 3,
+        "text": "+4 danni oltre il cap se vinci il fight.",
+        "effect": {
+          "type": "damage",
+          "value": 4
+        },
+        "flavor": "The great white Valerio is back."
+      },
+      "passive": {
+        "name": "Radiazione di Hawking",
+        "text": "+2 Breccia se attacchi con Opportunismo.",
+        "effect": {
+          "type": "attack-stat-bonus",
+          "stat": "O",
+          "value": 2
+        },
+        "flavor": "The great white Valerio is back."
+      },
+      "quote": "The great white Valerio is back.",
+      "tags": [
+        "diplomatico",
+        "opportunismo",
+        "valerio"
+      ],
+      "valerio": {
+        "V": 6,
+        "A": 6,
+        "L": 4,
+        "E": 5,
+        "R": 5,
+        "I": 7,
+        "O": 7
+      },
+      "combat": {
+        "attackPower": 90,
+        "defensePower": 70,
+        "draftCost": 4
+      },
+      "rarityRule": "epica: costo draft 4 secondo bilanciamento v7; nuova carta extra"
+    },
+    {
+      "id": "valenstein",
+      "image": "valenstein.png",
+      "name": "Stephen Hawking",
+      "subtitle": "The great commander",
+      "rarity": "leggendaria",
+      "archetype": "diplomatico",
+      "theme": "scientist",
+      "frame": {
+        "preset": "violin_gold",
+        "accent": "#f59e0b",
+        "icon": "scientist"
+      },
+      "active": {
+        "name": "Morte Stellarei",
+        "cost": 3,
+        "text": "+4 danni oltre il cap se vinci il fight.",
+        "effect": {
+          "type": "damage",
+          "value": 4
+        },
+        "flavor": "The great white Valerio is back."
+      },
+      "passive": {
+        "name": "Radiazione di Hawking",
+        "text": "+2 Breccia se attacchi con Opportunismo.",
+        "effect": {
+          "type": "attack-stat-bonus",
+          "stat": "O",
+          "value": 2
+        },
+        "flavor": "The great white Valerio is back."
+      },
+      "quote": "The great white Valerio is back.",
+      "tags": [
+        "diplomatico",
         "opportunismo",
         "valerio"
       ],

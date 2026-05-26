@@ -266,6 +266,30 @@
   background: rgba(7, 8, 7, 0.78);
 }
 
+.homeCatalogButton {
+  display: grid;
+  min-height: 42px;
+  place-items: center;
+  border: 1px solid rgba(214, 174, 82, 0.34);
+  border-radius: 10px;
+  color: var(--color-gold);
+  background:
+    linear-gradient(90deg, rgba(214, 174, 82, 0.12), transparent),
+    rgba(7, 8, 7, 0.72);
+  font-size: 0.78rem;
+  font-weight: 950;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.homeCatalogButton:hover {
+  border-color: rgba(214, 174, 82, 0.62);
+  color: var(--color-text);
+  background:
+    linear-gradient(90deg, rgba(214, 174, 82, 0.2), rgba(214, 174, 82, 0.04)),
+    rgba(7, 8, 7, 0.86);
+}
+
 .list {
   display: grid;
   gap: 8px;

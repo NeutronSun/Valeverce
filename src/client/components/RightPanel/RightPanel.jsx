@@ -38,20 +38,7 @@ export function RightPanel({ lobby, previewCard, planPreview }) {
       ) : null}
 
       {card ? (
-        <section className={styles.summary}>
-          <div className={styles.heading}>
-            <span>{previewCard ? "Carta selezionata" : "Carta avversaria"}</span>
-          </div>
-          <GameCard card={card} disabled showDetails />
-          <AbilityBox ability={card.active} kind="Attiva" />
-          <AbilityBox ability={card.passive} kind="Passiva" />
-          <div className={styles.infoGrid}>
-            <span>Costo <b>{getDraftCost(card)}</b></span>
-            <span>ATT <b>{card.combat?.attackPower ?? 0}% · {getAttackPool(card)}</b></span>
-            <span>DIF <b>{card.combat?.defensePower ?? 0}% · {getDefensePool(card)}</b></span>
-            <span>Rarità <b>{rarityLabel(card.rarity)}</b></span>
-          </div>
-        </section>
+        <CardInspector card={card} title={previewCard ? "Carta selezionata" : "Carta avversaria"} />
       ) : (
         <section className={styles.panel}>
           <p>Nessuna carta da ispezionare.</p>
@@ -73,5 +60,24 @@ export function RightPanel({ lobby, previewCard, planPreview }) {
       ) : null}
 
     </aside>
+  );
+}
+
+export function CardInspector({ card, title = "Carta selezionata" }) {
+  return (
+    <section className={styles.summary}>
+      <div className={styles.heading}>
+        <span>{title}</span>
+      </div>
+      <GameCard card={card} disabled showDetails />
+      <AbilityBox ability={card.active} kind="Attiva" />
+      <AbilityBox ability={card.passive} kind="Passiva" />
+      <div className={styles.infoGrid}>
+        <span>Costo <b>{getDraftCost(card)}</b></span>
+        <span>ATT <b>{card.combat?.attackPower ?? 0}% · {getAttackPool(card)}</b></span>
+        <span>DIF <b>{card.combat?.defensePower ?? 0}% · {getDefensePool(card)}</b></span>
+        <span>Rarità <b>{rarityLabel(card.rarity)}</b></span>
+      </div>
+    </section>
   );
 }

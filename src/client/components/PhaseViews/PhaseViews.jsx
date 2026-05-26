@@ -152,6 +152,9 @@ export function HomeView({ snapshot, name, onNameChange, emit, connectionState, 
           </button>
           <JoinLobby emit={emit} />
         </div>
+        <a className={styles.homeCatalogButton} href="/cards">
+          Vedi tutte le carte
+        </a>
       </section>
 
       <section className={styles.publicLobbyPanel}>
@@ -537,67 +540,85 @@ export function DraftView({ lobby, previewCard, onPreviewCard, emit, groupMode =
           </div>
         </div>
       </div>
-      <div className={classNames(styles.draftPool, groupMode === "alpha" && styles.flat)}>
-        {groupMode === "rarity" ? (
-          groups.map((group) => (
-            <details key={group.rarity} className={classNames(styles.accordion, rarityStyleClass(group.rarity))} open>
-              <summary className={styles.separator}>
-                <span className={styles.raritySigil} />
-                <span className={styles.rarityName}>{group.label}</span>
-                <b className={styles.rarityFlavor}>{rarityFlavor(group.rarity)}</b>
-                <i className={styles.rarityCount}>{group.items.length}</i>
-              </summary>
-              <div className={styles.cards}>
-                {group.items.map((item) => (
-                  <DraftCardItem
-                    key={item.card.id}
-                    item={item}
-                    selected={previewCard?.id === item.card.id}
-                    onPreviewCard={onPreviewCard}
-                  />
-                ))}
-              </div>
-            </details>
-          ))
-        ) : groupMode === "theme" ? (
-          themeGroups.map((group) => (
-            <details
-              key={group.theme}
-              id={draftThemeAnchorId(group.theme)}
-              className={classNames(styles.accordion, styles.themeAccordion)}
-              open
-            >
-              <summary className={styles.separator}>
-                <span className={styles.raritySigil} />
-                <span className={styles.rarityName}>{group.theme}</span>
-                <b className={styles.rarityFlavor}>tema</b>
-                <i className={styles.rarityCount}>{group.items.length}</i>
-              </summary>
-              <div className={styles.cards}>
-                {group.items.map((item) => (
-                  <DraftCardItem
-                    key={item.card.id}
-                    item={item}
-                    selected={previewCard?.id === item.card.id}
-                    onPreviewCard={onPreviewCard}
-                  />
-                ))}
-              </div>
-            </details>
-          ))
-        ) : (
-          flatItems.map((item) => (
-            <DraftCardItem
-              key={item.card.id}
-              item={item}
-              selected={previewCard?.id === item.card.id}
-              onPreviewCard={onPreviewCard}
-            />
-          ))
-        )}
-        {draftItems.length === 0 ? <p className={styles.empty}>Nessuna carta trovata.</p> : null}
-      </div>
+      <CardGrid
+        items={draftItems}
+        rarityGroups={groups}
+        themeGroups={themeGroups}
+        flatItems={flatItems}
+        groupMode={groupMode}
+        previewCard={previewCard}
+        onPreviewCard={onPreviewCard}
+      />
     </section>
+  );
+}
+
+export function CardGrid({
+  items,
+  rarityGroups,
+  themeGroups,
+  flatItems,
+  groupMode,
+  previewCard,
+  onPreviewCard,
+  emptyText = "Nessuna carta trovata."
+}) {
+  return (
+    <div className={classNames(styles.draftPool, groupMode === "alpha" && styles.flat)}>
+      {groupMode === "rarity" ? (
+        rarityGroups.map((group) => (
+          <details key={group.rarity} className={classNames(styles.accordion, rarityStyleClass(group.rarity))} open>
+            <summary className={styles.separator}>
+              <span className={styles.raritySigil} />
+              <span className={styles.rarityName}>{group.label}</span>
+              <b className={styles.rarityFlavor}>{rarityFlavor(group.rarity)}</b>
+              <i className={styles.rarityCount}>{group.items.length}</i>
+            </summary>
+            <div className={styles.cards}>
+              {group.items.map((item) => (
+                <DraftCardItem
+                  key={item.card.id}
+                  item={item}
+                  selected={previewCard?.id === item.card.id}
+                  onPreviewCard={onPreviewCard}
+                />
+              ))}
+            </div>
+          </details>
+        ))
+      ) : groupMode === "theme" ? (
+        themeGroups.map((group) => (
+          <details key={group.theme} id={draftThemeAnchorId(group.theme)} className={classNames(styles.accordion, styles.themeAccordion)} open>
+            <summary className={styles.separator}>
+              <span className={styles.raritySigil} />
+              <span className={styles.rarityName}>{group.theme}</span>
+              <b className={styles.rarityFlavor}>tema</b>
+              <i className={styles.rarityCount}>{group.items.length}</i>
+            </summary>
+            <div className={styles.cards}>
+              {group.items.map((item) => (
+                <DraftCardItem
+                  key={item.card.id}
+                  item={item}
+                  selected={previewCard?.id === item.card.id}
+                  onPreviewCard={onPreviewCard}
+                />
+              ))}
+            </div>
+          </details>
+        ))
+      ) : (
+        flatItems.map((item) => (
+          <DraftCardItem
+            key={item.card.id}
+            item={item}
+            selected={previewCard?.id === item.card.id}
+            onPreviewCard={onPreviewCard}
+          />
+        ))
+      )}
+      {items.length === 0 ? <p className={styles.empty}>{emptyText}</p> : null}
+    </div>
   );
 }
 

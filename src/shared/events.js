@@ -3,6 +3,7 @@ export const CLIENT_EVENTS = Object.freeze({
   CREATE_LOBBY: "createLobby",
   JOIN_LOBBY: "joinLobby",
   LEAVE_LOBBY: "leaveLobby",
+  UPDATE_LOBBY_SETTINGS: "updateLobbySettings",
   START_GAME: "startGame",
   DRAFT_CARD: "draftCard",
   SELECT_CARD: "selectCard",

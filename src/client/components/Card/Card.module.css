@@ -1,0 +1,430 @@
+.root {
+  --rarity-color: var(--rarity-common);
+  --cost-size: 40px;
+  --panel-bottom: 44px;
+  --combat-bottom: 8px;
+
+  display: block;
+  min-width: 0;
+
+  &.selected .button {
+    border-color: var(--rarity-color);
+    box-shadow:
+      0 0 0 2px color-mix(in srgb, var(--rarity-color), transparent 48%),
+      0 0 28px color-mix(in srgb, var(--rarity-color), transparent 68%);
+  }
+
+  &.selected .body,
+  &.details .body {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  &.taken {
+    & .image {
+      filter: grayscale(0.72) brightness(0.52);
+    }
+
+    & .takenBadge {
+      opacity: 1;
+    }
+  }
+
+  &.mini {
+    --cost-size: 34px;
+    --panel-bottom: 38px;
+    --combat-bottom: 8px;
+
+    & .button {
+      border-radius: 8px;
+    }
+
+    & .rarity,
+    & .rarityText,
+    & .valerio {
+      display: none;
+    }
+
+    & .body {
+      right: 8px;
+      left: 8px;
+      display: flex;
+      min-height: 40px;
+      max-height: 54px;
+      align-items: center;
+      border-radius: 8px;
+      padding: 8px 10px;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(0, 0, 0, 0.14)),
+        rgba(8, 8, 7, 0.9);
+    }
+
+    & .name {
+      display: -webkit-box;
+      overflow: hidden;
+      font-size: 11px;
+      line-height: 1.08;
+      text-align: left;
+      text-overflow: unset;
+      white-space: normal;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+    }
+
+    & .combat {
+      font-size: 0.68rem;
+
+      & .combatValue {
+        padding: 3px 8px;
+      }
+    }
+  }
+
+  &.details {
+    --cost-size: 44px;
+    --panel-bottom: 18px;
+    --combat-bottom: 126px;
+
+    & .button {
+      border-width: 2px;
+      border-radius: 12px;
+    }
+
+    & .rarity {
+      display: none;
+    }
+
+    & .body {
+      right: 16px;
+      left: 16px;
+      gap: 7px;
+      max-height: none;
+      border-radius: 10px;
+      padding: 14px 16px;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(0, 0, 0, 0.14)),
+        rgba(8, 8, 7, 0.91);
+    }
+
+    & .name {
+      font-size: 1rem;
+      line-height: 1.08;
+      white-space: normal;
+    }
+
+    & .valerio {
+      width: 100%;
+    }
+  }
+
+  &:hover .image {
+    filter: saturate(1.08) contrast(1.04) brightness(0.96);
+    transform: scale(1.018);
+  }
+
+  &:hover .body {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.rarityCommon { --rarity-color: var(--rarity-common); }
+.rarityRare { --rarity-color: var(--rarity-rare); }
+.rarityEpic { --rarity-color: var(--rarity-epic); }
+.rarityLegendary { --rarity-color: var(--rarity-legendary); }
+.rarityMythic { --rarity-color: var(--rarity-mythic); }
+
+.empty {
+  display: grid;
+  min-height: 160px;
+  place-items: center;
+  border: 1px dashed var(--color-border);
+  border-radius: 8px;
+  color: var(--color-muted);
+  background: rgba(7, 8, 7, 0.5);
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.button {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: var(--card-ratio, 2 / 3);
+  min-height: 0;
+  overflow: visible;
+  border: 2px solid color-mix(in srgb, var(--rarity-color), transparent 12%);
+  border-radius: 12px;
+  padding: 0;
+  color: var(--color-text);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--rarity-color), transparent 78%), transparent 38%),
+    #080a08;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.035),
+    0 10px 26px rgba(0, 0, 0, 0.34),
+    0 0 20px color-mix(in srgb, var(--rarity-color), transparent 84%);
+  cursor: pointer;
+  isolation: isolate;
+  text-align: left;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    border-radius: 10px;
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, var(--rarity-color), transparent 42%),
+      inset 0 0 0 4px rgba(0, 0, 0, 0.22),
+      inset 0 -42px 48px rgba(0, 0, 0, 0.34);
+  }
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 5px;
+    z-index: 3;
+    border: 1px solid color-mix(in srgb, var(--rarity-color), white 14%);
+    border-radius: 8px;
+    opacity: 0.42;
+    pointer-events: none;
+  }
+
+  &:disabled {
+    cursor: default;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--rarity-color);
+    outline-offset: 2px;
+  }
+}
+
+.imageFallback,
+.image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.imageFallback {
+  display: grid;
+  place-items: center;
+  color: var(--color-muted);
+  background: linear-gradient(135deg, rgba(214, 174, 82, 0.12), rgba(255, 255, 255, 0.03));
+  font-size: 1.4rem;
+  font-weight: 950;
+}
+
+.image {
+  z-index: 1;
+  clip-path: inset(0 round 10px);
+  object-fit: cover;
+  transition:
+    filter 160ms ease,
+    transform 180ms ease;
+}
+
+.cost {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 6;
+  display: grid;
+  width: var(--cost-size);
+  height: var(--cost-size);
+  place-items: center;
+  border: 2px solid var(--rarity-color);
+  border-top: 0;
+  border-left: 0;
+  border-radius: 0 0 16px 0;
+  color: var(--color-text);
+  background:
+    radial-gradient(circle at 38% 32%, rgba(255, 255, 255, 0.2), transparent 36%),
+    linear-gradient(135deg, color-mix(in srgb, var(--rarity-color), transparent 70%), rgba(7, 8, 7, 0.92) 52%),
+    rgba(7, 8, 7, 0.94);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.42),
+    0 0 18px color-mix(in srgb, var(--rarity-color), transparent 68%);
+  font-size: 1rem;
+  font-weight: 950;
+  text-shadow: 0 1px 2px #000;
+}
+
+.rarity {
+  position: absolute;
+  top: 9px;
+  right: 9px;
+  z-index: 4;
+  max-width: calc(100% - 58px);
+  overflow: hidden;
+  color: var(--rarity-color);
+  font-size: 0.62rem;
+  font-weight: 950;
+  text-overflow: ellipsis;
+  text-shadow: 0 1px 2px #000;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.cooldown {
+  position: absolute;
+  top: calc(var(--cost-size) + 6px);
+  left: 7px;
+  z-index: 6;
+  display: grid;
+  min-width: 24px;
+  min-height: 24px;
+  place-items: center;
+  border: 1px solid var(--color-attack);
+  border-radius: 50%;
+  color: var(--color-text);
+  background: rgba(224, 91, 86, 0.86);
+  font-size: 0.72rem;
+  font-weight: 950;
+}
+
+.takenBadge {
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  color: var(--color-text);
+  background: rgba(7, 8, 7, 0.58);
+  font-size: 0.92rem;
+  font-weight: 950;
+  opacity: 0;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.combat {
+  position: absolute;
+  right: 8px;
+  bottom: var(--combat-bottom);
+  left: 8px;
+  z-index: 5;
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  color: var(--color-text);
+  font-size: 0.72rem;
+  font-weight: 950;
+  pointer-events: none;
+
+}
+
+.combatValue {
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  padding: 4px 10px;
+  background: rgba(4, 5, 4, 0.9);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.35);
+  text-shadow: 0 1px 2px #000;
+  white-space: nowrap;
+}
+
+.body {
+  position: absolute;
+  right: 10px;
+  bottom: var(--panel-bottom);
+  left: 10px;
+  z-index: 4;
+  display: grid;
+  justify-items: start;
+  gap: 5px;
+  max-height: 128px;
+  border: 1px solid color-mix(in srgb, var(--rarity-color), transparent 48%);
+  border-radius: 9px;
+  padding: 10px 12px;
+  color: var(--color-text);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(0, 0, 0, 0.14)),
+    rgba(8, 8, 7, 0.86);
+  opacity: 0;
+  overflow: visible;
+  backdrop-filter: blur(7px);
+  transform: translateY(8px);
+  transition:
+    opacity 160ms ease,
+    transform 160ms ease;
+  text-align: left;
+
+}
+
+.name {
+  overflow: hidden;
+  max-width: 100%;
+  color: var(--color-text);
+  font-size: 0.88rem;
+  font-weight: 950;
+  line-height: 1.05;
+  text-overflow: ellipsis;
+  text-shadow: 0 1px 2px #000;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.rarityText {
+  display: block;
+  overflow: hidden;
+  max-width: 100%;
+  color: var(--rarity-color);
+  font-size: 0.66rem;
+  font-style: normal;
+  font-weight: 950;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.valerio {
+  display: block;
+  width: 100%;
+}
+
+.ability {
+  display: grid;
+  gap: 4px;
+  border: 1px solid var(--ability-color, var(--color-border-soft));
+  border-radius: 8px;
+  padding: 10px;
+  color: var(--color-text);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--ability-color, var(--color-gold)), transparent 90%), transparent),
+    rgba(7, 8, 7, 0.58);
+
+  &.active {
+    --ability-color: var(--color-mana);
+  }
+
+  &.passive {
+    --ability-color: #a855f7;
+  }
+
+}
+
+.abilityLabel {
+  color: var(--color-muted);
+  font-size: 0.68rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.abilityName {
+  color: var(--color-text);
+  font-size: 0.94rem;
+  line-height: 1.1;
+}
+
+.abilityText {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.78rem;
+  line-height: 1.28;
+}

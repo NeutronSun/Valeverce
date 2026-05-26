@@ -1,7 +1,21 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { CLIENT_EVENTS } from "../../shared/events.js";
+import { CLIENT_EVENTS } from "../../../shared/events.js";
+import styles from "./ChatFloat.module.css";
+
+function classNames(...items) {
+  return items.filter(Boolean).join(" ");
+}
+
+function positionStyle(position) {
+  return /** @type {import("react").CSSProperties} */ (
+    /** @type {unknown} */ ({
+      "--chat-x": `${position.x}px`,
+      "--chat-y": `${position.y}px`
+    })
+  );
+}
 
 export function ChatFloat({ lobby, emit }) {
   const [visible, setVisible] = useState(false);
@@ -124,38 +138,34 @@ export function ChatFloat({ lobby, emit }) {
   }
 
   return (
-    <section
-      className={`chat-float${visible ? " is-visible" : " is-hidden"}`}
-      style={{ left: position.x, top: position.y }}
-    >
-      <div className="chat-head" onMouseDown={startDrag}>
+    <section className={classNames(styles.root, visible && styles.visible)} style={positionStyle(position)}>
+      <div className={styles.head} onMouseDown={startDrag}>
         <span>chat</span>
-        <button type="button" className="chat-close" onClick={() => setVisible(false)} aria-label="Nascondi chat">
+        <button type="button" className={styles.close} onClick={() => setVisible(false)} aria-label="Nascondi chat">
           x
         </button>
       </div>
-      <div className="chat-log" ref={logRef}>
+      <div className={styles.log} ref={logRef}>
         {lobby.chat.map((message) => {
-          const authorLabel = message.kind === "system" ? "sys" : message.name;
-          const messageClass = [
-            "chat-message",
-            message.kind === "system" ? "is-system" : "",
-            message.kind === "user" && message.playerId === selfId ? "is-self" : "",
-            message.kind === "user" && message.playerId !== selfId ? "is-enemy" : ""
-          ]
-            .filter(Boolean)
-            .join(" ");
+          const authorLabel = message.kind === "system" ? "SYS" : message.name;
+          const messageClass = classNames(
+            styles.message,
+            message.kind === "system" && styles.system,
+            message.kind === "user" && message.playerId === selfId && styles.self,
+            message.kind === "user" && message.playerId !== selfId && styles.enemy
+          );
 
           return (
             <div key={message.id} className={messageClass}>
-              <strong>[{authorLabel}]:</strong>
-              <p>{message.text}</p>
+              <span className={styles.author}>[{authorLabel}]:</span>
+              <span className={styles.text}>{message.text}</span>
             </div>
           );
         })}
       </div>
-      <form className="chat-form" onSubmit={submit}>
+      <form className={styles.form} onSubmit={submit}>
         <input
+          className={styles.input}
           ref={inputRef}
           value={text}
           maxLength={240}
@@ -163,7 +173,7 @@ export function ChatFloat({ lobby, emit }) {
           onBlur={scheduleHideAfterBlur}
           onChange={(event) => setText(event.target.value)}
         />
-        <button type="submit">Invia</button>
+        <button type="submit" className={styles.submit}>Invia</button>
       </form>
     </section>
   );

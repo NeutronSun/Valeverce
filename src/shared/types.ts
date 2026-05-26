@@ -78,6 +78,12 @@ export interface LobbySnapshot {
   hostId: string;
   phase: GamePhase;
   round: number;
+  settings: {
+    pickTimerEnabled: boolean;
+    pickTimerSeconds: number;
+    draftSize: number;
+    draftBudget: number;
+  };
   activePair: string[];
   deadlineAt: number | null;
   draft: {
@@ -108,6 +114,12 @@ export interface ClientEventPayloads {
   createLobby: Record<string, never>;
   joinLobby: { lobbyId: string };
   leaveLobby: Record<string, never>;
+  updateLobbySettings: {
+    pickTimerEnabled?: boolean;
+    pickTimerSeconds?: number;
+    draftSize?: number;
+    draftBudget?: number;
+  };
   startGame: Record<string, never>;
   draftCard: { cardId: string };
   selectCard: { cardId: string };

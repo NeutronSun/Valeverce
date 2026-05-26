@@ -1,0 +1,10 @@
+.root {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+  min-width: 0;
+
+  &.compact {
+    gap: 6px;
+  }
+}

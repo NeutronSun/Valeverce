@@ -68,7 +68,7 @@
       "subtitle": "Stratega dell'Olimpo",
       "rarity": "epica",
       "archetype": "stratega",
-      "theme": "greco • oro • stratega",
+      "theme": "Historical",
       "frame": {
         "preset": "stratega_gold",
         "accent": "#d6a94f",
@@ -123,7 +123,7 @@
       "subtitle": "Magister Projectorum",
       "rarity": "rara",
       "archetype": "controllore",
-      "theme": "roma • registro • latino minaccioso",
+      "theme": "Historical",
       "frame": {
         "preset": "roman_marble",
         "accent": "#b7934e",
@@ -178,7 +178,7 @@
       "subtitle": "Imy-r Khet Nebet",
       "rarity": "epica",
       "archetype": "scalatore",
-      "theme": "egitto • sabbia • late game",
+      "theme": "Historical",
       "frame": {
         "preset": "egyptian_gold",
         "accent": "#d9a441",
@@ -231,7 +231,7 @@
       "subtitle": "Jigyo Bugyo",
       "rarity": "rara",
       "archetype": "duellante",
-      "theme": "samurai • sakura • condominio",
+      "theme": "Historical",
       "frame": {
         "preset": "sakura_steel",
         "accent": "#c99958",
@@ -286,7 +286,7 @@
       "subtitle": "Knight of All Projects",
       "rarity": "rara",
       "archetype": "diplomatico",
-      "theme": "cavaliere • codice • salotto blu",
+      "theme": "Historical",
       "frame": {
         "preset": "royal_blue_gold",
         "accent": "#1f4c85",
@@ -341,7 +341,7 @@
       "subtitle": "Brotherhood of Projects, DLC incluso.",
       "rarity": "epica",
       "archetype": "assassino agile",
-      "theme": "rinascimento • stealth • piume perse",
+      "theme": "Assassin's Creed",
       "frame": {
         "preset": "assassin_shadow_gold",
         "accent": "#6b5b42",
@@ -396,7 +396,7 @@
       "subtitle": "La user story è incisa sulla parete.",
       "rarity": "comune",
       "archetype": "bruto",
-      "theme": "pietra • fuoco • bonk",
+      "theme": "Historical",
       "frame": {
         "preset": "stone_bone",
         "accent": "#9c7a4a",
@@ -451,7 +451,7 @@
       "subtitle": "Doom of the Grand Project.",
       "rarity": "leggendaria",
       "archetype": "demolitore",
-      "theme": "metallo • verde • boss finale",
+      "theme": "Marvel",
       "frame": {
         "preset": "doom_emerald_iron",
         "accent": "#0c6f3c",
@@ -506,7 +506,7 @@
       "subtitle": "Noyan of the Grand Project",
       "rarity": "comune",
       "archetype": "gacha",
-      "theme": "anime • fortuna • banner limitato",
+      "theme": "Historical",
       "frame": {
         "preset": "fantasy_gacha",
         "accent": "#8ac7ff",
@@ -561,7 +561,7 @@
       "subtitle": "Parcheggia il task dove capita.",
       "rarity": "rara",
       "archetype": "caos urbano",
-      "theme": "neon • crime • radio anni 80",
+      "theme": "Rockstar Games",
       "frame": {
         "preset": "vice_neon",
         "accent": "#ff39c9",
@@ -616,7 +616,7 @@
       "subtitle": "Non ha mai perso: ha solo iterato.",
       "rarity": "mitica",
       "archetype": "duellante letale",
-      "theme": "oro • rosso • boss fight",
+      "theme": "Elden Ring",
       "frame": {
         "preset": "scarlet_gold",
         "accent": "#b13b2e",
@@ -670,7 +670,7 @@
       "subtitle": "Obester Projektleiter",
       "rarity": "rara",
       "archetype": "ordine e controllo",
-      "theme": "grigio • ufficio • calendario ostile",
+      "theme": "Historical",
       "frame": {
         "preset": "cold_steel_archive",
         "accent": "#626262",
@@ -725,7 +725,7 @@
       "subtitle": "Commodore of Projects",
       "rarity": "rara",
       "archetype": "corsaro",
-      "theme": "pirati • legno • teschi",
+      "theme": "Historical",
       "frame": {
         "preset": "pirate_bone_wood",
         "accent": "#8a642b",
@@ -780,7 +780,7 @@
       "subtitle": "Dead Eye",
       "rarity": "rara",
       "archetype": "tiratore",
-      "theme": "western • tramonto • polvere",
+      "theme": "Rockstar Games",
       "frame": {
         "preset": "western_sunset",
         "accent": "#b5492a",
@@ -835,7 +835,7 @@
       "subtitle": "Shaman of Project.",
       "rarity": "comune",
       "archetype": "support mistico",
-      "theme": "totem • canyon • connessione instabile",
+      "theme": "Historical",
       "frame": {
         "preset": "tribal_sunset",
         "accent": "#b6783b",
@@ -890,7 +890,7 @@
       "subtitle": "The Iron Project",
       "rarity": "leggendaria",
       "archetype": "inventore",
-      "theme": "tech • oro • ego sostenibile",
+      "theme": "Marvel",
       "frame": {
         "preset": "arc_reactor_gold",
         "accent": "#38bdf8",
@@ -945,7 +945,7 @@
       "subtitle": "The Art of Mistic Management",
       "rarity": "epica",
       "archetype": "mago controllo",
-      "theme": "arcano • portali • bug cosmici",
+      "theme": "Marvel",
       "frame": {
         "preset": "arcane_gold",
         "accent": "#f59e0b",
@@ -999,7 +999,7 @@
       "subtitle": "Hapkom Npoektob",
       "rarity": "comune",
       "archetype": "resiliente",
-      "theme": "grigio • rosso • piano quinquennale",
+      "theme": "Historical",
       "frame": {
         "preset": "soviet_stone",
         "accent": "#7f1d1d",
@@ -1054,7 +1054,7 @@
       "subtitle": "Vendetta, validazione, verbali.",
       "rarity": "rara",
       "archetype": "oratore oscuro",
-      "theme": "gothic • rosso • allitterazioni",
+      "theme": "Movies",
       "frame": {
         "preset": "gothic_crimson",
         "accent": "#991b1b",
@@ -1109,7 +1109,7 @@
       "subtitle": "Build your project",
       "rarity": "comune",
       "archetype": "costruttore",
-      "theme": "voxel • diamante • crafting",
+      "theme": "Minecraft",
       "frame": {
         "preset": "voxel_diamond",
         "accent": "#22d3ee",
@@ -1163,7 +1163,7 @@
       "subtitle": "Dark Project",
       "rarity": "epica",
       "archetype": "mago oscuro",
-      "theme": "nero • verde • serpentcore",
+      "theme": "Harry Potter",
       "frame": {
         "preset": "dark_magic_emerald",
         "accent": "#10b981",
@@ -1216,9 +1216,9 @@
       "image": "valerio.png",
       "name": "Valerio Prime",
       "subtitle": "Semplicemente Valerio.",
-      "rarity": "speciale",
+      "rarity": "comune",
       "archetype": "jolly",
-      "theme": "viaggio • mare • plot armor",
+      "theme": "Project Manager",
       "frame": {
         "preset": "travel_blue_gold",
         "accent": "#1e3a8a",
@@ -1264,7 +1264,7 @@
         "defensePower": 90,
         "draftCost": 6
       },
-      "rarityRule": "speciale: costo draft 6 secondo bilanciamento v7; rarità precedente: speciale"
+      "rarityRule": "comune: costo draft 6 secondo bilanciamento v7; rarità precedente: epica"
     },
     {
       "id": "vally",
@@ -1273,7 +1273,7 @@
       "subtitle": "The fastest PM alive.",
       "rarity": "comune",
       "archetype": "speedster",
-      "theme": "fulmine • rosso • speed force",
+      "theme": "DC Comics",
       "frame": {
         "preset": "speed_red_gold",
         "accent": "#f59e0b",
@@ -1328,7 +1328,7 @@
       "subtitle": "God of PMs",
       "rarity": "leggendaria",
       "archetype": "berserker controllato",
-      "theme": "mito • cenere • furia controllata",
+      "theme": "God of War",
       "frame": {
         "preset": "mythic_ash_gold",
         "accent": "#c2410c",
@@ -1383,7 +1383,7 @@
       "subtitle": "National hero of follow‑ups.",
       "rarity": "epica",
       "archetype": "leader patriottico",
-      "theme": "stelle • mantello • briefing aereo",
+      "theme": "The Boys",
       "frame": {
         "preset": "heroic_stars_gold",
         "accent": "#1d4ed8",
@@ -1438,7 +1438,7 @@
       "subtitle": "Re degli abissi",
       "rarity": "comune",
       "archetype": "guardiano marino",
-      "theme": "oceano • corazzata • tridente invisibile",
+      "theme": "The Boys",
       "frame": {
         "preset": "atlantean_teal_gold",
         "accent": "#0f766e",
@@ -1493,7 +1493,7 @@
       "subtitle": "The fat pm",
       "rarity": "comune",
       "archetype": "atleta tech",
-      "theme": "sport • blue armor • palestra futuristica",
+      "theme": "The Boys",
       "frame": {
         "preset": "neon_sport_blue",
         "accent": "#38bdf8",
@@ -1548,7 +1548,7 @@
       "subtitle": "Quando il progetto brucia, lui posa.",
       "rarity": "comune",
       "archetype": "piromane gestionale",
-      "theme": "rosso • fuoco • city disaster",
+      "theme": "The Boys",
       "frame": {
         "preset": "burning_hero_red",
         "accent": "#dc2626",
@@ -1603,7 +1603,7 @@
       "subtitle": "Lo scudo blocca i bug, non le richieste.",
       "rarity": "comune",
       "archetype": "difensore",
-      "theme": "post‑apocalisse • scudo • morale basso",
+      "theme": "The Boys",
       "frame": {
         "preset": "wasteland_steel",
         "accent": "#334155",
@@ -1658,7 +1658,7 @@
       "subtitle": "Splende così tanto che acceca la deadline.",
       "rarity": "leggendaria",
       "archetype": "campione solare",
-      "theme": "oro • luce • skyline",
+      "theme": "The Boys",
       "frame": {
         "preset": "solar_gold",
         "accent": "#facc15",
@@ -1713,7 +1713,7 @@
       "subtitle": "Il lato oscuro della project board.",
       "rarity": "epica",
       "archetype": "anti‑eroe",
-      "theme": "nero • metallo • battaglia finale",
+      "theme": "The Boys",
       "frame": {
         "preset": "black_ops_steel",
         "accent": "#7f1d1d",
@@ -1768,7 +1768,7 @@
       "subtitle": "Saiyan del backlog infinito.",
       "rarity": "leggendaria",
       "archetype": "saiyan",
-      "theme": "aura dorata • sfere del drago • potenza",
+      "theme": "Dragon Ball",
       "frame": {
         "preset": "dragonball_orange_gold",
         "accent": "#f59e0b",
@@ -1822,7 +1822,7 @@
       "subtitle": "Assorbe snack, bug e responsabilità.",
       "rarity": "rara",
       "archetype": "majin",
-      "theme": "rosa • caramelle • caos cosmico",
+      "theme": "Dragon Ball",
       "frame": {
         "preset": "majin_candy_pink",
         "accent": "#ec4899",
@@ -1877,7 +1877,7 @@
       "subtitle": "Cinque pose, una sola retrospettiva.",
       "rarity": "epica",
       "archetype": "team combo",
-      "theme": "namek • squadra • pose impossibili",
+      "theme": "Dragon Ball",
       "frame": {
         "preset": "namek_green_orange",
         "accent": "#65a30d",
@@ -1932,7 +1932,7 @@
       "subtitle": "Bio‑android del refactoring perfetto.",
       "rarity": "leggendaria",
       "archetype": "bio‑android",
-      "theme": "verde • bio‑organic • perfezione",
+      "theme": "The Boys",
       "frame": {
         "preset": "cell_bio_green",
         "accent": "#84cc16",
@@ -1987,7 +1987,7 @@
       "subtitle": "Namecciano del silenzio giudicante.",
       "rarity": "rara",
       "archetype": "maestro",
-      "theme": "namek • mantello bianco • aura verde",
+      "theme": "Dragon Ball",
       "frame": {
         "preset": "namek_guardian_green",
         "accent": "#22c55e",
@@ -2042,7 +2042,7 @@
       "subtitle": "Fusione definitiva tra potenza e approvazione.",
       "rarity": "mitica",
       "archetype": "fusion warrior",
-      "theme": "rosso • ssj4 • aura devastante",
+      "theme": "Dragon Ball",
       "frame": {
         "preset": "fusion_red_gold",
         "accent": "#ef4444",
@@ -2097,7 +2097,7 @@
       "subtitle": "Il re dei PMs.",
       "rarity": "mitica",
       "archetype": "pm",
-      "theme": "pm • king • aura devastante",
+      "theme": "Davide Tartaglini Er King",
       "frame": {
         "preset": "pm_king_gold",
         "accent": "#d6a94f",
@@ -2152,7 +2152,7 @@
       "subtitle": "The fent obsessed",
       "rarity": "mitica",
       "archetype": "fent",
-      "theme": "fent • floyd • n",
+      "theme": "George Floyd",
       "frame": {
         "preset": "fent_floyd_blue",
         "accent": "#000000",
@@ -2207,7 +2207,7 @@
       "subtitle": "L'innocente",
       "rarity": "rara",
       "archetype": "boss noir",
-      "theme": "rosso • noir • indagini infinite",
+      "theme": "Goated",
       "frame": {
         "preset": "crime_noir_crimson",
         "accent": "#7f1d1d",
@@ -2262,7 +2262,7 @@
       "subtitle": "The Niggasoft Project",
       "rarity": "epica",
       "archetype": "cyborg esecutore",
-      "theme": "metallo • rosso • città in rovina",
+      "theme": "George Floyd",
       "frame": {
         "preset": "cyber_war_red",
         "accent": "#991b1b",
@@ -2317,7 +2317,7 @@
       "subtitle": "The Goat",
       "rarity": "comune",
       "archetype": "regista di campo",
-      "theme": "sport • maglia blu • spogliatoio",
+      "theme": "Goated",
       "frame": {
         "preset": "stadium_blue_gold",
         "accent": "#1d4ed8",
@@ -2372,7 +2372,7 @@
       "subtitle": "Nessuno lo sente arrivare finché non è già in produzione.",
       "rarity": "mitica",
       "archetype": "predatore alieno",
-      "theme": "xeno • acido • corridoi bui",
+      "theme": "Movies",
       "frame": {
         "preset": "xeno_biomech_blue",
         "accent": "#0e7490",
@@ -2427,7 +2427,7 @@
       "subtitle": "Iron strategist",
       "rarity": "epica",
       "archetype": "stratega politico",
-      "theme": "blu • bianco • diplomazia dura",
+      "theme": "Political",
       "frame": {
         "preset": "statecraft_blue_white",
         "accent": "#1d4ed8",
@@ -2481,7 +2481,7 @@
       "subtitle": "What about it mix",
       "rarity": "rara",
       "archetype": "assassino d'ombra",
-      "theme": "verde • ninja • veleno",
+      "theme": "League of Legends",
       "frame": {
         "preset": "shadow_venom_green",
         "accent": "#16a34a",
@@ -2536,7 +2536,7 @@
       "subtitle": "Non guarda il problema: lo sente respirare.",
       "rarity": "rara",
       "archetype": "monaco cieco",
-      "theme": "tempio • benda rossa • calcio volante",
+      "theme": "League of Legends",
       "frame": {
         "preset": "blind_monk_sand",
         "accent": "#b45309",
@@ -2591,7 +2591,7 @@
       "subtitle": "Ha il vento contro, quindi lo usa come feature.",
       "rarity": "rara",
       "archetype": "spadaccino errante",
-      "theme": "vento • katana • dash infinito",
+      "theme": "League of Legends",
       "frame": {
         "preset": "wind_samurai_blue",
         "accent": "#38bdf8",
@@ -2646,7 +2646,7 @@
       "subtitle": "Ride dietro la maschera mentre il piano esplode.",
       "rarity": "epica",
       "archetype": "giullare assassino",
-      "theme": "viola • maschera • caos teatrale",
+      "theme": "League of Legends",
       "frame": {
         "preset": "jester_shadow_purple",
         "accent": "#7e22ce",
@@ -2701,7 +2701,7 @@
       "subtitle": "The Call Center",
       "rarity": "epica",
       "archetype": "slasher gestionale",
-      "theme": "nero • bianco • telefono spento",
+      "theme": "Movies",
       "frame": {
         "preset": "slasher_black_white",
         "accent": "#991b1b",
@@ -2756,7 +2756,7 @@
       "subtitle": "Due lame, un solo silenzio giudicante.",
       "rarity": "leggendaria",
       "archetype": "duellante spirituale",
-      "theme": "rosso • blu • maschera demoniaca",
+      "theme": "League of Legends",
       "frame": {
         "preset": "spirit_duelist_crimson",
         "accent": "#dc2626",
@@ -2810,7 +2810,7 @@
       "subtitle": "Brucia il problema e poi chiede se era urgente.",
       "rarity": "epica",
       "archetype": "mago incendiario",
-      "theme": "fuoco • lava • apocalisse",
+      "theme": "League of Legends",
       "frame": {
         "preset": "inferno_orange_black",
         "accent": "#ea580c",
@@ -2864,7 +2864,7 @@
       "subtitle": "Lanterna accesa, catena pronta, deadline intrappolata.",
       "rarity": "leggendaria",
       "archetype": "carceriere spettrale",
-      "theme": "verde • anime • lanterna",
+      "theme": "League of Legends",
       "frame": {
         "preset": "spectral_chain_teal",
         "accent": "#14b8a6",
@@ -2919,7 +2919,7 @@
       "subtitle": "Make backlog great again, almeno sul cartellone.",
       "rarity": "rara",
       "archetype": "showman politico",
-      "theme": "bandiere • palco • slogan giganti",
+      "theme": "Political",
       "frame": {
         "preset": "campaign_red_blue",
         "accent": "#dc2626",
@@ -2974,7 +2974,7 @@
       "subtitle": "Dagli abissi arriva solo per chiudere il conto.",
       "rarity": "epica",
       "archetype": "assassino degli abissi",
-      "theme": "mare oscuro • arpione • vendetta",
+      "theme": "League of Legends",
       "frame": {
         "preset": "abyssal_assassin_teal",
         "accent": "#0f766e",
@@ -3020,6 +3020,227 @@
         "draftCost": 4
       },
       "rarityRule": "epica: costo draft 4 secondo bilanciamento v7; nuova carta extra"
+    },
+    {
+      "id": "squalerio",
+      "image": "squalerio.png",
+      "name": "Squalerio",
+      "subtitle": "The great white Valerio",
+      "rarity": "leggendaria",
+      "archetype": "shark",
+      "theme": "Movies",
+      "frame": {
+        "preset": "shark_white_black",
+        "accent": "#0f766e",
+        "icon": "shark"
+      },
+      "active": {
+        "name": "Bite",
+        "cost": 3,
+        "text": "+4 danni oltre il cap se vinci il fight.",
+        "effect": {
+          "type": "damage",
+          "value": 4
+        },
+        "flavor": "The great white Valerio is back."
+      },
+      "passive": {
+        "name": "Blood Thirsty",
+        "text": "+2 Breccia se attacchi con Opportunismo.",
+        "effect": {
+          "type": "attack-stat-bonus",
+          "stat": "O",
+          "value": 2
+        },
+        "flavor": "The great white Valerio is back."
+      },
+      "quote": "The great white Valerio is back.",
+      "tags": [
+        "shark",
+        "opportunismo",
+        "valerio"
+      ],
+      "valerio": {
+        "V": 6,
+        "A": 6,
+        "L": 4,
+        "E": 5,
+        "R": 5,
+        "I": 7,
+        "O": 7
+      },
+      "combat": {
+        "attackPower": 90,
+        "defensePower": 70,
+        "draftCost": 4
+      },
+      "rarityRule": "epica: costo draft 4 secondo bilanciamento v7; nuova carta extra"
+    },
+    {
+      "id": "vavitar",
+      "image": "vavitar.png",
+      "name": "Vavitar",
+      "subtitle": "The God of Speed",
+      "rarity": "Mitica",
+      "archetype": "speedster",
+      "theme": "DC Comics",
+      "frame": {
+        "preset": "speed_red_gold",
+        "accent": "#f59e0b",
+        "icon": "lightning"
+      },
+      "active": {
+        "name": "Speed of Light",
+        "cost": 3,
+        "text": "+4 danni oltre il cap se vinci il fight.",
+        "effect": {
+          "type": "damage",
+          "value": 4
+        },
+        "flavor": "The God of Speed is back."
+      },
+      "passive": {
+        "name": "I, am the future Flash",
+        "text": "+2 Breccia se attacchi con Opportunismo.",
+        "effect": {
+          "type": "attack-stat-bonus",
+          "stat": "O",
+          "value": 2
+        },
+        "flavor": "The God of Speed is back."
+      },
+      "quote": "The God of Speed is back.",
+      "tags": [
+        "speed",
+        "opportunismo",
+        "valerio"
+      ],
+      "valerio": {
+        "V": 6,
+        "A": 6,
+        "L": 4,
+        "E": 5,
+        "R": 5,
+        "I": 7,
+        "O": 7
+      },
+      "combat": {
+        "attackPower": 90,
+        "defensePower": 70,
+        "draftCost": 4
+      },
+      "rarityRule": "epica: costo draft 4 secondo bilanciamento v7; nuova carta extra"
+    },
+    {
+      "id": "reverse_vally",
+      "image": "reverse_vally.png",
+      "name": "Reverse Vally",
+      "subtitle": "The hateful Vally",
+      "rarity": "mitica",
+      "archetype": "speedster",
+      "theme": "DC Comics",
+      "frame": {
+        "preset": "speed_blue_red",
+        "accent": "#0f766e",
+        "icon": "lightning"
+      },
+      "active": {
+        "name": "Time travel",
+        "cost": 3,
+        "text": "+4 danni oltre il cap se vinci il fight.",
+        "effect": {
+          "type": "damage",
+          "value": 4
+        },
+        "flavor": "The great white Valerio is back."
+      },
+      "passive": {
+        "name": "Hate",
+        "text": "+2 Breccia se attacchi con Opportunismo.",
+        "effect": {
+          "type": "attack-stat-bonus",
+          "stat": "O",
+          "value": 2
+        },
+        "flavor": "The great white Valerio is back."
+      },
+      "quote": "The great white Valerio is back.",
+      "tags": [
+        "shark",
+        "opportunismo",
+        "valerio"
+      ],
+      "valerio": {
+        "V": 6,
+        "A": 6,
+        "L": 4,
+        "E": 5,
+        "R": 5,
+        "I": 7,
+        "O": 7
+      },
+      "combat": {
+        "attackPower": 90,
+        "defensePower": 70,
+        "draftCost": 4
+      },
+      "rarityRule": "epica: costo draft 4 secondo bilanciamento v7; nuova carta extra"
+    },
+    {
+      "id": "voom",
+      "image": "voom.png",
+      "name": "Voom",
+      "subtitle": "The death runner",
+      "rarity": "leggendaria",
+      "archetype": "speedster",
+      "theme": "DC Comics",
+      "frame": {
+        "preset": "shark_white_black",
+        "accent": "#f59e0b",
+        "icon": "lightning"
+      },
+      "active": {
+        "name": "Give me your speed",
+        "cost": 3,
+        "text": "+4 danni oltre il cap se vinci il fight.",
+        "effect": {
+          "type": "damage",
+          "value": 4
+        },
+        "flavor": "The great white Valerio is back."
+      },
+      "passive": {
+        "name": "Time stop",
+        "text": "+2 Breccia se attacchi con Opportunismo.",
+        "effect": {
+          "type": "attack-stat-bonus",
+          "stat": "O",
+          "value": 2
+        },
+        "flavor": "The great white Valerio is back."
+      },
+      "quote": "The great white Valerio is back.",
+      "tags": [
+        "speed",
+        "opportunismo",
+        "valerio"
+      ],
+      "valerio": {
+        "V": 6,
+        "A": 6,
+        "L": 4,
+        "E": 5,
+        "R": 5,
+        "I": 7,
+        "O": 7
+      },
+      "combat": {
+        "attackPower": 90,
+        "defensePower": 70,
+        "draftCost": 4
+      },
+      "rarityRule": "epica: costo draft 4 secondo bilanciamento v7; nuova carta extra"
     }
+
   ]
 }

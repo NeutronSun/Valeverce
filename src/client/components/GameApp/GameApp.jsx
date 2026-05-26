@@ -1,12 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { CLIENT_EVENTS } from "../../shared/events.js";
-import { useGameSocket } from "../useGameSocket.js";
-import { ActionDock } from "./ActionDock.jsx";
-import { ChatFloat } from "./ChatFloat.jsx";
-import { PlayerRail } from "./PlayerRail.jsx";
-import { RightPanel } from "./RightPanel.jsx";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { CLIENT_EVENTS } from "../../../shared/events.js";
+import { useGameSocket } from "../../useGameSocket.js";
+import { ActionDock } from "../ActionDock/ActionDock.jsx";
+import { ChatFloat } from "../ChatFloat/ChatFloat.jsx";
+import { ConnectionSignal } from "../ConnectionSignal/ConnectionSignal.jsx";
+import { PlayerRail } from "../PlayerRail/PlayerRail.jsx";
+import { RightPanel } from "../RightPanel/RightPanel.jsx";
 import {
   DraftView,
   HomeView,
@@ -14,8 +15,19 @@ import {
   PlanFightView,
   RevealView,
   SelectView
-} from "./PhaseViews.jsx";
-import { SETTINGS, clampValue, emptyPlan, phaseLabel, phasePath, selectedStats, sumDistribution, validatePlanDraft } from "../ui.js";
+} from "../PhaseViews/PhaseViews.jsx";
+import {
+  SETTINGS,
+  clampValue,
+  emptyPlan,
+  groupDraftItemsByTheme,
+  phaseLabel,
+  phasePath,
+  selectedStats,
+  sumDistribution,
+  validatePlanDraft
+} from "../../ui.js";
+import styles from "./GameApp.module.css";
 
 export function GameApp({ initialLobbyId = "" }) {
   const { snapshot, connectionState, pingMs, lastError, clearError, emit, setName } = useGameSocket();
@@ -26,8 +38,25 @@ export function GameApp({ initialLobbyId = "" }) {
   const [plan, setPlan] = useState(emptyPlan);
   const [planPreview, setPlanPreview] = useState([]);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [draftGroupMode, setDraftGroupMode] = useState("rarity");
+  const [height, setHeight] = useState(0);
+  const shellRef = useRef(null);
   const menuDialogRef = useRef(null);
   const autoJoinRef = useRef(false);
+
+  useLayoutEffect(() => {
+    const updateHeight = () => {
+      setHeight(shellRef.current?.getBoundingClientRect().height ?? 0);
+    };
+
+    updateHeight();
+
+    window.addEventListener("resize", updateHeight);
+
+    return () => {
+      window.removeEventListener("resize", updateHeight);
+    };
+  }, []);
 
   useEffect(() => {
     const savedName = window.localStorage.getItem("valeverce.playerName") ?? "";
@@ -49,6 +78,12 @@ export function GameApp({ initialLobbyId = "" }) {
     setPlan(emptyPlan());
     setPlanPreview([]);
   }, [lobby?.phase, lobby?.round]);
+
+  useEffect(() => {
+    if (lobby?.phase !== "draft") {
+      setDraftGroupMode("rarity");
+    }
+  }, [lobby?.phase]);
 
   useEffect(() => {
     const dialog = menuDialogRef.current;
@@ -89,8 +124,12 @@ export function GameApp({ initialLobbyId = "" }) {
         setMenuOpen((current) => !current);
       }
     };
+
     window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+    };
   }, []);
 
   const selfCard = lobby?.self?.selected?.selectedCard ?? lobby?.self?.deck?.find((card) => card.id === selectedCardId) ?? null;
@@ -98,10 +137,23 @@ export function GameApp({ initialLobbyId = "" }) {
     if (!selfCard || lobby?.phase !== "plan" || lobby.self?.selected?.attacks) {
       return false;
     }
+
     const validation = validatePlanDraft(plan, selfCard);
     const activeCost = Number(selfCard.active?.cost ?? 0);
+
     return validation.canSubmit && (!plan.useActive || Number(lobby.self?.mana ?? 0) >= activeCost);
   }, [lobby, plan, selfCard]);
+  const draftThemeNav = useMemo(() => {
+    if (lobby?.phase !== "draft" || draftGroupMode !== "theme") {
+      return [];
+    }
+
+    return groupDraftItemsByTheme(lobby.draft?.pool ?? []).map((group) => ({
+      theme: group.theme,
+      count: group.items.length,
+      targetId: group.targetId
+    }));
+  }, [draftGroupMode, lobby?.draft?.pool, lobby?.phase]);
 
   const updateName = useCallback(
     (value) => {
@@ -119,6 +171,7 @@ export function GameApp({ initialLobbyId = "" }) {
       }
 
       const pool = section === "attacks" ? validatePlanDraft(plan, card).attackPool : validatePlanDraft(plan, card).defensePool;
+
       setPlan((current) => {
         const nextSection = { ...current[section] };
         const currentValue = Number(nextSection[key] ?? 0);
@@ -126,23 +179,38 @@ export function GameApp({ initialLobbyId = "" }) {
         const selected = selectedStats(nextSection).filter((stat) => stat !== key);
         const maxSlots = section === "attacks" ? SETTINGS.attackSlots : SETTINGS.defenseSlots;
         const canEnable = currentValue > 0 || value > 0 ? selected.length < maxSlots || currentValue > 0 : true;
+
         nextSection[key] = canEnable ? clampValue(value, 0, Math.max(0, pool - totalWithoutKey)) : 0;
+
         return { ...current, [section]: nextSection };
       });
     },
     [lobby, plan]
   );
 
-  const shellClass = lobby ? "shell app-layout is-match-focus" : "shell";
+  const shellClass = lobby ? `${styles.shell} ${styles.layout}` : styles.shell;
+  const shellStyle = /** @type {import("react").CSSProperties} */ (
+    /** @type {unknown} */ ({
+      "--header-height": `${height}px`
+    })
+  );
+
   return (
-    <div className={shellClass}>
+    <div ref={shellRef} className={shellClass} style={shellStyle}>
       {lobby ? <MatchHeader lobby={lobby} connectionState={connectionState} pingMs={pingMs} /> : null}
-      {lobby ? <PlayerRail lobby={lobby} /> : null}
-      <main className={lobby ? "main-stage" : ""}>
+      {lobby ? <PlayerRail lobby={lobby} draftThemeNav={draftThemeNav} /> : null}
+      <main className={lobby ? styles.main : ""}>
         {lastError ? (
-          <button type="button" className="toast" onClick={clearError}>
-            {lastError}
-          </button>
+          <aside className={styles.toast} role="status" aria-live="polite">
+            <span className={styles.toastIcon}>!</span>
+            <div className={styles.toastCopy}>
+              <span className={styles.toastLabel}>Errore</span>
+              <p className={styles.toastText}>{lastError}</p>
+            </div>
+            <button type="button" className={styles.toastClose} onClick={clearError} aria-label="Chiudi errore">
+              x
+            </button>
+          </aside>
         ) : null}
 
         {!lobby ? (
@@ -156,9 +224,16 @@ export function GameApp({ initialLobbyId = "" }) {
           />
         ) : (
           <>
-            {lobby.phase === "lobby" ? <LobbyView lobby={lobby} /> : null}
+            {lobby.phase === "lobby" ? <LobbyView lobby={lobby} emit={emit} /> : null}
             {lobby.phase === "draft" ? (
-              <DraftView lobby={lobby} previewCard={previewCard} onPreviewCard={setPreviewCard} emit={emit} />
+              <DraftView
+                lobby={lobby}
+                previewCard={previewCard}
+                onPreviewCard={setPreviewCard}
+                emit={emit}
+                groupMode={draftGroupMode}
+                onGroupModeChange={setDraftGroupMode}
+              />
             ) : null}
             {lobby.phase === "select" ? (
               <SelectView lobby={lobby} selectedCardId={selectedCardId} onSelectedCardId={setSelectedCardId} emit={emit} />
@@ -187,22 +262,29 @@ export function GameApp({ initialLobbyId = "" }) {
 
       <dialog
         ref={menuDialogRef}
-        className="menu-modal"
+        className={styles.menu}
         onCancel={(event) => {
           event.preventDefault();
           setMenuOpen(false);
         }}
         onClose={() => setMenuOpen(false)}
       >
-        <h2>Menu</h2>
-        <div className="menu-actions">
-          <button type="button" className="ghost" onClick={() => setMenuOpen(false)}>
+        <div className={styles.menuHeader}>
+          <span className={styles.menuMark}>V</span>
+          <div className={styles.menuHeading}>
+            <p className={styles.menuEyebrow}>pausa</p>
+            <h2 className={styles.menuTitle}>Menu partita</h2>
+          </div>
+        </div>
+        <p className={styles.menuText}>Gestisci la stanza o torna al gioco. Esc chiude questa finestra.</p>
+        <div className={styles.menuActions}>
+          <button type="button" className={styles.menuSecondary} onClick={() => setMenuOpen(false)}>
             Torna
           </button>
           {lobby ? (
             <button
               type="button"
-              className="ghost"
+              className={styles.menuDanger}
               onClick={() => {
                 emit(CLIENT_EVENTS.LEAVE_LOBBY);
                 setMenuOpen(false);
@@ -219,26 +301,32 @@ export function GameApp({ initialLobbyId = "" }) {
 
 function MatchHeader({ lobby, connectionState, pingMs }) {
   const self = lobby.self;
-  const pingLabel = Number.isFinite(pingMs) ? `${pingMs} ms` : "-- ms";
 
   return (
-    <header className="match-header">
-      <div className="match-brand">
-        <span>V</span>
-        <strong>VALEVERCE</strong>
+    <header className={styles.header}>
+      <div className={styles.brand}>
+        <span className={styles.brandMark}>V</span>
+        <strong className={styles.brandName}>VALEVERCE</strong>
       </div>
-      <div className="match-meta">
-        <span>Lobby <b>{lobby.id}</b></span>
-        <span>Player <b>{self?.name ?? "-"}</b></span>
-        <span>Fase <b>{phaseLabel(lobby.phase)}</b></span>
-        <span>Round <b>{lobby.round ?? 0}</b></span>
+      <div className={styles.meta}>
+        <span className={styles.metaItem}>
+          <span className={styles.metaLabel}>Lobby</span>
+          <b className={styles.metaValue}>{lobby.id}</b>
+        </span>
+        <span className={styles.metaItem}>
+          <span className={styles.metaLabel}>Player</span>
+          <b className={styles.metaValue}>{self?.name ?? "-"}</b>
+        </span>
+        <span className={styles.metaItem}>
+          <span className={styles.metaLabel}>Fase</span>
+          <b className={styles.metaValue}>{phaseLabel(lobby.phase)}</b>
+        </span>
+        <span className={styles.metaItem}>
+          <span className={styles.metaLabel}>Round</span>
+          <b className={styles.metaValue}>{lobby.round ?? 0}</b>
+        </span>
       </div>
-      <div className={`match-signal is-${connectionState}`} title={`Ping: ${pingLabel}`} aria-label={`Ping: ${pingLabel}`}>
-        <i />
-        <i />
-        <i />
-        <i />
-      </div>
+      <ConnectionSignal connectionState={connectionState} pingMs={pingMs} />
     </header>
   );
 }

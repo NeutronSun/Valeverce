@@ -3020,6 +3020,227 @@
         "draftCost": 4
       },
       "rarityRule": "epica: costo draft 4 secondo bilanciamento v7; nuova carta extra"
+    },
+    {
+      "id": "squalerio",
+      "image": "squalerio.png",
+      "name": "Squalerio",
+      "subtitle": "The great white Valerio",
+      "rarity": "leggendaria",
+      "archetype": "shark",
+      "theme": "Movies",
+      "frame": {
+        "preset": "shark_white_black",
+        "accent": "#0f766e",
+        "icon": "shark"
+      },
+      "active": {
+        "name": "Bite",
+        "cost": 3,
+        "text": "+4 danni oltre il cap se vinci il fight.",
+        "effect": {
+          "type": "damage",
+          "value": 4
+        },
+        "flavor": "The great white Valerio is back."
+      },
+      "passive": {
+        "name": "Blood Thirsty",
+        "text": "+2 Breccia se attacchi con Opportunismo.",
+        "effect": {
+          "type": "attack-stat-bonus",
+          "stat": "O",
+          "value": 2
+        },
+        "flavor": "The great white Valerio is back."
+      },
+      "quote": "The great white Valerio is back.",
+      "tags": [
+        "shark",
+        "opportunismo",
+        "valerio"
+      ],
+      "valerio": {
+        "V": 6,
+        "A": 6,
+        "L": 4,
+        "E": 5,
+        "R": 5,
+        "I": 7,
+        "O": 7
+      },
+      "combat": {
+        "attackPower": 90,
+        "defensePower": 70,
+        "draftCost": 4
+      },
+      "rarityRule": "epica: costo draft 4 secondo bilanciamento v7; nuova carta extra"
+    },
+    {
+      "id": "vavitar",
+      "image": "vavitar.png",
+      "name": "Vavitar",
+      "subtitle": "The God of Speed",
+      "rarity": "Mitica",
+      "archetype": "speedster",
+      "theme": "DC Comics",
+      "frame": {
+        "preset": "speed_red_gold",
+        "accent": "#f59e0b",
+        "icon": "lightning"
+      },
+      "active": {
+        "name": "Speed of Light",
+        "cost": 3,
+        "text": "+4 danni oltre il cap se vinci il fight.",
+        "effect": {
+          "type": "damage",
+          "value": 4
+        },
+        "flavor": "The God of Speed is back."
+      },
+      "passive": {
+        "name": "I, am the future Flash",
+        "text": "+2 Breccia se attacchi con Opportunismo.",
+        "effect": {
+          "type": "attack-stat-bonus",
+          "stat": "O",
+          "value": 2
+        },
+        "flavor": "The God of Speed is back."
+      },
+      "quote": "The God of Speed is back.",
+      "tags": [
+        "speed",
+        "opportunismo",
+        "valerio"
+      ],
+      "valerio": {
+        "V": 6,
+        "A": 6,
+        "L": 4,
+        "E": 5,
+        "R": 5,
+        "I": 7,
+        "O": 7
+      },
+      "combat": {
+        "attackPower": 90,
+        "defensePower": 70,
+        "draftCost": 4
+      },
+      "rarityRule": "epica: costo draft 4 secondo bilanciamento v7; nuova carta extra"
+    },
+    {
+      "id": "reverse_vally",
+      "image": "reverse_vally.png",
+      "name": "Reverse Vally",
+      "subtitle": "The hateful Vally",
+      "rarity": "mitica",
+      "archetype": "speedster",
+      "theme": "DC Comics",
+      "frame": {
+        "preset": "speed_blue_red",
+        "accent": "#0f766e",
+        "icon": "lightning"
+      },
+      "active": {
+        "name": "Time travel",
+        "cost": 3,
+        "text": "+4 danni oltre il cap se vinci il fight.",
+        "effect": {
+          "type": "damage",
+          "value": 4
+        },
+        "flavor": "The great white Valerio is back."
+      },
+      "passive": {
+        "name": "Hate",
+        "text": "+2 Breccia se attacchi con Opportunismo.",
+        "effect": {
+          "type": "attack-stat-bonus",
+          "stat": "O",
+          "value": 2
+        },
+        "flavor": "The great white Valerio is back."
+      },
+      "quote": "The great white Valerio is back.",
+      "tags": [
+        "shark",
+        "opportunismo",
+        "valerio"
+      ],
+      "valerio": {
+        "V": 6,
+        "A": 6,
+        "L": 4,
+        "E": 5,
+        "R": 5,
+        "I": 7,
+        "O": 7
+      },
+      "combat": {
+        "attackPower": 90,
+        "defensePower": 70,
+        "draftCost": 4
+      },
+      "rarityRule": "epica: costo draft 4 secondo bilanciamento v7; nuova carta extra"
+    },
+    {
+      "id": "voom",
+      "image": "voom.png",
+      "name": "Voom",
+      "subtitle": "The death runner",
+      "rarity": "leggendaria",
+      "archetype": "speedster",
+      "theme": "DC Comics",
+      "frame": {
+        "preset": "shark_white_black",
+        "accent": "#f59e0b",
+        "icon": "lightning"
+      },
+      "active": {
+        "name": "Give me your speed",
+        "cost": 3,
+        "text": "+4 danni oltre il cap se vinci il fight.",
+        "effect": {
+          "type": "damage",
+          "value": 4
+        },
+        "flavor": "The great white Valerio is back."
+      },
+      "passive": {
+        "name": "Time stop",
+        "text": "+2 Breccia se attacchi con Opportunismo.",
+        "effect": {
+          "type": "attack-stat-bonus",
+          "stat": "O",
+          "value": 2
+        },
+        "flavor": "The great white Valerio is back."
+      },
+      "quote": "The great white Valerio is back.",
+      "tags": [
+        "speed",
+        "opportunismo",
+        "valerio"
+      ],
+      "valerio": {
+        "V": 6,
+        "A": 6,
+        "L": 4,
+        "E": 5,
+        "R": 5,
+        "I": 7,
+        "O": 7
+      },
+      "combat": {
+        "attackPower": 90,
+        "defensePower": 70,
+        "draftCost": 4
+      },
+      "rarityRule": "epica: costo draft 4 secondo bilanciamento v7; nuova carta extra"
     }
+
   ]
 }

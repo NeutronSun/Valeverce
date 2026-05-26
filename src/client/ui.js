@@ -392,6 +392,42 @@ export function groupDraftItemsByRarity(items) {
   return groups;
 }
 
+export function getCardTheme(card) {
+  const theme = String(card?.theme ?? "").trim();
+  return theme || "Senza tema";
+}
+
+export function draftThemeAnchorId(theme) {
+  const normalized = String(theme ?? "Senza tema")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+  return `draft-theme-${normalized || "senza-tema"}`;
+}
+
+export function groupDraftItemsByTheme(items) {
+  const groups = new Map();
+
+  for (const item of items ?? []) {
+    const theme = getCardTheme(item.card);
+    if (!groups.has(theme)) {
+      groups.set(theme, []);
+    }
+    groups.get(theme).push(item);
+  }
+
+  return [...groups.entries()]
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([theme, groupItems]) => ({
+      theme,
+      targetId: draftThemeAnchorId(theme),
+      items: groupItems.sort((left, right) => String(left.card?.name ?? "").localeCompare(String(right.card?.name ?? "")))
+    }));
+}
+
 export function phasePath(phase) {
   return {
     lobby: "",

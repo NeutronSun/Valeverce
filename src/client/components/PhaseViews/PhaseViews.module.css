@@ -448,6 +448,39 @@
   }
 }
 
+.lobbyTabs {
+  display: inline-flex;
+  width: fit-content;
+  border: 1px solid var(--color-border-soft);
+  border-radius: 999px;
+  padding: 4px;
+  background: rgba(7, 8, 7, 0.62);
+}
+
+.lobbyTab {
+  min-height: 34px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 0 14px;
+  color: var(--color-muted);
+  background: transparent;
+  font-size: 0.72rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.lobbyTab:hover {
+  color: var(--color-text);
+}
+
+.lobbyTabActive {
+  border-color: rgba(214, 174, 82, 0.42);
+  color: var(--color-gold);
+  background:
+    linear-gradient(180deg, rgba(214, 174, 82, 0.15), rgba(214, 174, 82, 0.04)),
+    rgba(7, 8, 7, 0.78);
+}
+
 .codeChip {
   display: grid;
   gap: 2px;
@@ -471,6 +504,120 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(260px, 0.7fr);
   gap: 12px;
+}
+
+.settingsPanel {
+  max-width: 720px;
+}
+
+.settingRow {
+  display: grid;
+  gap: 10px;
+  border: 1px solid var(--color-border-soft);
+  border-radius: 10px;
+  padding: 12px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent),
+    rgba(7, 8, 7, 0.52);
+}
+
+.settingRow.disabled {
+  opacity: 0.46;
+}
+
+.settingToggle {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.settingCheckbox {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.settingSwitch {
+  position: relative;
+  display: block;
+  width: 44px;
+  height: 24px;
+  border: 1px solid var(--color-border-soft);
+  border-radius: 999px;
+  background: rgba(7, 8, 7, 0.9);
+}
+
+.settingSwitch::before {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--color-muted);
+  transition:
+    background 160ms ease,
+    transform 160ms ease;
+}
+
+.settingCheckbox:checked + .settingSwitch {
+  border-color: rgba(214, 174, 82, 0.6);
+  background: rgba(214, 174, 82, 0.16);
+}
+
+.settingCheckbox:checked + .settingSwitch::before {
+  background: var(--color-gold);
+  transform: translateX(20px);
+}
+
+.settingCheckbox:disabled + .settingSwitch {
+  opacity: 0.6;
+}
+
+.settingCopy {
+  display: grid;
+  gap: 3px;
+}
+
+.settingTitle {
+  color: var(--color-text);
+  font-size: 0.9rem;
+}
+
+.settingDescription {
+  color: var(--color-muted);
+  font-size: 0.74rem;
+  font-weight: 750;
+}
+
+.settingHeader,
+.settingScale {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.settingName,
+.settingScaleText {
+  color: var(--color-muted);
+  font-size: 0.7rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.settingValue {
+  color: var(--color-gold);
+  font-size: 0.9rem;
+}
+
+.settingSlider {
+  width: 100%;
+  accent-color: var(--color-gold);
 }
 
 .ruleGrid,
@@ -514,13 +661,102 @@
 
 .tools {
   display: grid;
-  grid-template-columns: minmax(220px, 1fr) 180px;
+  grid-template-columns: minmax(220px, 1fr) auto;
   gap: 10px;
+}
+
+.groupField {
+  display: grid;
+  align-content: end;
+  gap: 6px;
+}
+
+.groupButtons {
+  display: flex;
+  gap: 6px;
+}
+
+.groupButton {
+  position: relative;
+  display: inline-grid;
+  grid-template-columns: auto auto;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  min-width: 72px;
+  border: 1px solid var(--color-border-soft);
+  border-radius: 9px;
+  padding: 0 10px;
+  color: var(--color-muted);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent),
+    rgba(7, 8, 7, 0.78);
+  font-weight: 950;
+}
+
+.groupButton:hover {
+  border-color: rgba(214, 174, 82, 0.38);
+  color: var(--color-text);
+}
+
+.groupButton:hover .groupTooltip {
+  opacity: 1;
+  transform: translate(-50%, calc(-100% - 9px));
+}
+
+.groupButtonActive {
+  border-color: var(--color-gold);
+  color: var(--color-gold);
+  background:
+    linear-gradient(180deg, rgba(214, 174, 82, 0.16), rgba(214, 174, 82, 0.06)),
+    rgba(7, 8, 7, 0.86);
+  box-shadow: 0 0 18px rgba(214, 174, 82, 0.12);
+}
+
+.groupIcon {
+  display: grid;
+  width: 20px;
+  height: 20px;
+  place-items: center;
+  border: 1px solid rgba(214, 174, 82, 0.32);
+  border-radius: 6px;
+  color: var(--color-gold);
+  background: rgba(214, 174, 82, 0.08);
+  font-size: 0.72rem;
+}
+
+.groupLabel {
+  color: currentColor;
+  font-size: 0.72rem;
+}
+
+.groupTooltip {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  z-index: 50;
+  width: max-content;
+  max-width: 230px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 7px 9px;
+  color: var(--color-text);
+  background: rgba(7, 8, 7, 0.98);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.42);
+  font-size: 0.68rem;
+  font-weight: 850;
+  line-height: 1.24;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, calc(-100% - 5px));
+  transition:
+    opacity 140ms ease,
+    transform 140ms ease;
 }
 
 .draftPool {
   display: grid;
-  gap: 12px;
+  gap: 14px;
 
   &.flat {
     grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
@@ -528,21 +764,164 @@
 }
 
 .accordion {
-  border: 1px solid var(--rarity-color, var(--color-border));
-  border-radius: 10px;
-  padding: 8px;
-  background: rgba(7, 8, 7, 0.48);
+  position: relative;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--rarity-color, var(--color-gold)), transparent 34%);
+  border-radius: 12px;
+  padding: 10px;
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--rarity-color, var(--color-gold)), transparent 90%), transparent 42%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(0, 0, 0, 0.12)),
+    rgba(7, 8, 7, 0.56);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.024),
+    0 18px 42px rgba(0, 0, 0, 0.22);
+}
+
+.accordion::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: linear-gradient(180deg, transparent, var(--rarity-color, var(--color-gold)), transparent);
+  opacity: 0.85;
+}
+
+.accordion[open] {
+  border-color: color-mix(in srgb, var(--rarity-color, var(--color-gold)), transparent 16%);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--rarity-color, var(--color-gold)), transparent 72%),
+    0 18px 42px rgba(0, 0, 0, 0.26),
+    0 0 24px color-mix(in srgb, var(--rarity-color, var(--color-gold)), transparent 86%);
+}
+
+.themeAccordion {
+  --rarity-color: #b8b2a3;
+
+  border-color: rgba(184, 178, 163, 0.24);
+  background:
+    linear-gradient(90deg, rgba(184, 178, 163, 0.1), transparent 46%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.032), rgba(0, 0, 0, 0.14)),
+    rgba(9, 10, 9, 0.68);
+}
+
+.themeAccordion[open] {
+  border-color: rgba(214, 174, 82, 0.22);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.028),
+    0 18px 42px rgba(0, 0, 0, 0.24);
+}
+
+.themeAccordion .separator {
+  border-color: rgba(255, 255, 255, 0.075);
+  color: var(--color-text);
+  background:
+    linear-gradient(90deg, rgba(214, 174, 82, 0.08), transparent),
+    rgba(7, 8, 7, 0.62);
+}
+
+.themeAccordion .rarityName {
+  color: var(--color-text);
+  font-size: 0.84rem;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.themeAccordion .rarityFlavor {
+  color: var(--color-muted);
+}
+
+.themeAccordion .raritySigil {
+  border-color: rgba(214, 174, 82, 0.3);
+  background:
+    radial-gradient(circle, rgba(214, 174, 82, 0.12), transparent 70%),
+    rgba(7, 8, 7, 0.8);
+  box-shadow: none;
+}
+
+.themeAccordion .raritySigil::before {
+  width: 10px;
+  height: 10px;
+  border-color: var(--color-gold);
+  border-radius: 50%;
+  opacity: 0.74;
+  transform: none;
 }
 
 .separator {
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: 28px auto minmax(0, 1fr) auto;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  min-height: 38px;
+  border: 1px solid color-mix(in srgb, var(--rarity-color, var(--color-gold)), transparent 70%);
+  border-radius: 10px;
+  padding: 7px 10px;
   color: var(--rarity-color, var(--color-gold));
   cursor: pointer;
   font-weight: 950;
+  list-style: none;
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--rarity-color, var(--color-gold)), transparent 88%), transparent),
+    rgba(7, 8, 7, 0.56);
   text-transform: uppercase;
+}
+
+.separator::marker,
+.separator::-webkit-details-marker {
+  display: none;
+}
+
+.raritySigil {
+  display: grid;
+  width: 26px;
+  height: 26px;
+  place-items: center;
+  border: 1px solid var(--rarity-color, var(--color-gold));
+  border-radius: 8px;
+  background:
+    radial-gradient(circle, color-mix(in srgb, var(--rarity-color, var(--color-gold)), transparent 60%), transparent 70%),
+    rgba(7, 8, 7, 0.8);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--rarity-color, var(--color-gold)), transparent 76%);
+}
+
+.raritySigil::before {
+  content: "";
+  width: 9px;
+  height: 9px;
+  border: 2px solid var(--rarity-color, var(--color-gold));
+  transform: rotate(45deg);
+}
+
+.rarityName {
+  color: var(--rarity-color, var(--color-gold));
+  font-size: 0.95rem;
+  letter-spacing: 0.05em;
+}
+
+.rarityFlavor {
+  min-width: 0;
+  overflow: hidden;
+  color: color-mix(in srgb, var(--rarity-color, var(--color-gold)), white 26%);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  opacity: 0.88;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rarityCount {
+  display: grid;
+  min-width: 34px;
+  height: 26px;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--rarity-color, var(--color-gold)), transparent 44%);
+  border-radius: 999px;
+  color: var(--color-text);
+  background: rgba(7, 8, 7, 0.82);
+  font-size: 0.78rem;
+  font-style: normal;
+  font-weight: 950;
 }
 
 .cards {

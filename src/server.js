@@ -114,6 +114,10 @@ class LobbyState {
     this.hostId = hostId;
     this.phase = "lobby";
     this.round = 0;
+    this.settings = {
+      pickTimerEnabled: true,
+      pickTimerSeconds: SETTINGS.actionSeconds
+    };
     this.playerOrder = [hostId];
     this.activePair = [];
     this.pairCursor = 0;
@@ -201,6 +205,9 @@ function handleMessage(client, message) {
     case CLIENT_EVENTS.LEAVE_LOBBY:
       leaveLobby(client);
       break;
+    case CLIENT_EVENTS.UPDATE_LOBBY_SETTINGS:
+      updateLobbySettings(client, payload);
+      break;
     case CLIENT_EVENTS.START_GAME:
       startGame(client);
       break;
@@ -272,6 +279,30 @@ function joinLobby(client, lobbyId) {
   lobby.playerOrder.push(client.id);
   pushChat(lobby, { kind: "system", text: `${client.name} entra in lobby` });
   lobbyManager.attachClient(client, lobby.id);
+}
+
+function updateLobbySettings(client, payload) {
+  const lobby = getClientLobby(client);
+  if (!lobby || lobby.hostId !== client.id) {
+    sendError(client, "Solo l'host puo modificare i setting");
+    return;
+  }
+
+  if (lobby.phase !== "lobby") {
+    sendError(client, "Puoi modificare i setting solo in lobby");
+    return;
+  }
+
+  const pickTimerEnabled =
+    typeof payload.pickTimerEnabled === "boolean" ? payload.pickTimerEnabled : Boolean(lobby.settings.pickTimerEnabled);
+  const pickTimerSeconds = clampInteger(payload.pickTimerSeconds, 10, 60, lobby.settings.pickTimerSeconds);
+
+  lobby.settings = {
+    pickTimerEnabled,
+    pickTimerSeconds
+  };
+
+  broadcastLobbyState(lobby);
 }
 
 function startGame(client) {
@@ -907,7 +938,13 @@ function scheduleActionTimer(lobby, phase) {
     return;
   }
 
-  timerController.schedule(lobby, phase, SETTINGS.actionSeconds * 1000, (deadlineAt) => {
+  if (phase === "draft" && !lobby.settings.pickTimerEnabled) {
+    return;
+  }
+
+  const delaySeconds = phase === "draft" ? lobby.settings.pickTimerSeconds : SETTINGS.actionSeconds;
+
+  timerController.schedule(lobby, phase, delaySeconds * 1000, (deadlineAt) => {
     handleActionTimeout(lobby.id, phase, deadlineAt);
   });
 }
@@ -1102,6 +1139,7 @@ function serializeLobby(lobby, selfId) {
     hostId: lobby.hostId,
     phase: lobby.phase,
     round: lobby.round,
+    settings: lobby.settings,
     activePair: lobby.activePair,
     deadlineAt: lobby.deadlineAt,
     draft: serializeDraft(lobby, currentDrafterId, selfId),
@@ -1259,6 +1297,15 @@ function sanitizeName(name) {
 
 function sanitizeChatText(text) {
   return String(text ?? "").replace(/\s+/g, " ").trim().slice(0, 240);
+}
+
+function clampInteger(value, min, max, fallback) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) {
+    return fallback;
+  }
+
+  return Math.max(min, Math.min(max, Math.round(number)));
 }
 
 function makeLobbyId() {

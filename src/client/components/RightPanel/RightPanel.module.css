@@ -1,11 +1,13 @@
 .root {
-  position: sticky;
-  top: var(--header-padding);
+  grid-area: right;
+  position: relative;
   display: grid;
   align-content: start;
   gap: 10px;
-  max-height: calc(100dvh - var(--header-padding));
+  height: 100%;
+  max-height: none;
   min-width: 0;
+  min-height: 0;
   overflow-x: hidden;
   overflow-y: auto;
   scrollbar-width: none;

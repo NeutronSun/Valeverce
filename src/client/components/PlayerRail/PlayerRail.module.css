@@ -1,11 +1,13 @@
 .root {
-  position: sticky;
-  top: var(--header-padding);
+  grid-area: left;
+  position: relative;
   display: grid;
   align-content: start;
   gap: 10px;
-  max-height: calc(100dvh - var(--header-padding));
+  height: 100%;
+  max-height: none;
   min-width: 0;
+  min-height: 0;
   overflow-x: hidden;
   overflow-y: auto;
   scrollbar-width: none;
@@ -51,6 +53,91 @@
 .players {
   display: grid;
   gap: 7px;
+}
+
+.themeMap {
+  border-color: rgba(214, 174, 82, 0.22);
+  background:
+    linear-gradient(135deg, rgba(214, 174, 82, 0.075), transparent 44%),
+    rgba(10, 12, 10, 0.94);
+}
+
+.themeMapHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.themeMapLabel {
+  color: var(--color-muted);
+  font-size: 0.68rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.themeMapCount {
+  display: grid;
+  min-width: 24px;
+  height: 22px;
+  place-items: center;
+  border: 1px solid var(--color-border-soft);
+  border-radius: 999px;
+  color: var(--color-gold);
+  background: rgba(7, 8, 7, 0.7);
+  font-size: 0.72rem;
+}
+
+.themeMapList {
+  display: grid;
+  gap: 5px;
+  max-height: 190px;
+  overflow-y: auto;
+}
+
+.themeMapButton {
+  display: grid;
+  grid-template-columns: 14px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 7px;
+  min-height: 30px;
+  border: 1px solid rgba(255, 255, 255, 0.075);
+  border-radius: 7px;
+  padding: 5px 7px;
+  color: var(--color-text);
+  background: rgba(7, 8, 7, 0.5);
+  text-align: left;
+}
+
+.themeMapButton:hover {
+  border-color: rgba(214, 174, 82, 0.36);
+  background: rgba(214, 174, 82, 0.1);
+}
+
+.themeMapDot {
+  display: block;
+  width: 8px;
+  height: 8px;
+  border: 1px solid var(--color-gold);
+  border-radius: 50%;
+  background: rgba(214, 174, 82, 0.2);
+}
+
+.themeMapName {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--color-text);
+  font-size: 0.68rem;
+  font-weight: 850;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.themeMapAmount {
+  color: var(--color-muted);
+  font-size: 0.66rem;
+  font-weight: 950;
 }
 
 .plate {

@@ -11,10 +11,13 @@ import {
   getCardValerio,
   getDefensePool,
   getDraftCost,
+  getCardTheme,
   cardImageSrc,
+  draftThemeAnchorId,
   getPlanLineInfluence,
   getPlanLineTooltip,
   groupDraftItemsByRarity,
+  groupDraftItemsByTheme,
   rarityClass,
   rarityLabel,
   selectedStats,
@@ -243,8 +246,17 @@ function JoinLobby({ emit }) {
   );
 }
 
-export function LobbyView({ lobby }) {
+export function LobbyView({ lobby, emit }) {
+  const [activeTab, setActiveTab] = React.useState("room");
   const readyPlayers = lobby.players.filter((player) => player.alive !== false);
+  const isHost = lobby.self?.id === lobby.hostId;
+  const lobbySettings = lobby.settings ?? {};
+  const pickTimerEnabled = Boolean(lobbySettings.pickTimerEnabled);
+  const pickTimerSeconds = Number(lobbySettings.pickTimerSeconds ?? SETTINGS.actionSeconds);
+
+  function updateLobbySettings(nextSettings) {
+    emit?.(CLIENT_EVENTS.UPDATE_LOBBY_SETTINGS, nextSettings);
+  }
 
   return (
     <section className={styles.lobbyPanel}>
@@ -260,62 +272,157 @@ export function LobbyView({ lobby }) {
         </div>
       </div>
 
-      <div className={styles.grid}>
-        <section className={styles.panel}>
-          <div className={styles.sectionTitle}>
-            <strong>Partecipanti</strong>
-            <span>{lobby.players.length}/{SETTINGS.maxPlayers}</span>
-          </div>
-          {lobby.players.map((player) => (
-            <article key={player.id} className={styles.lobbyPlayer}>
-              <span>{player.deckCount ?? 0}</span>
-              <div>
-                <strong>{player.name}</strong>
-                <small>{player.id === lobby.hostId ? "Host partita" : "Player"}</small>
-              </div>
-              <b>{player.alive === false ? "out" : "pronto"}</b>
-            </article>
-          ))}
-        </section>
-
-        <section className={styles.panel}>
-          <div className={styles.sectionTitle}>
-            <strong>Regole</strong>
-            <span>VALERIO</span>
-          </div>
-          <div className={styles.ruleGrid}>
-            <span>
-              <b>{SETTINGS.draftBudget}</b> budget draft
-            </span>
-            <span>
-              <b>{SETTINGS.draftSize}</b> carte max
-            </span>
-            <span>
-              <b>{SETTINGS.startingHealth}</b> PV iniziali
-            </span>
-            <span>
-              <b>{SETTINGS.maxMana}</b> mana max
-            </span>
-          </div>
-        </section>
+      <div className={styles.lobbyTabs} role="tablist" aria-label="Lobby">
+        <button
+          type="button"
+          className={classNames(styles.lobbyTab, activeTab === "room" && styles.lobbyTabActive)}
+          onClick={() => setActiveTab("room")}
+        >
+          Stanza
+        </button>
+        <button
+          type="button"
+          className={classNames(styles.lobbyTab, activeTab === "settings" && styles.lobbyTabActive)}
+          onClick={() => setActiveTab("settings")}
+        >
+          Setting
+        </button>
       </div>
+
+      {activeTab === "room" ? (
+        <div className={styles.grid}>
+          <section className={styles.panel}>
+            <div className={styles.sectionTitle}>
+              <strong>Partecipanti</strong>
+              <span>{lobby.players.length}/{SETTINGS.maxPlayers}</span>
+            </div>
+            {lobby.players.map((player) => (
+              <article key={player.id} className={styles.lobbyPlayer}>
+                <span>{player.deckCount ?? 0}</span>
+                <div>
+                  <strong>{player.name}</strong>
+                  <small>{player.id === lobby.hostId ? "Host partita" : "Player"}</small>
+                </div>
+                <b>{player.alive === false ? "out" : "pronto"}</b>
+              </article>
+            ))}
+          </section>
+
+          <section className={styles.panel}>
+            <div className={styles.sectionTitle}>
+              <strong>Regole</strong>
+              <span>VALERIO</span>
+            </div>
+            <div className={styles.ruleGrid}>
+              <span>
+                <b>{SETTINGS.draftBudget}</b> budget draft
+              </span>
+              <span>
+                <b>{SETTINGS.draftSize}</b> carte max
+              </span>
+              <span>
+                <b>{SETTINGS.startingHealth}</b> PV iniziali
+              </span>
+              <span>
+                <b>{SETTINGS.maxMana}</b> mana max
+              </span>
+            </div>
+          </section>
+        </div>
+      ) : (
+        <section className={classNames(styles.panel, styles.settingsPanel)}>
+          <div className={styles.sectionTitle}>
+            <strong>Setting partita</strong>
+            <span>{isHost ? "Host" : "solo lettura"}</span>
+          </div>
+
+          <div className={styles.settingRow}>
+            <label className={styles.settingToggle}>
+              <input
+                className={styles.settingCheckbox}
+                type="checkbox"
+                checked={pickTimerEnabled}
+                disabled={!isHost}
+                onChange={(event) =>
+                  updateLobbySettings({
+                    pickTimerEnabled: event.target.checked,
+                    pickTimerSeconds
+                  })
+                }
+              />
+              <span className={styles.settingSwitch} />
+              <span className={styles.settingCopy}>
+                <strong className={styles.settingTitle}>Timer pick draft</strong>
+                <small className={styles.settingDescription}>Se attivo, il player di turno autopicka quando scade.</small>
+              </span>
+            </label>
+          </div>
+
+          <div className={classNames(styles.settingRow, !pickTimerEnabled && styles.disabled)}>
+            <div className={styles.settingHeader}>
+              <span className={styles.settingName}>Durata pick</span>
+              <b className={styles.settingValue}>{pickTimerSeconds}s</b>
+            </div>
+            <input
+              className={styles.settingSlider}
+              type="range"
+              min="10"
+              max="60"
+              step="5"
+              value={pickTimerSeconds}
+              disabled={!isHost || !pickTimerEnabled}
+              onChange={(event) =>
+                updateLobbySettings({
+                  pickTimerEnabled,
+                  pickTimerSeconds: Number(event.target.value)
+                })
+              }
+            />
+            <div className={styles.settingScale}>
+              <span className={styles.settingScaleText}>10s</span>
+              <span className={styles.settingScaleText}>1min</span>
+            </div>
+          </div>
+        </section>
+      )}
     </section>
   );
 }
 
-export function DraftView({ lobby, previewCard, onPreviewCard, emit }) {
+const draftViewModes = [
+  {
+    id: "rarity",
+    icon: "◆",
+    label: "Rarità",
+    tooltip: "Raggruppa le carte per rarità."
+  },
+  {
+    id: "theme",
+    icon: "◎",
+    label: "Tema",
+    tooltip: "Raggruppa le carte per tema dal JSON."
+  },
+  {
+    id: "alpha",
+    icon: "A",
+    label: "A-Z",
+    tooltip: "Mostra tutte le carte in ordine alfabetico."
+  }
+];
+
+export function DraftView({ lobby, previewCard, onPreviewCard, emit, groupMode = "rarity", onGroupModeChange = undefined }) {
   const self = lobby.self;
   const [query, setQuery] = React.useState("");
-  const [sortMode, setSortMode] = React.useState("rarity");
   const normalizedQuery = query.trim().toLowerCase();
   const draftItems = (lobby.draft?.pool ?? []).filter((item) => {
     const card = item.card ?? {};
-    const haystack = `${card.name ?? ""} ${card.id ?? ""} ${rarityLabel(card.rarity)}`.toLowerCase();
+    const haystack = `${card.name ?? ""} ${card.id ?? ""} ${rarityLabel(card.rarity)} ${getCardTheme(card)}`.toLowerCase();
     return !normalizedQuery || haystack.includes(normalizedQuery);
   });
   const groups = groupDraftItemsByRarity(draftItems);
+  const themeGroups = groupDraftItemsByTheme(draftItems);
   const flatItems = [...draftItems].sort((left, right) => {
-    if (sortMode === "alpha") {
+    if (groupMode === "alpha") {
       return String(left.card?.name ?? "").localeCompare(String(right.card?.name ?? ""));
     }
 
@@ -354,22 +461,62 @@ export function DraftView({ lobby, previewCard, onPreviewCard, emit }) {
             placeholder="Nome, ID, rarità..."
           />
         </label>
-        <label className={styles.field}>
-          <span className={styles.fieldLabel}>Ordine</span>
-          <select className={styles.fieldControl} value={sortMode} onChange={(event) => setSortMode(event.target.value)}>
-            <option value="rarity">Rarità</option>
-            <option value="alpha">Alfabetico</option>
-          </select>
-        </label>
+        <div className={styles.groupField}>
+          <span className={styles.fieldLabel}>Vista</span>
+          <div className={styles.groupButtons} role="tablist" aria-label="Vista draft">
+            {draftViewModes.map((mode) => (
+              <button
+                key={mode.id}
+                type="button"
+                className={classNames(styles.groupButton, groupMode === mode.id && styles.groupButtonActive)}
+                title={mode.tooltip}
+                aria-label={mode.tooltip}
+                aria-pressed={groupMode === mode.id}
+                onClick={() => onGroupModeChange?.(mode.id)}
+              >
+                <span className={styles.groupIcon}>{mode.icon}</span>
+                <span className={styles.groupLabel}>{mode.label}</span>
+                <span className={styles.groupTooltip}>{mode.tooltip}</span>
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
-      <div className={classNames(styles.draftPool, sortMode === "alpha" && styles.flat)}>
-        {sortMode === "rarity" ? (
+      <div className={classNames(styles.draftPool, groupMode === "alpha" && styles.flat)}>
+        {groupMode === "rarity" ? (
           groups.map((group) => (
             <details key={group.rarity} className={classNames(styles.accordion, rarityStyleClass(group.rarity))} open>
               <summary className={styles.separator}>
-                <span>{group.label}</span>
-                <b>{rarityFlavor(group.rarity)}</b>
-                <i>{group.items.length}</i>
+                <span className={styles.raritySigil} />
+                <span className={styles.rarityName}>{group.label}</span>
+                <b className={styles.rarityFlavor}>{rarityFlavor(group.rarity)}</b>
+                <i className={styles.rarityCount}>{group.items.length}</i>
+              </summary>
+              <div className={styles.cards}>
+                {group.items.map((item) => (
+                  <DraftCardItem
+                    key={item.card.id}
+                    item={item}
+                    selected={previewCard?.id === item.card.id}
+                    onPreviewCard={onPreviewCard}
+                  />
+                ))}
+              </div>
+            </details>
+          ))
+        ) : groupMode === "theme" ? (
+          themeGroups.map((group) => (
+            <details
+              key={group.theme}
+              id={draftThemeAnchorId(group.theme)}
+              className={classNames(styles.accordion, styles.themeAccordion)}
+              open
+            >
+              <summary className={styles.separator}>
+                <span className={styles.raritySigil} />
+                <span className={styles.rarityName}>{group.theme}</span>
+                <b className={styles.rarityFlavor}>tema</b>
+                <i className={styles.rarityCount}>{group.items.length}</i>
               </summary>
               <div className={styles.cards}>
                 {group.items.map((item) => (

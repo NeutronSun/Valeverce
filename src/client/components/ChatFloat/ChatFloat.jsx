@@ -147,7 +147,7 @@ export function ChatFloat({ lobby, emit }) {
       </div>
       <div className={styles.log} ref={logRef}>
         {lobby.chat.map((message) => {
-          const authorLabel = message.kind === "system" ? "sys" : message.name;
+          const authorLabel = message.kind === "system" ? "SYS" : message.name;
           const messageClass = classNames(
             styles.message,
             message.kind === "system" && styles.system,
@@ -157,14 +157,15 @@ export function ChatFloat({ lobby, emit }) {
 
           return (
             <div key={message.id} className={messageClass}>
-              <strong>[{authorLabel}]:</strong>
-              <p>{message.text}</p>
+              <span className={styles.author}>[{authorLabel}]:</span>
+              <span className={styles.text}>{message.text}</span>
             </div>
           );
         })}
       </div>
       <form className={styles.form} onSubmit={submit}>
         <input
+          className={styles.input}
           ref={inputRef}
           value={text}
           maxLength={240}
@@ -172,7 +173,7 @@ export function ChatFloat({ lobby, emit }) {
           onBlur={scheduleHideAfterBlur}
           onChange={(event) => setText(event.target.value)}
         />
-        <button type="submit">Invia</button>
+        <button type="submit" className={styles.submit}>Invia</button>
       </form>
     </section>
   );

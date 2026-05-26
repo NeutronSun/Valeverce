@@ -16,7 +16,17 @@ import {
   RevealView,
   SelectView
 } from "../PhaseViews/PhaseViews.jsx";
-import { SETTINGS, clampValue, emptyPlan, phaseLabel, phasePath, selectedStats, sumDistribution, validatePlanDraft } from "../../ui.js";
+import {
+  SETTINGS,
+  clampValue,
+  emptyPlan,
+  groupDraftItemsByTheme,
+  phaseLabel,
+  phasePath,
+  selectedStats,
+  sumDistribution,
+  validatePlanDraft
+} from "../../ui.js";
 import styles from "./GameApp.module.css";
 
 export function GameApp({ initialLobbyId = "" }) {
@@ -28,6 +38,7 @@ export function GameApp({ initialLobbyId = "" }) {
   const [plan, setPlan] = useState(emptyPlan);
   const [planPreview, setPlanPreview] = useState([]);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [draftGroupMode, setDraftGroupMode] = useState("rarity");
   const [height, setHeight] = useState(0);
   const shellRef = useRef(null);
   const menuDialogRef = useRef(null);
@@ -67,6 +78,12 @@ export function GameApp({ initialLobbyId = "" }) {
     setPlan(emptyPlan());
     setPlanPreview([]);
   }, [lobby?.phase, lobby?.round]);
+
+  useEffect(() => {
+    if (lobby?.phase !== "draft") {
+      setDraftGroupMode("rarity");
+    }
+  }, [lobby?.phase]);
 
   useEffect(() => {
     const dialog = menuDialogRef.current;
@@ -126,6 +143,17 @@ export function GameApp({ initialLobbyId = "" }) {
 
     return validation.canSubmit && (!plan.useActive || Number(lobby.self?.mana ?? 0) >= activeCost);
   }, [lobby, plan, selfCard]);
+  const draftThemeNav = useMemo(() => {
+    if (lobby?.phase !== "draft" || draftGroupMode !== "theme") {
+      return [];
+    }
+
+    return groupDraftItemsByTheme(lobby.draft?.pool ?? []).map((group) => ({
+      theme: group.theme,
+      count: group.items.length,
+      targetId: group.targetId
+    }));
+  }, [draftGroupMode, lobby?.draft?.pool, lobby?.phase]);
 
   const updateName = useCallback(
     (value) => {
@@ -170,7 +198,7 @@ export function GameApp({ initialLobbyId = "" }) {
   return (
     <div ref={shellRef} className={shellClass} style={shellStyle}>
       {lobby ? <MatchHeader lobby={lobby} connectionState={connectionState} pingMs={pingMs} /> : null}
-      {lobby ? <PlayerRail lobby={lobby} /> : null}
+      {lobby ? <PlayerRail lobby={lobby} draftThemeNav={draftThemeNav} /> : null}
       <main className={lobby ? styles.main : ""}>
         {lastError ? (
           <aside className={styles.toast} role="status" aria-live="polite">
@@ -196,9 +224,16 @@ export function GameApp({ initialLobbyId = "" }) {
           />
         ) : (
           <>
-            {lobby.phase === "lobby" ? <LobbyView lobby={lobby} /> : null}
+            {lobby.phase === "lobby" ? <LobbyView lobby={lobby} emit={emit} /> : null}
             {lobby.phase === "draft" ? (
-              <DraftView lobby={lobby} previewCard={previewCard} onPreviewCard={setPreviewCard} emit={emit} />
+              <DraftView
+                lobby={lobby}
+                previewCard={previewCard}
+                onPreviewCard={setPreviewCard}
+                emit={emit}
+                groupMode={draftGroupMode}
+                onGroupModeChange={setDraftGroupMode}
+              />
             ) : null}
             {lobby.phase === "select" ? (
               <SelectView lobby={lobby} selectedCardId={selectedCardId} onSelectedCardId={setSelectedCardId} emit={emit} />

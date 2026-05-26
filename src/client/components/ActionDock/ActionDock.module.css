@@ -2,7 +2,7 @@
   position: fixed;
   right: calc(8px + var(--right-rail-width, 340px) + 10px);
   bottom: 8px;
-  left: calc(8px + var(--left-rail-width, 276px) + 10px);
+  left: calc(8px + var(--left-rail-width, 260px) + 10px);
   z-index: var(--z-dock, 40);
   display: grid;
   gap: 4px;

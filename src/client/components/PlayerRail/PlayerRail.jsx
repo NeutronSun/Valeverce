@@ -18,7 +18,7 @@ function ratioStyle(value, max) {
   );
 }
 
-export function PlayerRail({ lobby }) {
+export function PlayerRail({ lobby, draftThemeNav = [] }) {
   if (!lobby) {
     return null;
   }
@@ -29,6 +29,7 @@ export function PlayerRail({ lobby }) {
 
   return (
     <aside className={styles.root}>
+      {draftThemeNav.length ? <ThemeMap items={draftThemeNav} /> : null}
       <section className={styles.panel}>
         <div className={styles.heading}>
           <span>Giocatori</span>
@@ -49,6 +50,39 @@ export function PlayerRail({ lobby }) {
       {selfDeck.length ? <DeckPanel deck={selfDeck} currentCardId={lobby.self?.selected?.cardId} /> : null}
       {lobby.phase === "draft" ? <RarityLegend /> : null}
     </aside>
+  );
+}
+
+function ThemeMap({ items }) {
+  function scrollToTheme(targetId) {
+    document.getElementById(targetId)?.scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+  }
+
+  return (
+    <section className={classNames(styles.panel, styles.themeMap)}>
+      <div className={styles.themeMapHead}>
+        <span className={styles.themeMapLabel}>Mappa temi</span>
+        <b className={styles.themeMapCount}>{items.length}</b>
+      </div>
+      <div className={styles.themeMapList}>
+        {items.map((item) => (
+          <button
+            key={item.theme}
+            type="button"
+            className={styles.themeMapButton}
+            title={`Vai a ${item.theme}`}
+            onClick={() => scrollToTheme(item.targetId)}
+          >
+            <span className={styles.themeMapDot} />
+            <span className={styles.themeMapName}>{item.theme}</span>
+            <b className={styles.themeMapAmount}>{item.count}</b>
+          </button>
+        ))}
+      </div>
+    </section>
   );
 }
 

@@ -116,9 +116,7 @@ class LobbyState {
     this.round = 0;
     this.settings = {
       pickTimerEnabled: true,
-      pickTimerSeconds: SETTINGS.actionSeconds,
-      draftSize: SETTINGS.draftSize,
-      draftBudget: SETTINGS.draftBudget
+      pickTimerSeconds: SETTINGS.actionSeconds
     };
     this.playerOrder = [hostId];
     this.activePair = [];
@@ -298,17 +296,10 @@ function updateLobbySettings(client, payload) {
   const pickTimerEnabled =
     typeof payload.pickTimerEnabled === "boolean" ? payload.pickTimerEnabled : Boolean(lobby.settings.pickTimerEnabled);
   const pickTimerSeconds = clampInteger(payload.pickTimerSeconds, 10, 60, lobby.settings.pickTimerSeconds);
-  const draftSize = clampInteger(payload.draftSize, 3, 10, lobby.settings.draftSize);
-  const minDraftBudget = getMinDraftBudget(draftSize);
-  const maxDraftBudget = getMaxDraftBudget(draftSize);
-  const draftBudgetValue = Number.isFinite(Number(payload.draftBudget)) ? payload.draftBudget : lobby.settings.draftBudget;
-  const draftBudget = clampInteger(draftBudgetValue, minDraftBudget, maxDraftBudget, SETTINGS.draftBudget);
 
   lobby.settings = {
     pickTimerEnabled,
-    pickTimerSeconds,
-    draftSize,
-    draftBudget
+    pickTimerSeconds
   };
 
   broadcastLobbyState(lobby);
@@ -341,14 +332,14 @@ function startGame(client) {
     taken: [],
     pickIndex: 0,
     order: [...lobby.playerOrder],
-    target: lobby.settings.draftSize,
-    budget: lobby.settings.draftBudget
+    target: SETTINGS.draftSize,
+    budget: SETTINGS.draftBudget
   };
   lobby.phase = "draft";
   scheduleActionTimer(lobby, "draft");
   pushChat(lobby, {
     kind: "system",
-    text: `Draft iniziato: ${lobby.settings.draftSize} carte max, budget ${lobby.settings.draftBudget}`
+    text: `Draft iniziato: ${SETTINGS.draftSize} carte max, budget ${SETTINGS.draftBudget}`
   });
   broadcastLobbyState(lobby);
 }
@@ -912,7 +903,7 @@ function isPlayerDraftDone(lobby, player) {
   return (
     !player ||
     player.deck.length >= lobby.draft.target ||
-    player.draftSpent >= lobby.draft.budget ||
+    player.draftSpent >= SETTINGS.draftBudget ||
     !findAffordableDraftCard(lobby, player)
   );
 }
@@ -927,7 +918,7 @@ function canPlayerDraftCard(lobby, player, card) {
   }
 
   const cost = getDraftCost(card);
-  if (player.draftSpent + cost > lobby.draft.budget) {
+  if (player.draftSpent + cost > SETTINGS.draftBudget) {
     return { ok: false, error: `Budget insufficiente (${cost} richiesti)` };
   }
 
@@ -947,13 +938,7 @@ function scheduleActionTimer(lobby, phase) {
     return;
   }
 
-  if (phase === "draft" && !lobby.settings.pickTimerEnabled) {
-    return;
-  }
-
-  const delaySeconds = phase === "draft" ? lobby.settings.pickTimerSeconds : SETTINGS.actionSeconds;
-
-  timerController.schedule(lobby, phase, delaySeconds * 1000, (deadlineAt) => {
+  timerController.schedule(lobby, phase, SETTINGS.actionSeconds * 1000, (deadlineAt) => {
     handleActionTimeout(lobby.id, phase, deadlineAt);
   });
 }
@@ -1148,7 +1133,6 @@ function serializeLobby(lobby, selfId) {
     hostId: lobby.hostId,
     phase: lobby.phase,
     round: lobby.round,
-    settings: lobby.settings,
     activePair: lobby.activePair,
     deadlineAt: lobby.deadlineAt,
     draft: serializeDraft(lobby, currentDrafterId, selfId),
@@ -1163,7 +1147,6 @@ function serializeLobby(lobby, selfId) {
 function serializePlayer(lobby, player, viewerId, currentDrafterId) {
   const selectedCard = shouldRevealSelectedCard(lobby, player, viewerId) ? cardsById.get(player.selected.cardId) : null;
   const showPlan = shouldRevealPlan(lobby, player, viewerId);
-  const draftBudget = lobby.draft?.budget ?? lobby.settings.draftBudget;
 
   return {
     id: player.id,
@@ -1175,8 +1158,8 @@ function serializePlayer(lobby, player, viewerId, currentDrafterId) {
     deckCount: player.deck.length,
     draftCount: player.deck.length,
     draftSpent: player.draftSpent,
-    draftBudget,
-    draftBudgetRemaining: Math.max(0, draftBudget - player.draftSpent),
+    draftBudget: SETTINGS.draftBudget,
+    draftBudgetRemaining: Math.max(0, SETTINGS.draftBudget - player.draftSpent),
     cooldowns: player.cooldowns,
     alive: player.alive,
     isActive: isActiveDuelist(lobby, player.id),
@@ -1200,7 +1183,6 @@ function serializePlayer(lobby, player, viewerId, currentDrafterId) {
 
 function serializeSelf(lobby, self, currentDrafterId) {
   const selectedCard = self.selected?.cardId ? cardsById.get(self.selected.cardId) : null;
-  const draftBudget = lobby.draft?.budget ?? lobby.settings.draftBudget;
   return {
     id: self.id,
     name: self.name,
@@ -1210,8 +1192,8 @@ function serializeSelf(lobby, self, currentDrafterId) {
     deck: self.deck.map((cardId) => cardsById.get(cardId)).filter(Boolean),
     deckCount: self.deck.length,
     draftSpent: self.draftSpent,
-    draftBudget,
-    draftBudgetRemaining: Math.max(0, draftBudget - self.draftSpent),
+    draftBudget: SETTINGS.draftBudget,
+    draftBudgetRemaining: Math.max(0, SETTINGS.draftBudget - self.draftSpent),
     cooldowns: self.cooldowns,
     selected: self.selected
       ? {
@@ -1235,7 +1217,7 @@ function serializeDraft(lobby, currentDrafterId, selfId) {
   const self = lobby.players.get(selfId);
   return {
     target: lobby.draft.target,
-    budget: lobby.draft.budget,
+    budget: SETTINGS.draftBudget,
     currentPlayerId: currentDrafterId,
     taken: lobby.draft.taken,
     pool: lobby.draft.pool.map((cardId) => {
@@ -1252,7 +1234,7 @@ function serializeDraft(lobby, currentDrafterId, selfId) {
         takenByName: takenBy?.name ?? null,
         isAvailable: !takenBy,
         canPick,
-        canAfford: Boolean(self && self.draftSpent + cost <= lobby.draft.budget)
+        canAfford: Boolean(self && self.draftSpent + cost <= SETTINGS.draftBudget)
       };
     })
   };
@@ -1317,14 +1299,6 @@ function clampInteger(value, min, max, fallback) {
   }
 
   return Math.max(min, Math.min(max, Math.round(number)));
-}
-
-function getMinDraftBudget(draftSize) {
-  return draftSize * 2;
-}
-
-function getMaxDraftBudget(draftSize) {
-  return draftSize * 6;
 }
 
 function makeLobbyId() {

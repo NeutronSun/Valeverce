@@ -12,10 +12,19 @@ import {
   getAttackPool,
   getDefensePool,
   getDraftCost,
+  normalizeCards,
   scoreFightPlan,
   shuffle,
   validateValerioPlan
 } from "./game.js";
+import { createDraftCardAction } from "./server/actions/createDraftCardAction.js";
+import { createResolveRoundAction } from "./server/actions/createResolveRoundAction.js";
+import { createSelectCardAction } from "./server/actions/createSelectCardAction.js";
+import { createSubmitPlanAction } from "./server/actions/createSubmitPlanAction.js";
+import { LobbyManager } from "./server/lobby/LobbyManager.js";
+import { LobbyState } from "./server/lobby/LobbyState.js";
+import { ClientSession } from "./server/socket/ClientSession.js";
+import { TimerController } from "./server/timer/TimerController.js";
 import { CLIENT_EVENT_NAMES, CLIENT_EVENTS, SERVER_EVENTS } from "./shared/events.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -33,6 +42,10 @@ const clientsBySocketId = new Map();
 const lobbies = new Map();
 let timerController;
 let lobbyManager;
+let draftCard;
+let selectCard;
+let submitPlan;
+let resolveRound;
 
 const nextApp = next({ dev: isDev, dir: rootDir });
 const nextHandler = nextApp.getRequestHandler();
@@ -50,7 +63,7 @@ const io = new SocketIOServer(server, {
 });
 
 io.on("connection", (socket) => {
-  const client = new ClientSession(socket, `Player ${clients.size + 1}`);
+  const client = new ClientSession(socket, `Player ${clients.size + 1}`, makeId);
   clients.set(client.id, client);
   clientsBySocketId.set(socket.id, client);
 
@@ -82,97 +95,47 @@ server.listen(port, "0.0.0.0", () => {
   }
 });
 
-class ClientSession {
-  constructor(socket, fallbackName) {
-    this.id = makeId("p", 8);
-    this.name = fallbackName;
-    this.lobbyId = null;
-    this.socket = socket;
-  }
-}
-
-class TimerController {
-  schedule(lobby, phase, delayMs, callback) {
-    this.clear(lobby);
-    const deadlineAt = Date.now() + delayMs;
-    lobby.deadlineAt = deadlineAt;
-    lobby.actionTimer = setTimeout(() => callback(deadlineAt), delayMs);
-  }
-
-  clear(lobby) {
-    if (lobby.actionTimer) {
-      clearTimeout(lobby.actionTimer);
-    }
-    lobby.actionTimer = null;
-    lobby.deadlineAt = null;
-  }
-}
-
-class LobbyState {
-  constructor({ id, hostId }) {
-    this.id = id;
-    this.hostId = hostId;
-    this.phase = "lobby";
-    this.round = 0;
-    this.settings = {
-      pickTimerEnabled: true,
-      pickTimerSeconds: SETTINGS.actionSeconds
-    };
-    this.playerOrder = [hostId];
-    this.activePair = [];
-    this.pairCursor = 0;
-    this.draft = null;
-    this.actionTimer = null;
-    this.deadlineAt = null;
-    this.chat = [];
-    this.players = new Map();
-    this.lastResult = null;
-    this.winnerId = null;
-  }
-}
-
-class LobbyManager {
-  constructor({ clients, lobbies }) {
-    this.clients = clients;
-    this.lobbies = lobbies;
-  }
-
-  attachClient(client, lobbyId) {
-    client.lobbyId = lobbyId;
-    client.socket.join(lobbyId);
-  }
-
-  detachClient(client, lobbyId) {
-    client.socket.leave(lobbyId);
-    client.lobbyId = null;
-  }
-
-  getClientLobby(client) {
-    return client.lobbyId ? this.lobbies.get(client.lobbyId) : null;
-  }
-
-  broadcastLobby(lobby) {
-    const room = io.sockets.adapter.rooms.get(lobby.id);
-    for (const socketId of room ?? []) {
-      const client = clientsBySocketId.get(socketId);
-      if (client) {
-        sendState(client);
-      }
-    }
-    this.broadcastLobbyList();
-  }
-
-  broadcastLobbyList() {
-    for (const client of this.clients.values()) {
-      if (!client.lobbyId) {
-        sendState(client);
-      }
-    }
-  }
-}
-
 timerController = new TimerController();
-lobbyManager = new LobbyManager({ clients, lobbies });
+lobbyManager = new LobbyManager({ clients, lobbies, io, clientsBySocketId, sendState });
+draftCard = createDraftCardAction({
+  getClientLobby,
+  sendError,
+  getCurrentDrafterId,
+  cardsById,
+  canPlayerDraftCard,
+  getDraftCost,
+  pushChat,
+  finishOrAdvanceDraft
+});
+selectCard = createSelectCardAction({
+  getClientLobby,
+  sendError,
+  isActiveDuelist,
+  cardsById,
+  advanceRoundIfReady,
+  broadcastLobbyState
+});
+submitPlan = createSubmitPlanAction({
+  getClientLobby,
+  sendError,
+  isActiveDuelist,
+  hasSubmittedPlan,
+  cardsById,
+  normalizePlan,
+  validateValerioPlan,
+  advanceRoundIfReady,
+  broadcastLobbyState
+});
+resolveRound = createResolveRoundAction({
+  getActiveDuelists,
+  SETTINGS,
+  cardsById,
+  scoreFightPlan,
+  getAlivePlayers,
+  makeRoundSummary,
+  clearActionTimer,
+  pushChat
+});
 
 function readCards(data) {
   const cardsList = Array.isArray(data) ? data : data.cards;
@@ -180,7 +143,7 @@ function readCards(data) {
     throw new Error("public/data/cards.json deve essere un array o un oggetto con cards[]");
   }
 
-  return cardsList;
+  return normalizeCards(cardsList);
 }
 
 function handleMessage(client, message) {
@@ -344,131 +307,6 @@ function startGame(client) {
   broadcastLobbyState(lobby);
 }
 
-function draftCard(client, cardId) {
-  const lobby = getClientLobby(client);
-  const player = lobby?.players.get(client.id);
-
-  if (!lobby || !player || lobby.phase !== "draft" || !lobby.draft) {
-    sendError(client, "Non puoi draftare ora");
-    return;
-  }
-
-  if (getCurrentDrafterId(lobby) !== client.id) {
-    sendError(client, "Non e il tuo turno di draft");
-    return;
-  }
-
-  const card = cardsById.get(cardId);
-  const availability = canPlayerDraftCard(lobby, player, card);
-  if (!availability.ok) {
-    sendError(client, availability.error);
-    return;
-  }
-
-  player.deck.push(cardId);
-  player.draftSpent += getDraftCost(card);
-  lobby.draft.taken.push(cardId);
-  pushChat(lobby, {
-    kind: "system",
-    text: `${player.name} drafta ${card.name} (${getDraftCost(card)} budget)`
-  });
-
-  finishOrAdvanceDraft(lobby);
-}
-
-function selectCard(client, cardId) {
-  const lobby = getClientLobby(client);
-  const player = lobby?.players.get(client.id);
-
-  if (!lobby || !player || lobby.phase !== "select") {
-    sendError(client, "Non puoi scegliere una carta ora");
-    return;
-  }
-
-  if (!isActiveDuelist(lobby, client.id)) {
-    sendError(client, "Sei spettatore per questo duello");
-    return;
-  }
-
-  if (!player.alive) {
-    sendError(client, "Sei fuori dalla partita");
-    return;
-  }
-
-  if (!player.deck.includes(cardId) || !cardsById.has(cardId)) {
-    sendError(client, "Carta non valida");
-    return;
-  }
-
-  if (Number(player.cooldowns[cardId] ?? 0) > 0) {
-    sendError(client, "Carta in cooldown");
-    return;
-  }
-
-  if (player.selected?.cardId) {
-    sendError(client, "Hai gia scelto la carta");
-    return;
-  }
-
-  player.selected = {
-    cardId,
-    attacks: null,
-    defenses: null,
-    useActive: null
-  };
-  advanceRoundIfReady(lobby);
-  broadcastLobbyState(lobby);
-}
-
-function submitPlan(client, payload) {
-  const lobby = getClientLobby(client);
-  const player = lobby?.players.get(client.id);
-
-  if (!lobby || !player || lobby.phase !== "plan") {
-    sendError(client, "Non puoi confermare un piano ora");
-    return;
-  }
-
-  if (!isActiveDuelist(lobby, client.id)) {
-    sendError(client, "Sei spettatore per questo duello");
-    return;
-  }
-
-  if (!player.alive) {
-    sendError(client, "Sei fuori dalla partita");
-    return;
-  }
-
-  if (!player.selected?.cardId) {
-    sendError(client, "Non hai scelto una carta");
-    return;
-  }
-
-  if (hasSubmittedPlan(player)) {
-    sendError(client, "Hai gia confermato il piano");
-    return;
-  }
-
-  const card = cardsById.get(player.selected.cardId);
-  const plan = normalizePlan(payload);
-  const validation = validateValerioPlan(plan, card);
-  if (!validation.ok) {
-    sendError(client, validation.error);
-    return;
-  }
-
-  if (plan.useActive && Number(card.active?.cost ?? 0) > player.mana) {
-    sendError(client, "Mana insufficiente");
-    return;
-  }
-
-  player.selected.attacks = plan.attacks;
-  player.selected.defenses = plan.defenses;
-  player.selected.useActive = plan.useActive;
-  advanceRoundIfReady(lobby);
-  broadcastLobbyState(lobby);
-}
-
 function sendChat(client, text) {
   const lobby = getClientLobby(client);
   if (!lobby) {
@@ -593,136 +431,6 @@ function advanceRoundIfReady(lobby) {
   if (lobby.phase === "plan" && activePlayers.every((player) => hasSubmittedPlan(player))) {
     resolveRound(lobby);
   }
-}
-
-function resolveRound(lobby) {
-  const duelists = getActiveDuelists(lobby);
-  if (duelists.length < SETTINGS.minPlayers) {
-    return;
-  }
-
-  const before = new Map(
-    duelists.map((player) => [
-      player.id,
-      {
-        health: player.health,
-        mana: player.mana
-      }
-    ])
-  );
-  const scores = duelists.map((player, index) => {
-    const opponent = duelists[index === 0 ? 1 : 0];
-    const card = cardsById.get(player.selected.cardId);
-    const opponentCard = cardsById.get(opponent.selected.cardId);
-    const detail = scoreFightPlan({
-      attacker: player,
-      defender: opponent,
-      attackerCard: card,
-      defenderCard: opponentCard,
-      attacks: player.selected.attacks,
-      ownDefenses: player.selected.defenses,
-      enemyDefenses: opponent.selected.defenses,
-      enemyAttacks: opponent.selected.attacks,
-      useActive: player.selected.useActive,
-      mana: player.mana
-    });
-
-    return { player, opponent, card, opponentCard, detail };
-  });
-
-  const highestBreach = Math.max(...scores.map((score) => score.detail.breach));
-  const contenders = scores.filter((score) => score.detail.breach === highestBreach);
-  const isTie = contenders.length > 1;
-  const winner = isTie ? null : contenders[0];
-  const damageTaken = new Map(duelists.map((player) => [player.id, 0]));
-
-  for (const score of scores) {
-    score.player.mana = Math.max(0, score.player.mana - score.detail.manaCost);
-    score.player.cooldowns[score.card.id] = SETTINGS.cardCooldownRounds + 1;
-  }
-
-  if (winner) {
-    const loser = winner.opponent;
-    const damage = winner.detail.finalDamage;
-    loser.health = Math.max(0, loser.health - damage);
-    damageTaken.set(loser.id, damage);
-  }
-
-  for (const player of duelists) {
-    player.mana = Math.min(SETTINGS.maxMana, player.mana + SETTINGS.roundManaGain);
-    if (player.health <= 0) {
-      player.alive = false;
-    }
-  }
-
-  const stillAlive = getAlivePlayers(lobby);
-  const gameWinner = stillAlive.length === 1 ? stillAlive[0] : null;
-
-  lobby.lastResult = {
-    round: lobby.round,
-    activePair: lobby.activePair,
-    winnerId: winner?.player.id ?? null,
-    isTie,
-    summary: makeRoundSummary(scores, winner, isTie, damageTaken),
-    plays: scores.map((score) => {
-      const healthBefore = before.get(score.player.id).health;
-      const manaBefore = before.get(score.player.id).mana;
-      const actualFinalDamage = winner?.player.id === score.player.id ? score.detail.finalDamage : 0;
-
-      return {
-        playerId: score.player.id,
-        playerName: score.player.name,
-        cardId: score.card.id,
-        cardName: score.card.name,
-        card: score.card,
-
-        attacks: score.player.selected.attacks,
-        defenses: score.player.selected.defenses,
-
-        attackPool: score.detail.attackPool,
-        defensePool: score.detail.defensePool,
-
-        breach: score.detail.breach,
-        breachBeforeTrait: score.detail.breachBeforeTrait,
-        normalDamageCap: score.detail.normalDamageCap,
-        normalDamage: score.detail.normalDamage,
-        activeDamage: score.detail.activeDamage,
-        finalDamage: actualFinalDamage,
-        potentialFinalDamage: score.detail.finalDamage,
-        damageTaken: damageTaken.get(score.player.id) ?? 0,
-
-        useActive: score.detail.useActive,
-        activeApplied: score.detail.activeApplied,
-        manaCost: score.detail.manaCost,
-
-        traitApplied: score.detail.traitApplied,
-        traitNotes: score.detail.traitNotes,
-        activeNotes: score.detail.activeNotes,
-        defenseTraitNotes: score.detail.defenseTraitNotes,
-
-        attackLines: score.detail.attackLines,
-
-        healthBefore,
-        healthAfter: score.player.health,
-        manaBefore,
-        manaAfter: score.player.mana,
-        manaGain: SETTINGS.roundManaGain,
-        cooldown: score.player.cooldowns[score.card.id] ?? 0,
-
-        outcome: winner ? (score.player.id === winner.player.id ? "win" : "lose") : "tie"
-      };
-    })
-  };
-
-  lobby.phase = gameWinner ? "ended" : "reveal";
-  lobby.winnerId = gameWinner?.id ?? null;
-  clearActionTimer(lobby);
-  pushChat(lobby, {
-    kind: "system",
-    text: winner
-      ? `${winner.player.name} vince il duello ${lobby.round} e infligge ${damageTaken.get(winner.opponent.id)} PV`
-      : `Duello ${lobby.round} in pareggio: nessun danno PV`
-  });
 }
 
 function leaveLobby(client, options = { broadcast: true }) {

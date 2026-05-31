@@ -40,6 +40,10 @@ function countMatches(text, regex) {
   return [...text.matchAll(regex)].length;
 }
 
+function hasPrivateFieldSyntax(text) {
+  return /(^|[^\w$&])#[$A-Z_a-z][$\w]*(?=\s*(?:[=;({]|\+\+|--))/m.test(text);
+}
+
 const files = await walk(root);
 
 for (const file of files) {
@@ -50,8 +54,8 @@ for (const file of files) {
     report(file, "avoid `var`; use const/let");
   }
 
-  if (/#\w+/.test(text)) {
-    report(file, "avoid #private fields; use normal fields/conventions");
+  if (hasPrivateFieldSyntax(text)) {
+    report(file, "avoid private class fields; use normal fields/conventions");
   }
 
   if (/\.then\s*\(/.test(text) && !/Promise\.all/.test(text)) {

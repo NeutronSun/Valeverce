@@ -77,21 +77,36 @@
       "active": {
         "name": "Fulgore di Athena",
         "cost": 2,
-        "text": "Ignora la difesa avversaria su Istinto.",
+        "timing": "before_fight",
+        "text": "Prima del fight: +2 danni oltre il cap se vinci.",
         "effect": {
-          "type": "ignore-defense",
-          "stat": "I"
+          "type": "damage",
+          "value": 2
         },
+        "effects": [
+          {
+            "type": "damage",
+            "value": 2
+          }
+        ],
         "flavor": "Prima protegge il piano, poi lo rende inevitabile."
       },
       "passive": {
         "name": "Democrazia",
-        "text": "+2 Breccia se attacchi con Astuzia.",
+        "timing": "always",
+        "text": "Sempre: +2 Breccia se almeno 2 tue difese vengono colpite.",
         "effect": {
-          "type": "attack-stat-bonus",
-          "stat": "A",
+          "type": "defense-hit-bonus",
+          "count": 2,
           "value": 2
         },
+        "effects": [
+          {
+            "type": "defense-hit-bonus",
+            "count": 2,
+            "value": 2
+          }
+        ],
         "flavor": "Vede il problema tre sprint prima degli altri."
       },
       "quote": "Non è micromanagement, è mitologia applicata.",
@@ -131,22 +146,37 @@
       },
       "active": {
         "name": "Ialea Iacta Est",
-        "cost": 2,
-        "text": "+3 danni oltre il cap se vinci il fight.",
+        "cost": 3,
+        "timing": "before_fight",
+        "text": "Prima del fight: +3 danni oltre il cap se vinci.",
         "effect": {
           "type": "damage",
           "value": 3
         },
+        "effects": [
+          {
+            "type": "damage",
+            "value": 3
+          }
+        ],
         "flavor": "La domanda era fuori programma. Anche il programma."
       },
       "passive": {
         "name": "Edictum Senatus",
-        "text": "+2 Breccia se attacchi con Lucidita.",
+        "timing": "always",
+        "text": "Sempre: +2 Breccia se almeno 2 tue difese vengono colpite.",
         "effect": {
-          "type": "attack-stat-bonus",
-          "stat": "L",
+          "type": "defense-hit-bonus",
+          "count": 2,
           "value": 2
         },
+        "effects": [
+          {
+            "type": "defense-hit-bonus",
+            "count": 2,
+            "value": 2
+          }
+        ],
         "flavor": "Il Senato è il giudice del progetto."
       },
       "quote": "Apriamo una parentesi. Non la chiuderemo.",
@@ -187,19 +217,34 @@
       "active": {
         "name": "Vita eterna",
         "cost": 3,
-        "text": "Se vinci, puoi infliggere tutta la Breccia oltre il cap.",
+        "timing": "before_fight",
+        "text": "Prima del fight: +3 danni oltre il cap se vinci.",
         "effect": {
-          "type": "break-cap"
+          "type": "damage",
+          "value": 3
         },
+        "effects": [
+          {
+            "type": "damage",
+            "value": 3
+          }
+        ],
         "flavor": "Ogni Q è una riunione sopravvissuta."
       },
       "passive": {
         "name": "Tomba del Faraone",
-        "text": "+2 Breccia sempre attiva.",
+        "timing": "always",
+        "text": "Sempre: +1 Breccia.",
         "effect": {
           "type": "flat-damage",
-          "value": 2
+          "value": 1
         },
+        "effects": [
+          {
+            "type": "flat-damage",
+            "value": 1
+          }
+        ],
         "flavor": "Quando sembra finita, inizia il late game."
       },
       "quote": "Il tempo è una risorsa. La stack pure.",
@@ -240,21 +285,36 @@
       "active": {
         "name": "Fendente del Ronin",
         "cost": 2,
-        "text": "Ignora la difesa avversaria su Istinto.",
+        "timing": "before_fight",
+        "text": "Prima del fight: +2 danni oltre il cap se vinci.",
         "effect": {
-          "type": "ignore-defense",
-          "stat": "I"
+          "type": "damage",
+          "value": 2
         },
+        "effects": [
+          {
+            "type": "damage",
+            "value": 2
+          }
+        ],
         "flavor": "Estrae la soluzione prima ancora del problema."
       },
       "passive": {
         "name": "Codice del Bushidō",
-        "text": "+2 Breccia se attacchi con Vigore.",
+        "timing": "always",
+        "text": "Sempre: +2 Breccia se almeno 2 tue difese vengono colpite.",
         "effect": {
-          "type": "attack-stat-bonus",
-          "stat": "V",
+          "type": "defense-hit-bonus",
+          "count": 2,
           "value": 2
         },
+        "effects": [
+          {
+            "type": "defense-hit-bonus",
+            "count": 2,
+            "value": 2
+          }
+        ],
         "flavor": "Il codice d'onore consente le Crocs."
       },
       "quote": "Una lama, un branch, zero conflitti.",
@@ -294,22 +354,37 @@
       },
       "active": {
         "name": "Verdetto del Cavaliere",
-        "cost": 2,
-        "text": "+3 danni oltre il cap se vinci il fight.",
+        "cost": 1,
+        "timing": "before_fight",
+        "text": "Prima del fight: +1 danni oltre il cap se vinci.",
         "effect": {
           "type": "damage",
-          "value": 3
+          "value": 1
         },
+        "effects": [
+          {
+            "type": "damage",
+            "value": 1
+          }
+        ],
         "flavor": "Vince anche quando compila il form per perdere."
       },
       "passive": {
         "name": "Sangue Blu",
-        "text": "+2 Breccia se attacchi con Ego.",
+        "timing": "always",
+        "text": "Sempre: +2 Breccia se non usi Vigore nel piano.",
         "effect": {
-          "type": "attack-stat-bonus",
-          "stat": "E",
+          "type": "missing",
+          "stat": "V",
           "value": 2
         },
+        "effects": [
+          {
+            "type": "missing",
+            "stat": "V",
+            "value": 2
+          }
+        ],
         "flavor": "Ti distrugge, ma dandoti del Lei."
       },
       "quote": "Propongo una resa elegante.",
@@ -350,21 +425,36 @@
       "active": {
         "name": "Lama Celata",
         "cost": 2,
-        "text": "Ignora la difesa avversaria su Istinto.",
+        "timing": "before_fight",
+        "text": "Prima del fight: ignora la difesa avversaria su Astuzia.",
         "effect": {
           "type": "ignore-defense",
-          "stat": "I"
+          "stat": "A"
         },
+        "effects": [
+          {
+            "type": "ignore-defense",
+            "stat": "A"
+          }
+        ],
         "flavor": "Entra in call silenzioso, esce con la milestone."
       },
       "passive": {
         "name": "Codice della Confraternita",
-        "text": "+2 Breccia se attacchi con Astuzia.",
+        "timing": "always",
+        "text": "Sempre: +1 Breccia se attacchi con Ego.",
         "effect": {
           "type": "attack-stat-bonus",
-          "stat": "A",
-          "value": 2
+          "stat": "E",
+          "value": 1
         },
+        "effects": [
+          {
+            "type": "attack-stat-bonus",
+            "stat": "E",
+            "value": 1
+          }
+        ],
         "flavor": "Manca sempre una piuma o una acceptance criteria."
       },
       "quote": "Nulla è vero, tutto è backlog.",
@@ -404,22 +494,37 @@
       },
       "active": {
         "name": "UGA BONK",
-        "cost": 1,
-        "text": "+2 danni oltre il cap se vinci il fight.",
+        "cost": 2,
+        "timing": "before_fight",
+        "text": "Prima del fight: ignora la difesa avversaria su Astuzia.",
         "effect": {
-          "type": "damage",
-          "value": 2
+          "type": "ignore-defense",
+          "stat": "A"
         },
+        "effects": [
+          {
+            "type": "ignore-defense",
+            "stat": "A"
+          }
+        ],
         "flavor": "Soluzione binaria: funziona o clava."
       },
       "passive": {
         "name": "GRR UGH",
-        "text": "+1 Breccia se attacchi con Vigore.",
+        "timing": "always",
+        "text": "Sempre: +1 Breccia se attacchi con Istinto.",
         "effect": {
           "type": "attack-stat-bonus",
-          "stat": "V",
+          "stat": "I",
           "value": 1
         },
+        "effects": [
+          {
+            "type": "attack-stat-bonus",
+            "stat": "I",
+            "value": 1
+          }
+        ],
         "flavor": "Non è legacy: è archeologia."
       },
       "quote": "Ugh. Deploy.",
@@ -459,22 +564,37 @@
       },
       "active": {
         "name": "Editto di Latveria",
-        "cost": 3,
-        "text": "Ignora la difesa avversaria su Vigore.",
+        "cost": 1,
+        "timing": "before_fight",
+        "text": "Prima del fight: +1 danni oltre il cap se vinci.",
         "effect": {
-          "type": "ignore-defense",
-          "stat": "V"
+          "type": "damage",
+          "value": 1
         },
+        "effects": [
+          {
+            "type": "damage",
+            "value": 1
+          }
+        ],
         "flavor": "Prima spiega il problema, poi lo cancella dall'esistenza."
       },
       "passive": {
         "name": "Volontà di Destino",
-        "text": "+2 Breccia se attacchi con Rigore.",
+        "timing": "always",
+        "text": "Sempre: +1 Breccia se almeno 1 tue difese vengono colpite.",
         "effect": {
-          "type": "attack-stat-bonus",
-          "stat": "R",
-          "value": 2
+          "type": "defense-hit-bonus",
+          "count": 1,
+          "value": 1
         },
+        "effects": [
+          {
+            "type": "defense-hit-bonus",
+            "count": 1,
+            "value": 1
+          }
+        ],
         "flavor": "Ogni escalation parte con un riff."
       },
       "quote": "Non ho bug. Ho demoni da ottimizzare.",
@@ -515,21 +635,36 @@
       "active": {
         "name": "Decreto del Khan",
         "cost": 1,
-        "text": "+2 danni oltre il cap se vinci il fight.",
+        "timing": "before_fight",
+        "text": "Prima del fight: +1 danni oltre il cap se vinci.",
         "effect": {
           "type": "damage",
-          "value": 2
+          "value": 1
         },
+        "effects": [
+          {
+            "type": "damage",
+            "value": 1
+          }
+        ],
         "flavor": "Nove doppioni e una soluzione."
       },
       "passive": {
         "name": "Grazia della Steppa",
-        "text": "+1 Breccia se attacchi con Opportunismo.",
+        "timing": "always",
+        "text": "Sempre: +3 Breccia se attacchi con Astuzia.",
         "effect": {
           "type": "attack-stat-bonus",
-          "stat": "O",
-          "value": 1
+          "stat": "A",
+          "value": 3
         },
+        "effects": [
+          {
+            "type": "attack-stat-bonus",
+            "stat": "A",
+            "value": 3
+          }
+        ],
         "flavor": "Perde fiducia, poi trova la pull giusta."
       },
       "quote": "Non è gambling, è resource planning.",
@@ -570,21 +705,36 @@
       "active": {
         "name": "Cinque Stelle",
         "cost": 2,
-        "text": "+3 danni oltre il cap se vinci il fight.",
+        "timing": "before_fight",
+        "text": "Prima del fight: +2 danni oltre il cap se vinci.",
         "effect": {
           "type": "damage",
-          "value": 3
+          "value": 2
         },
+        "effects": [
+          {
+            "type": "damage",
+            "value": 2
+          }
+        ],
         "flavor": "Quando arriva il QA, ha già cambiato veicolo."
       },
       "passive": {
         "name": "Fuga",
-        "text": "+2 Breccia se attacchi con Istinto.",
+        "timing": "always",
+        "text": "Sempre: +2 Breccia se non usi Lucidita nel piano.",
         "effect": {
-          "type": "attack-stat-bonus",
-          "stat": "I",
+          "type": "missing",
+          "stat": "L",
           "value": 2
         },
+        "effects": [
+          {
+            "type": "missing",
+            "stat": "L",
+            "value": 2
+          }
+        ],
         "flavor": "La soluzione è tecnicamente in divieto di sosta."
       },
       "quote": "Mission passed. Respect +3.",
@@ -624,21 +774,37 @@
       },
       "active": {
         "name": "Danza Acquatica",
-        "cost": 3,
-        "text": "Se vinci, puoi infliggere tutta la Breccia oltre il cap.",
+        "cost": 2,
+        "timing": "before_fight",
+        "text": "Prima del fight: ignora la difesa avversaria su Ego.",
         "effect": {
-          "type": "break-cap"
+          "type": "ignore-defense",
+          "stat": "E"
         },
+        "effects": [
+          {
+            "type": "ignore-defense",
+            "stat": "E"
+          }
+        ],
         "flavor": "Un colpo, tre revisioni, zero pietà."
       },
       "passive": {
         "name": "Marcescenza Scarlatta",
-        "text": "+3 Breccia se attacchi con Istinto.",
+        "timing": "always",
+        "text": "Sempre: +1 difesa virtuale se difendi con Lucidita.",
         "effect": {
-          "type": "attack-stat-bonus",
-          "stat": "I",
-          "value": 3
+          "type": "defense-stat-bonus",
+          "stat": "L",
+          "value": 1
         },
+        "effects": [
+          {
+            "type": "defense-stat-bonus",
+            "stat": "L",
+            "value": 1
+          }
+        ],
         "flavor": "Il bug è morto prima del log."
       },
       "quote": "Witness me merge.",
@@ -679,21 +845,36 @@
       "active": {
         "name": "Guerra Lampo",
         "cost": 2,
-        "text": "+3 danni oltre il cap se vinci il fight.",
+        "timing": "before_fight",
+        "text": "Prima del fight: ignora la difesa avversaria su Rigore.",
         "effect": {
-          "type": "damage",
-          "value": 3
+          "type": "ignore-defense",
+          "stat": "R"
         },
+        "effects": [
+          {
+            "type": "ignore-defense",
+            "stat": "R"
+          }
+        ],
         "flavor": "Prima approva, poi chiede chi ha autorizzato."
       },
       "passive": {
         "name": "Gerarchia di Ferro",
-        "text": "+2 Breccia se attacchi con Astuzia.",
+        "timing": "always",
+        "text": "Sempre: +2 Breccia se non usi Lucidita nel piano.",
         "effect": {
-          "type": "attack-stat-bonus",
-          "stat": "A",
+          "type": "missing",
+          "stat": "L",
           "value": 2
         },
+        "effects": [
+          {
+            "type": "missing",
+            "stat": "L",
+            "value": 2
+          }
+        ],
         "flavor": "Ha letto la mail. Tutte. Dal 2019."
       },
       "quote": "Il processo è il processo, anche quando nessuno sa quale.",
@@ -733,22 +914,37 @@
       },
       "active": {
         "name": "Bordata del Corsaro",
-        "cost": 2,
-        "text": "+3 danni oltre il cap se vinci il fight.",
+        "cost": 3,
+        "timing": "before_fight",
+        "text": "Prima del fight: +3 danni oltre il cap se vinci.",
         "effect": {
           "type": "damage",
           "value": 3
         },
+        "effects": [
+          {
+            "type": "damage",
+            "value": 3
+          }
+        ],
         "flavor": "Non colpisce il target, ma spaventa la roadmap."
       },
       "passive": {
         "name": "Codice della Ciurma",
-        "text": "+2 Breccia se attacchi con Opportunismo.",
+        "timing": "always",
+        "text": "Sempre: +2 Breccia se almeno 2 tue difese vengono colpite.",
         "effect": {
-          "type": "attack-stat-bonus",
-          "stat": "O",
+          "type": "defense-hit-bonus",
+          "count": 2,
           "value": 2
         },
+        "effects": [
+          {
+            "type": "defense-hit-bonus",
+            "count": 2,
+            "value": 2
+          }
+        ],
         "flavor": "La X indica un tesoro o il bagno."
       },
       "quote": "Arrr, chi ha spostato la deadline?",
@@ -788,22 +984,37 @@
       },
       "active": {
         "name": "Dead Eye",
-        "cost": 2,
-        "text": "Ignora la difesa avversaria su Astuzia.",
+        "cost": 3,
+        "timing": "before_fight",
+        "text": "Prima del fight: +3 danni oltre il cap se vinci.",
         "effect": {
-          "type": "ignore-defense",
-          "stat": "A"
+          "type": "damage",
+          "value": 3
         },
+        "effects": [
+          {
+            "type": "damage",
+            "value": 3
+          }
+        ],
         "flavor": "Rallenta il tempo abbastanza da leggere l'email."
       },
       "passive": {
         "name": "Duello",
-        "text": "+2 Breccia se attacchi con Opportunismo.",
+        "timing": "always",
+        "text": "Sempre: +3 difesa virtuale se difendi con Ego.",
         "effect": {
-          "type": "attack-stat-bonus",
-          "stat": "O",
-          "value": 2
+          "type": "defense-stat-bonus",
+          "stat": "E",
+          "value": 3
         },
+        "effects": [
+          {
+            "type": "defense-stat-bonus",
+            "stat": "E",
+            "value": 3
+          }
+        ],
         "flavor": "Non sa dov'è, ma è sicuramente coperto."
       },
       "quote": "This town ain't big enough for two PM.",
@@ -843,22 +1054,37 @@
       },
       "active": {
         "name": "Rituale del Totem",
-        "cost": 1,
-        "text": "+2 danni oltre il cap se vinci il fight.",
+        "cost": 2,
+        "timing": "before_fight",
+        "text": "Prima del fight: ignora la difesa avversaria su Ego.",
         "effect": {
-          "type": "damage",
-          "value": 2
+          "type": "ignore-defense",
+          "stat": "E"
         },
+        "effects": [
+          {
+            "type": "ignore-defense",
+            "stat": "E"
+          }
+        ],
         "flavor": "Il segnale è debole, ma la fede è in fibra."
       },
       "passive": {
         "name": "Presagio degli Antenati",
-        "text": "+1 Breccia se non usi Lucidita nel piano.",
+        "timing": "always",
+        "text": "Sempre: +1 Breccia se attacchi con Istinto.",
         "effect": {
-          "type": "missing",
-          "stat": "L",
+          "type": "attack-stat-bonus",
+          "stat": "I",
           "value": 1
         },
+        "effects": [
+          {
+            "type": "attack-stat-bonus",
+            "stat": "I",
+            "value": 1
+          }
+        ],
         "flavor": "Prevede il bug prima che venga pushato."
       },
       "quote": "Ho consultato gli antenati: serve riavviare.",
@@ -898,22 +1124,37 @@
       },
       "active": {
         "name": "Jarvis, Delete them",
-        "cost": 3,
-        "text": "Ignora la difesa avversaria su Lucidita.",
+        "cost": 2,
+        "timing": "before_fight",
+        "text": "Prima del fight: +2 danni oltre il cap se vinci.",
         "effect": {
-          "type": "ignore-defense",
-          "stat": "L"
+          "type": "damage",
+          "value": 2
         },
+        "effects": [
+          {
+            "type": "damage",
+            "value": 2
+          }
+        ],
         "flavor": "Il prototipo vola. Il budget no."
       },
       "passive": {
         "name": "Reattore Arc",
-        "text": "+2 Breccia se attacchi con Ego.",
+        "timing": "always",
+        "text": "Sempre: +2 Breccia se almeno 2 tue difese vengono colpite.",
         "effect": {
-          "type": "attack-stat-bonus",
-          "stat": "E",
+          "type": "defense-hit-bonus",
+          "count": 2,
           "value": 2
         },
+        "effects": [
+          {
+            "type": "defense-hit-bonus",
+            "count": 2,
+            "value": 2
+          }
+        ],
         "flavor": "Convince tutti che il bug era una feature premium."
       },
       "quote": "Genius, billionaire, playboy, project manager.",
@@ -953,21 +1194,37 @@
       },
       "active": {
         "name": "Portale del Sanctum",
-        "cost": 3,
-        "text": "Se vinci, puoi infliggere tutta la Breccia oltre il cap.",
+        "cost": 2,
+        "timing": "before_fight",
+        "text": "Prima del fight: ignora la difesa avversaria su Rigore.",
         "effect": {
-          "type": "break-cap"
+          "type": "ignore-defense",
+          "stat": "R"
         },
+        "effects": [
+          {
+            "type": "ignore-defense",
+            "stat": "R"
+          }
+        ],
         "flavor": "Voleva aprire staging, è finito in produzione."
       },
       "passive": {
         "name": "Occhio di Agamotto",
-        "text": "+2 Breccia se attacchi con Lucidita.",
+        "timing": "always",
+        "text": "Sempre: +1 Breccia se non usi Rigore nel piano.",
         "effect": {
-          "type": "attack-stat-bonus",
-          "stat": "L",
-          "value": 2
+          "type": "missing",
+          "stat": "R",
+          "value": 1
         },
+        "effects": [
+          {
+            "type": "missing",
+            "stat": "R",
+            "value": 1
+          }
+        ],
         "flavor": "E in uno solo la build passava."
       },
       "quote": "Dormammu, sono venuto a contrattare lo scope.",
@@ -1007,22 +1264,35 @@
       },
       "active": {
         "name": "Piano Quinquennale Express",
-        "cost": 1,
-        "text": "+2 danni oltre il cap se vinci il fight.",
+        "cost": 3,
+        "timing": "before_fight",
+        "text": "Prima del fight: +3 danni oltre il cap se vinci.",
         "effect": {
           "type": "damage",
-          "value": 2
+          "value": 3
         },
+        "effects": [
+          {
+            "type": "damage",
+            "value": 3
+          }
+        ],
         "flavor": "Cinque anni compressi in due daily."
       },
       "passive": {
         "name": "Disciplina Sovietica",
-        "text": "+1 Breccia se attacchi con Rigore.",
+        "timing": "always",
+        "text": "Sempre: +2 Breccia.",
         "effect": {
-          "type": "attack-stat-bonus",
-          "stat": "R",
-          "value": 1
+          "type": "flat-damage",
+          "value": 2
         },
+        "effects": [
+          {
+            "type": "flat-damage",
+            "value": 2
+          }
+        ],
         "flavor": "Se uno è stanco, siamo tutti stanchi."
       },
       "quote": "Nostro task. Nostro merge.",
@@ -1062,22 +1332,35 @@
       },
       "active": {
         "name": "Vendetta",
-        "cost": 2,
-        "text": "Ignora la difesa avversaria su Ego.",
+        "cost": 3,
+        "timing": "before_fight",
+        "text": "Prima del fight: se vinci, la Breccia supera il cap.",
         "effect": {
-          "type": "ignore-defense",
-          "stat": "E"
+          "type": "break-cap"
         },
+        "effects": [
+          {
+            "type": "break-cap"
+          }
+        ],
         "flavor": "Finisce il discorso quando finisce il budget."
       },
       "passive": {
         "name": "5 Novembre",
-        "text": "+5 Breccia se attacchi con Opportunismo.",
+        "timing": "always",
+        "text": "Sempre: +2 Breccia se almeno 1 tue difese vengono colpite.",
         "effect": {
-          "type": "attack-stat-bonus",
-          "stat": "O",
-          "value": 5
+          "type": "defense-hit-bonus",
+          "count": 1,
+          "value": 2
         },
+        "effects": [
+          {
+            "type": "defense-hit-bonus",
+            "count": 1,
+            "value": 2
+          }
+        ],
         "flavor": "Vince verbalmente, verticalmente, vagamente."
       },
       "quote": "Ricorda, ricorda, la deadline di novembre.",
@@ -1117,21 +1400,35 @@
       },
       "active": {
         "name": "chicken jockey",
-        "cost": 1,
-        "text": "+2 danni oltre il cap se vinci il fight.",
+        "cost": 2,
+        "timing": "before_fight",
+        "text": "Prima del fight: ignora la difesa avversaria su Rigore.",
         "effect": {
-          "type": "damage",
-          "value": 2
+          "type": "ignore-defense",
+          "stat": "R"
         },
+        "effects": [
+          {
+            "type": "ignore-defense",
+            "stat": "R"
+          }
+        ],
         "flavor": "Anche la skill più bassa può minare diamanti."
       },
       "passive": {
         "name": "I Am Steve",
-        "text": "+1 Breccia sempre attiva.",
+        "timing": "always",
+        "text": "Sempre: +2 Breccia.",
         "effect": {
           "type": "flat-damage",
-          "value": 1
+          "value": 2
         },
+        "effects": [
+          {
+            "type": "flat-damage",
+            "value": 2
+          }
+        ],
         "flavor": "Una porta, due assi e un piano B."
       },
       "quote": "Non è un bug, è un blocco invisibile.",
@@ -1171,22 +1468,35 @@
       },
       "active": {
         "name": "Avada Valedavra",
-        "cost": 2,
-        "text": "Ignora la difesa avversaria su Lucidita.",
+        "cost": 3,
+        "timing": "before_fight",
+        "text": "Prima del fight: se vinci, la Breccia supera il cap.",
         "effect": {
-          "type": "ignore-defense",
-          "stat": "L"
+          "type": "break-cap"
         },
+        "effects": [
+          {
+            "type": "break-cap"
+          }
+        ],
         "flavor": "Evoca una soluzione proibita, ma funziona."
       },
       "passive": {
         "name": "Horcrux",
-        "text": "+2 Breccia se attacchi con Ego.",
+        "timing": "always",
+        "text": "Sempre: +1 difesa virtuale se difendi con Istinto.",
         "effect": {
-          "type": "attack-stat-bonus",
-          "stat": "E",
-          "value": 2
+          "type": "defense-stat-bonus",
+          "stat": "I",
+          "value": 1
         },
+        "effects": [
+          {
+            "type": "defense-stat-bonus",
+            "stat": "I",
+            "value": 1
+          }
+        ],
         "flavor": "Ha diviso l'anima in sette repository."
       },
       "quote": "Avada Kedavra al ticket duplicato.",
@@ -1226,22 +1536,37 @@
       },
       "active": {
         "name": "Plot Armor Personale",
-        "cost": 3,
-        "text": "+5 danni oltre il cap se vinci il fight.",
+        "cost": 1,
+        "timing": "before_fight",
+        "text": "Prima del fight: +1 danni oltre il cap se vinci.",
         "effect": {
           "type": "damage",
-          "value": 5
+          "value": 1
         },
+        "effects": [
+          {
+            "type": "damage",
+            "value": 1
+          }
+        ],
         "flavor": "Il destino gli dà sempre un branch pulito."
       },
       "passive": {
         "name": "Main Character",
-        "text": "+3 Breccia se attacchi con Opportunismo.",
+        "timing": "always",
+        "text": "Sempre: +3 Breccia se attacchi con Istinto.",
         "effect": {
           "type": "attack-stat-bonus",
-          "stat": "O",
+          "stat": "I",
           "value": 3
         },
+        "effects": [
+          {
+            "type": "attack-stat-bonus",
+            "stat": "I",
+            "value": 3
+          }
+        ],
         "flavor": "Quando serve un critico, sorride alla camera."
       },
       "quote": "Semplicemente Valerio.",
@@ -1281,22 +1606,35 @@
       },
       "active": {
         "name": "Back in time",
-        "cost": 1,
-        "text": "+2 danni oltre il cap se vinci il fight.",
+        "cost": 2,
+        "timing": "before_fight",
+        "text": "Prima del fight: ignora la difesa avversaria su Istinto.",
         "effect": {
-          "type": "damage",
-          "value": 2
+          "type": "ignore-defense",
+          "stat": "I"
         },
+        "effects": [
+          {
+            "type": "ignore-defense",
+            "stat": "I"
+          }
+        ],
         "flavor": "Ti corregge così veloce che sembra un complimento."
       },
       "passive": {
         "name": "Speed Force",
-        "text": "+1 Breccia se attacchi con Ego.",
+        "timing": "always",
+        "text": "Sempre: +2 Breccia.",
         "effect": {
-          "type": "attack-stat-bonus",
-          "stat": "E",
-          "value": 1
+          "type": "flat-damage",
+          "value": 2
         },
+        "effects": [
+          {
+            "type": "flat-damage",
+            "value": 2
+          }
+        ],
         "flavor": "Un'occhiata e il CSS smette di fluttuare."
       },
       "quote": "Corro perché la call è già iniziata.",
@@ -1337,21 +1675,36 @@
       "active": {
         "name": "Ira di Sparta",
         "cost": 3,
-        "text": "Ignora la difesa avversaria su Vigore.",
+        "timing": "before_fight",
+        "text": "Prima del fight: ignora la difesa avversaria su Rigore.",
         "effect": {
           "type": "ignore-defense",
-          "stat": "V"
+          "stat": "R"
         },
+        "effects": [
+          {
+            "type": "ignore-defense",
+            "stat": "R"
+          }
+        ],
         "flavor": "Il tono è basso. Il danno no."
       },
       "passive": {
         "name": "Disciplina del Padre",
-        "text": "+2 Breccia se attacchi con Rigore.",
+        "timing": "always",
+        "text": "Sempre: +2 Breccia se almeno 1 tue difese vengono colpite.",
         "effect": {
-          "type": "attack-stat-bonus",
-          "stat": "R",
+          "type": "defense-hit-bonus",
+          "count": 1,
           "value": 2
         },
+        "effects": [
+          {
+            "type": "defense-hit-bonus",
+            "count": 1,
+            "value": 2
+          }
+        ],
         "flavor": "Può attendere. L'ascia no."
       },
       "quote": "Non urlare. Prioritizza.",
@@ -1391,22 +1744,35 @@
       },
       "active": {
         "name": "Laser Eye",
-        "cost": 2,
-        "text": "+4 danni oltre il cap se vinci il fight.",
+        "cost": 3,
+        "timing": "before_fight",
+        "text": "Prima del fight: +3 danni oltre il cap se vinci.",
         "effect": {
           "type": "damage",
-          "value": 4
+          "value": 3
         },
+        "effects": [
+          {
+            "type": "damage",
+            "value": 3
+          }
+        ],
         "flavor": "Motiva il team anche se nessuno ha capito il perimetro."
       },
       "passive": {
         "name": "Compound V",
-        "text": "+2 Breccia se attacchi con Ego.",
+        "timing": "always",
+        "text": "Sempre: +2 Breccia.",
         "effect": {
-          "type": "attack-stat-bonus",
-          "stat": "E",
+          "type": "flat-damage",
           "value": 2
         },
+        "effects": [
+          {
+            "type": "flat-damage",
+            "value": 2
+          }
+        ],
         "flavor": "La roadmap sventola dietro di lui."
       },
       "quote": "Per la patria, per il project plan.",
@@ -1446,22 +1812,37 @@
       },
       "active": {
         "name": "Blow V-Train",
-        "cost": 1,
-        "text": "+2 danni oltre il cap se vinci il fight.",
+        "cost": 2,
+        "timing": "before_fight",
+        "text": "Prima del fight: +2 danni oltre il cap se vinci.",
         "effect": {
           "type": "damage",
           "value": 2
         },
+        "effects": [
+          {
+            "type": "damage",
+            "value": 2
+          }
+        ],
         "flavor": "Più sale la pressione, più sorride alla tempesta."
       },
       "passive": {
         "name": "The Peak",
-        "text": "+1 Breccia se attacchi con Astuzia.",
+        "timing": "always",
+        "text": "Sempre: +2 Breccia se attacchi con Vigore.",
         "effect": {
           "type": "attack-stat-bonus",
-          "stat": "A",
-          "value": 1
+          "stat": "V",
+          "value": 2
         },
+        "effects": [
+          {
+            "type": "attack-stat-bonus",
+            "stat": "V",
+            "value": 2
+          }
+        ],
         "flavor": "Vede arrivare il problema dall'orizzonte."
       },
       "quote": "Non è mare mosso. È stakeholder alignment.",
@@ -1501,22 +1882,35 @@
       },
       "active": {
         "name": "Circuito Massacrante",
-        "cost": 1,
-        "text": "+2 danni oltre il cap se vinci il fight.",
+        "cost": 3,
+        "timing": "before_fight",
+        "text": "Prima del fight: se vinci, la Breccia supera il cap.",
         "effect": {
-          "type": "damage",
-          "value": 2
+          "type": "break-cap"
         },
+        "effects": [
+          {
+            "type": "break-cap"
+          }
+        ],
         "flavor": "Tre serie da dodici e una retrospettiva."
       },
       "passive": {
         "name": "Recovery tra le Call",
-        "text": "+1 Breccia se attacchi con Rigore.",
+        "timing": "always",
+        "text": "Sempre: +1 difesa virtuale se difendi con Istinto.",
         "effect": {
-          "type": "attack-stat-bonus",
-          "stat": "R",
+          "type": "defense-stat-bonus",
+          "stat": "I",
           "value": 1
         },
+        "effects": [
+          {
+            "type": "defense-stat-bonus",
+            "stat": "I",
+            "value": 1
+          }
+        ],
         "flavor": "Il cooldown dura meno della daily."
       },
       "quote": "No pain, no sprint.",
@@ -1556,22 +1950,37 @@
       },
       "active": {
         "name": "Incendio Controllato",
-        "cost": 1,
-        "text": "+2 danni oltre il cap se vinci il fight.",
+        "cost": 2,
+        "timing": "before_fight",
+        "text": "Prima del fight: ignora la difesa avversaria su Astuzia.",
         "effect": {
-          "type": "damage",
-          "value": 2
+          "type": "ignore-defense",
+          "stat": "A"
         },
+        "effects": [
+          {
+            "type": "ignore-defense",
+            "stat": "A"
+          }
+        ],
         "flavor": "Controllato nel senso che lo guarda bruciare con fiducia."
       },
       "passive": {
         "name": "Fumo negli Occhi",
-        "text": "+1 Breccia se attacchi con Ego.",
+        "timing": "always",
+        "text": "Sempre: +2 Breccia se almeno 1 tue difese vengono colpite.",
         "effect": {
-          "type": "attack-stat-bonus",
-          "stat": "E",
-          "value": 1
+          "type": "defense-hit-bonus",
+          "count": 1,
+          "value": 2
         },
+        "effects": [
+          {
+            "type": "defense-hit-bonus",
+            "count": 1,
+            "value": 2
+          }
+        ],
         "flavor": "Nessuno capisce, ma tutti applaudono."
       },
       "quote": "Non è in fiamme. È in fase di trasformazione.",
@@ -1611,22 +2020,37 @@
       },
       "active": {
         "name": "Scudo Anti‑Scope",
-        "cost": 1,
-        "text": "+2 danni oltre il cap se vinci il fight.",
+        "cost": 2,
+        "timing": "before_fight",
+        "text": "Prima del fight: ignora la difesa avversaria su Istinto.",
         "effect": {
-          "type": "damage",
-          "value": 2
+          "type": "ignore-defense",
+          "stat": "I"
         },
+        "effects": [
+          {
+            "type": "ignore-defense",
+            "stat": "I"
+          }
+        ],
         "flavor": "Può bloccare tutto tranne 'piccola modifica'."
       },
       "passive": {
         "name": "Ultima Stand‑Up",
-        "text": "+1 Breccia se attacchi con Astuzia.",
+        "timing": "always",
+        "text": "Sempre: +1 Breccia se non usi Ego nel piano.",
         "effect": {
-          "type": "attack-stat-bonus",
-          "stat": "A",
+          "type": "missing",
+          "stat": "E",
           "value": 1
         },
+        "effects": [
+          {
+            "type": "missing",
+            "stat": "E",
+            "value": 1
+          }
+        ],
         "flavor": "Individua il rischio dietro le rovine."
       },
       "quote": "Project boy, but make it endgame.",
@@ -1666,22 +2090,37 @@
       },
       "active": {
         "name": "Bagliore da Milestone",
-        "cost": 3,
-        "text": "+5 danni oltre il cap se vinci il fight.",
+        "cost": 2,
+        "timing": "before_fight",
+        "text": "Prima del fight: +2 danni oltre il cap se vinci.",
         "effect": {
           "type": "damage",
-          "value": 5
+          "value": 2
         },
+        "effects": [
+          {
+            "type": "damage",
+            "value": 2
+          }
+        ],
         "flavor": "Quando entra, la presentazione diventa HDR."
       },
       "passive": {
         "name": "Aura Motivazionale",
-        "text": "+2 Breccia se attacchi con Ego.",
+        "timing": "always",
+        "text": "Sempre: +2 Breccia se almeno 2 tue difese vengono colpite.",
         "effect": {
-          "type": "attack-stat-bonus",
-          "stat": "E",
+          "type": "defense-hit-bonus",
+          "count": 2,
           "value": 2
         },
+        "effects": [
+          {
+            "type": "defense-hit-bonus",
+            "count": 2,
+            "value": 2
+          }
+        ],
         "flavor": "Anche il Gantt sembra ottimista."
       },
       "quote": "Brilla. Consegnare è opzionale, ma consigliato.",
@@ -1721,22 +2160,35 @@
       },
       "active": {
         "name": "Protocollo Nero",
-        "cost": 2,
-        "text": "Ignora la difesa avversaria su Vigore.",
+        "cost": 3,
+        "timing": "before_fight",
+        "text": "Prima del fight: se vinci, la Breccia supera il cap.",
         "effect": {
-          "type": "ignore-defense",
-          "stat": "V"
+          "type": "break-cap"
         },
+        "effects": [
+          {
+            "type": "break-cap"
+          }
+        ],
         "flavor": "La soluzione è classificata. Il danno è pubblico."
       },
       "passive": {
         "name": "Silenzio da War Room",
-        "text": "+2 Breccia se attacchi con Rigore.",
+        "timing": "always",
+        "text": "Sempre: +1 difesa virtuale se difendi con Rigore.",
         "effect": {
-          "type": "attack-stat-bonus",
+          "type": "defense-stat-bonus",
           "stat": "R",
-          "value": 2
+          "value": 1
         },
+        "effects": [
+          {
+            "type": "defense-stat-bonus",
+            "stat": "R",
+            "value": 1
+          }
+        ],
         "flavor": "Resiste finché anche il caos si stanca."
       },
       "quote": "Non sono il piano B. Sono il piano finale.",
@@ -1776,21 +2228,37 @@
       },
       "active": {
         "name": "Kamehame‑Check",
-        "cost": 3,
-        "text": "Ignora la difesa avversaria su Vigore.",
+        "cost": 2,
+        "timing": "before_fight",
+        "text": "Prima del fight: ignora la difesa avversaria su Astuzia.",
         "effect": {
           "type": "ignore-defense",
-          "stat": "V"
+          "stat": "A"
         },
+        "effects": [
+          {
+            "type": "ignore-defense",
+            "stat": "A"
+          }
+        ],
         "flavor": "Cancella il problema con un'onda di energia e un commento in PR."
       },
       "passive": {
         "name": "Zenkai da Deadline",
-        "text": "+2 Breccia sempre attiva.",
+        "timing": "always",
+        "text": "Sempre: +2 Breccia se non usi Istinto nel piano.",
         "effect": {
-          "type": "flat-damage",
+          "type": "missing",
+          "stat": "I",
           "value": 2
         },
+        "effects": [
+          {
+            "type": "missing",
+            "stat": "I",
+            "value": 2
+          }
+        ],
         "flavor": "Più è vicino alla fine, più urla."
       },
       "quote": "Il mio livello di priorità è oltre 9000.",
@@ -1831,21 +2299,36 @@
       "active": {
         "name": "Trasformazione in Caramella",
         "cost": 2,
-        "text": "+3 danni oltre il cap se vinci il fight.",
+        "timing": "before_fight",
+        "text": "Prima del fight: +2 danni oltre il cap se vinci.",
         "effect": {
           "type": "damage",
-          "value": 3
+          "value": 2
         },
+        "effects": [
+          {
+            "type": "damage",
+            "value": 2
+          }
+        ],
         "flavor": "Il blocker era dolce, quindi l'ha mangiato."
       },
       "passive": {
         "name": "Rigenerazione Majin",
-        "text": "+2 Breccia se attacchi con Rigore.",
+        "timing": "always",
+        "text": "Sempre: +2 Breccia se attacchi con Ego.",
         "effect": {
           "type": "attack-stat-bonus",
-          "stat": "R",
+          "stat": "E",
           "value": 2
         },
+        "effects": [
+          {
+            "type": "attack-stat-bonus",
+            "stat": "E",
+            "value": 2
+          }
+        ],
         "flavor": "Lo abbattono in call, torna più rosa."
       },
       "quote": "Buu vuole approvazione.",
@@ -1885,22 +2368,37 @@
       },
       "active": {
         "name": "Posa Coordinata",
-        "cost": 2,
-        "text": "Ignora la difesa avversaria su Ego.",
+        "cost": 3,
+        "timing": "before_fight",
+        "text": "Prima del fight: +3 danni oltre il cap se vinci.",
         "effect": {
-          "type": "ignore-defense",
-          "stat": "E"
+          "type": "damage",
+          "value": 3
         },
+        "effects": [
+          {
+            "type": "damage",
+            "value": 3
+          }
+        ],
         "flavor": "La posa dura più della pianificazione."
       },
       "passive": {
         "name": "Team Impact S+",
-        "text": "+2 Breccia se attacchi con Istinto.",
+        "timing": "always",
+        "text": "Sempre: +2 Breccia se attacchi con Astuzia.",
         "effect": {
           "type": "attack-stat-bonus",
-          "stat": "I",
+          "stat": "A",
           "value": 2
         },
+        "effects": [
+          {
+            "type": "attack-stat-bonus",
+            "stat": "A",
+            "value": 2
+          }
+        ],
         "flavor": "Entrano male, vincono stilosi."
       },
       "quote": "Squad, non force. Rispetto per il naming.",
@@ -1940,22 +2438,37 @@
       },
       "active": {
         "name": "Forma Perfetta",
-        "cost": 3,
-        "text": "Ignora la difesa avversaria su Lucidita.",
+        "cost": 2,
+        "timing": "before_fight",
+        "text": "Prima del fight: ignora la difesa avversaria su Istinto.",
         "effect": {
           "type": "ignore-defense",
-          "stat": "L"
+          "stat": "I"
         },
+        "effects": [
+          {
+            "type": "ignore-defense",
+            "stat": "I"
+          }
+        ],
         "flavor": "Assorbe due feedback e diventa la versione definitiva."
       },
       "passive": {
         "name": "Adattamento Cellulare",
-        "text": "+2 Breccia se attacchi con Astuzia.",
+        "timing": "always",
+        "text": "Sempre: +2 Breccia se non usi Rigore nel piano.",
         "effect": {
-          "type": "attack-stat-bonus",
-          "stat": "A",
+          "type": "missing",
+          "stat": "R",
           "value": 2
         },
+        "effects": [
+          {
+            "type": "missing",
+            "stat": "R",
+            "value": 2
+          }
+        ],
         "flavor": "Capisce il pattern prima del designer."
       },
       "quote": "La perfezione richiede solo un ultimo fix.",
@@ -1996,21 +2509,36 @@
       "active": {
         "name": "Meditazione da Merge",
         "cost": 2,
-        "text": "Ignora la difesa avversaria su Astuzia.",
+        "timing": "before_fight",
+        "text": "Prima del fight: +2 danni oltre il cap se vinci.",
         "effect": {
-          "type": "ignore-defense",
-          "stat": "A"
+          "type": "damage",
+          "value": 2
         },
+        "effects": [
+          {
+            "type": "damage",
+            "value": 2
+          }
+        ],
         "flavor": "Resta fermo e il bug si sente in colpa."
       },
       "passive": {
         "name": "Mantello Pesante",
-        "text": "+2 Breccia se attacchi con Rigore.",
+        "timing": "always",
+        "text": "Sempre: +2 Breccia se attacchi con Ego.",
         "effect": {
           "type": "attack-stat-bonus",
-          "stat": "R",
+          "stat": "E",
           "value": 2
         },
+        "effects": [
+          {
+            "type": "attack-stat-bonus",
+            "stat": "E",
+            "value": 2
+          }
+        ],
         "flavor": "Si allena portando addosso il peso dello scope."
       },
       "quote": "Parlo poco. Reviewo tutto.",
@@ -2050,22 +2578,37 @@
       },
       "active": {
         "name": "Big Bang Planning",
-        "cost": 3,
-        "text": "Ignora la difesa avversaria su Istinto.",
+        "cost": 2,
+        "timing": "before_fight",
+        "text": "Prima del fight: +2 danni oltre il cap se vinci.",
         "effect": {
-          "type": "ignore-defense",
-          "stat": "I"
+          "type": "damage",
+          "value": 2
         },
+        "effects": [
+          {
+            "type": "damage",
+            "value": 2
+          }
+        ],
         "flavor": "La mano è aperta. La tolleranza allo scope creep no."
       },
       "passive": {
         "name": "Aura da Fusione",
-        "text": "+3 Breccia se attacchi con Vigore.",
+        "timing": "always",
+        "text": "Sempre: +3 difesa virtuale se difendi con Astuzia.",
         "effect": {
-          "type": "attack-stat-bonus",
-          "stat": "V",
+          "type": "defense-stat-bonus",
+          "stat": "A",
           "value": 3
         },
+        "effects": [
+          {
+            "type": "defense-stat-bonus",
+            "stat": "A",
+            "value": 3
+          }
+        ],
         "flavor": "Quando entra in campo, il Jira trema."
       },
       "quote": "Non sono due persone. Sono due deadline fuse male.",
@@ -2105,22 +2648,37 @@
       },
       "active": {
         "name": "Pizzo del PM",
-        "cost": 3,
-        "text": "Ignora la difesa avversaria su Opportunismo.",
+        "cost": 1,
+        "timing": "before_fight",
+        "text": "Prima del fight: +1 danni oltre il cap se vinci.",
         "effect": {
-          "type": "ignore-defense",
-          "stat": "O"
+          "type": "damage",
+          "value": 1
         },
+        "effects": [
+          {
+            "type": "damage",
+            "value": 1
+          }
+        ],
         "flavor": "La mano è aperta. La tolleranza allo scope creep no."
       },
       "passive": {
         "name": "Troppi soldi",
-        "text": "+3 Breccia se attacchi con Rigore.",
+        "timing": "always",
+        "text": "Sempre: +2 Breccia se attacchi con Rigore.",
         "effect": {
           "type": "attack-stat-bonus",
           "stat": "R",
-          "value": 3
+          "value": 2
         },
+        "effects": [
+          {
+            "type": "attack-stat-bonus",
+            "stat": "R",
+            "value": 2
+          }
+        ],
         "flavor": "Mai visto nessuno con così tanti soldi."
       },
       "quote": "Che sfigato",
@@ -2161,21 +2719,36 @@
       "active": {
         "name": "Fent Rush",
         "cost": 3,
-        "text": "Ignora la difesa avversaria su Opportunismo.",
+        "timing": "before_fight",
+        "text": "Prima del fight: +3 danni oltre il cap se vinci.",
         "effect": {
-          "type": "ignore-defense",
-          "stat": "O"
+          "type": "damage",
+          "value": 3
         },
+        "effects": [
+          {
+            "type": "damage",
+            "value": 3
+          }
+        ],
         "flavor": "La mano è aperta. La tolleranza allo scope creep no."
       },
       "passive": {
         "name": "Cant breath",
-        "text": "+3 Breccia se attacchi con Astuzia.",
+        "timing": "always",
+        "text": "Sempre: +2 difesa virtuale se difendi con Rigore.",
         "effect": {
-          "type": "attack-stat-bonus",
-          "stat": "A",
-          "value": 3
+          "type": "defense-stat-bonus",
+          "stat": "R",
+          "value": 2
         },
+        "effects": [
+          {
+            "type": "defense-stat-bonus",
+            "stat": "R",
+            "value": 2
+          }
+        ],
         "flavor": "Fent non respira."
       },
       "quote": "I cant breath",
@@ -2216,21 +2789,36 @@
       "active": {
         "name": "Rapimento",
         "cost": 2,
-        "text": "+3 danni oltre il cap se vinci il fight.",
+        "timing": "before_fight",
+        "text": "Prima del fight: +2 danni oltre il cap se vinci.",
         "effect": {
           "type": "damage",
-          "value": 3
+          "value": 2
         },
+        "effects": [
+          {
+            "type": "damage",
+            "value": 2
+          }
+        ],
         "flavor": "La sentenza arriva prima della retrospettiva."
       },
       "passive": {
         "name": "Innocenza",
-        "text": "+2 Breccia se attacchi con Astuzia.",
+        "timing": "always",
+        "text": "Sempre: +2 Breccia se attacchi con Astuzia.",
         "effect": {
           "type": "attack-stat-bonus",
           "stat": "A",
           "value": 2
         },
+        "effects": [
+          {
+            "type": "attack-stat-bonus",
+            "stat": "A",
+            "value": 2
+          }
+        ],
         "flavor": "Trova un dettaglio nascosto anche nel requisito più vuoto."
       },
       "quote": "Il caso è chiuso. Il ticket no.",
@@ -2270,22 +2858,37 @@
       },
       "active": {
         "name": "Fent Reactor",
-        "cost": 2,
-        "text": "Ignora la difesa avversaria su Rigore.",
+        "cost": 3,
+        "timing": "before_fight",
+        "text": "Prima del fight: +3 danni oltre il cap se vinci.",
         "effect": {
-          "type": "ignore-defense",
-          "stat": "R"
+          "type": "damage",
+          "value": 3
         },
+        "effects": [
+          {
+            "type": "damage",
+            "value": 3
+          }
+        ],
         "flavor": "La macchina non interpreta: esegue."
       },
       "passive": {
         "name": "Nigga-Link",
-        "text": "+2 Breccia se attacchi con Vigore.",
+        "timing": "always",
+        "text": "Sempre: +1 Breccia se almeno 1 tue difese vengono colpite.",
         "effect": {
-          "type": "attack-stat-bonus",
-          "stat": "V",
-          "value": 2
+          "type": "defense-hit-bonus",
+          "count": 1,
+          "value": 1
         },
+        "effects": [
+          {
+            "type": "defense-hit-bonus",
+            "count": 1,
+            "value": 1
+          }
+        ],
         "flavor": "Ogni colpo installa una patch più pesante."
       },
       "quote": "Vivo, morto o deployato: vieni con me.",
@@ -2325,22 +2928,37 @@
       },
       "active": {
         "name": "75 coltellate",
-        "cost": 1,
-        "text": "+2 danni oltre il cap se vinci il fight.",
+        "cost": 2,
+        "timing": "before_fight",
+        "text": "Prima del fight: ignora la difesa avversaria su Rigore.",
         "effect": {
-          "type": "damage",
-          "value": 2
+          "type": "ignore-defense",
+          "stat": "R"
         },
+        "effects": [
+          {
+            "type": "ignore-defense",
+            "stat": "R"
+          }
+        ],
         "flavor": "Parte da lontano e finisce comunque nel backlog."
       },
       "passive": {
         "name": "Stalking",
-        "text": "+1 Breccia se attacchi con Astuzia.",
+        "timing": "always",
+        "text": "Sempre: +2 difesa virtuale se difendi con Astuzia.",
         "effect": {
-          "type": "attack-stat-bonus",
+          "type": "defense-stat-bonus",
           "stat": "A",
-          "value": 1
+          "value": 2
         },
+        "effects": [
+          {
+            "type": "defense-stat-bonus",
+            "stat": "A",
+            "value": 2
+          }
+        ],
         "flavor": "Vede il corridoio libero prima degli altri."
       },
       "quote": "Palla al centro, problema in produzione.",
@@ -2381,21 +2999,36 @@
       "active": {
         "name": "Acido",
         "cost": 3,
-        "text": "Ignora la difesa avversaria su Istinto.",
+        "timing": "before_fight",
+        "text": "Prima del fight: ignora la difesa avversaria su Istinto.",
         "effect": {
           "type": "ignore-defense",
           "stat": "I"
         },
+        "effects": [
+          {
+            "type": "ignore-defense",
+            "stat": "I"
+          }
+        ],
         "flavor": "Quando capisci da dove arriva, il pavimento è già sciolto."
       },
       "passive": {
         "name": "Predatore Perfetto",
-        "text": "+3 Breccia se attacchi con Vigore.",
+        "timing": "always",
+        "text": "Sempre: +1 difesa virtuale se difendi con Astuzia.",
         "effect": {
-          "type": "attack-stat-bonus",
-          "stat": "V",
-          "value": 3
+          "type": "defense-stat-bonus",
+          "stat": "A",
+          "value": 1
         },
+        "effects": [
+          {
+            "type": "defense-stat-bonus",
+            "stat": "A",
+            "value": 1
+          }
+        ],
         "flavor": "Non negozia. Nidifica."
       },
       "quote": "Nel backlog nessuno può sentirti urlare.",
@@ -2436,20 +3069,36 @@
       "active": {
         "name": "Genocidio",
         "cost": 3,
-        "text": "Se vinci, puoi infliggere tutta la Breccia oltre il cap.",
+        "timing": "before_fight",
+        "text": "Prima del fight: +3 danni oltre il cap se vinci.",
         "effect": {
-          "type": "break-cap"
+          "type": "damage",
+          "value": 3
         },
+        "effects": [
+          {
+            "type": "damage",
+            "value": 3
+          }
+        ],
         "flavor": "Convoca tutti, decide prima che entrino."
       },
       "passive": {
         "name": "Popolo prescelto",
-        "text": "+2 Breccia se attacchi con Rigore.",
+        "timing": "always",
+        "text": "Sempre: +1 Breccia se non usi Vigore nel piano.",
         "effect": {
-          "type": "attack-stat-bonus",
-          "stat": "R",
-          "value": 2
+          "type": "missing",
+          "stat": "V",
+          "value": 1
         },
+        "effects": [
+          {
+            "type": "missing",
+            "stat": "V",
+            "value": 1
+          }
+        ],
         "flavor": "Ogni compromesso passa da tre controlli di sicurezza."
       },
       "quote": "La pace è una feature. La priorità è un'altra.",
@@ -2489,22 +3138,37 @@
       },
       "active": {
         "name": "Poison Trail",
-        "cost": 2,
-        "text": "Ignora la difesa avversaria su Istinto.",
+        "cost": 3,
+        "timing": "before_fight",
+        "text": "Prima del fight: +3 danni oltre il cap se vinci.",
         "effect": {
-          "type": "ignore-defense",
-          "stat": "I"
+          "type": "damage",
+          "value": 3
         },
+        "effects": [
+          {
+            "type": "damage",
+            "value": 3
+          }
+        ],
         "flavor": "Non appare in riunione, ma lascia il danno firmato."
       },
       "passive": {
         "name": "Noxious Slipstream",
-        "text": "+2 Breccia se attacchi con Opportunismo.",
+        "timing": "always",
+        "text": "Sempre: +2 Breccia se almeno 2 tue difese vengono colpite.",
         "effect": {
-          "type": "attack-stat-bonus",
-          "stat": "O",
+          "type": "defense-hit-bonus",
+          "count": 2,
           "value": 2
         },
+        "effects": [
+          {
+            "type": "defense-hit-bonus",
+            "count": 2,
+            "value": 2
+          }
+        ],
         "flavor": "Sfrutta ogni apertura, anche quella sbagliata."
       },
       "quote": "Se mi vedi, è già troppo tardi.",
@@ -2544,22 +3208,33 @@
       },
       "active": {
         "name": "Dragon's Rage",
-        "cost": 2,
-        "text": "Ignora la difesa avversaria su Vigore.",
+        "cost": 3,
+        "timing": "before_fight",
+        "text": "Prima del fight: se vinci, la Breccia supera il cap.",
         "effect": {
-          "type": "ignore-defense",
-          "stat": "V"
+          "type": "break-cap"
         },
+        "effects": [
+          {
+            "type": "break-cap"
+          }
+        ],
         "flavor": "Il target non è visibile, ma il dolore sì."
       },
       "passive": {
         "name": "Flurry",
-        "text": "+2 Breccia se attacchi con Istinto.",
+        "timing": "always",
+        "text": "Sempre: +2 Breccia.",
         "effect": {
-          "type": "attack-stat-bonus",
-          "stat": "I",
+          "type": "flat-damage",
           "value": 2
         },
+        "effects": [
+          {
+            "type": "flat-damage",
+            "value": 2
+          }
+        ],
         "flavor": "Schiva la domanda prima che venga fatta."
       },
       "quote": "La visione è sopravvalutata. Il danno no.",
@@ -2600,21 +3275,36 @@
       "active": {
         "name": "Windwall",
         "cost": 2,
-        "text": "Ignora la difesa avversaria su Astuzia.",
+        "timing": "before_fight",
+        "text": "Prima del fight: +2 danni oltre il cap se vinci.",
         "effect": {
-          "type": "ignore-defense",
-          "stat": "A"
+          "type": "damage",
+          "value": 2
         },
+        "effects": [
+          {
+            "type": "damage",
+            "value": 2
+          }
+        ],
         "flavor": "Un colpo, tre dash, una build rotta."
       },
       "passive": {
         "name": "Way of the Wandered",
-        "text": "+2 Breccia se attacchi con Istinto.",
+        "timing": "always",
+        "text": "Sempre: +3 difesa virtuale se difendi con Rigore.",
         "effect": {
-          "type": "attack-stat-bonus",
-          "stat": "I",
-          "value": 2
+          "type": "defense-stat-bonus",
+          "stat": "R",
+          "value": 3
         },
+        "effects": [
+          {
+            "type": "defense-stat-bonus",
+            "stat": "R",
+            "value": 3
+          }
+        ],
         "flavor": "Sta perdendo solo per aumentare la tensione narrativa."
       },
       "quote": "Il vento non intasa mai la pipeline.",
@@ -2655,21 +3345,36 @@
       "active": {
         "name": "Jack in the box",
         "cost": 2,
-        "text": "Ignora la difesa avversaria su Opportunismo.",
+        "timing": "before_fight",
+        "text": "Prima del fight: +2 danni oltre il cap se vinci.",
         "effect": {
-          "type": "ignore-defense",
-          "stat": "O"
+          "type": "damage",
+          "value": 2
         },
+        "effects": [
+          {
+            "type": "damage",
+            "value": 2
+          }
+        ],
         "flavor": "Apri il task e trovi solo una risata."
       },
       "passive": {
         "name": "Backstab",
-        "text": "+2 Breccia se non usi Rigore nel piano.",
+        "timing": "always",
+        "text": "Sempre: +3 difesa virtuale se difendi con Rigore.",
         "effect": {
-          "type": "missing",
+          "type": "defense-stat-bonus",
           "stat": "R",
-          "value": 2
+          "value": 3
         },
+        "effects": [
+          {
+            "type": "defense-stat-bonus",
+            "stat": "R",
+            "value": 3
+          }
+        ],
         "flavor": "Meno regole ci sono, più si diverte."
       },
       "quote": "Perché così serio sulla milestone?",
@@ -2709,22 +3414,35 @@
       },
       "active": {
         "name": "Final Call",
-        "cost": 2,
-        "text": "+4 danni oltre il cap se vinci il fight.",
+        "cost": 3,
+        "timing": "before_fight",
+        "text": "Prima del fight: se vinci, la Breccia supera il cap.",
         "effect": {
-          "type": "damage",
-          "value": 4
+          "type": "break-cap"
         },
+        "effects": [
+          {
+            "type": "break-cap"
+          }
+        ],
         "flavor": "Rispondi e scopri che la call era già iniziata."
       },
       "passive": {
         "name": "Panic Mask",
-        "text": "+2 Breccia se attacchi con Ego.",
+        "timing": "always",
+        "text": "Sempre: +1 Breccia se non usi Vigore nel piano.",
         "effect": {
-          "type": "attack-stat-bonus",
-          "stat": "E",
-          "value": 2
+          "type": "missing",
+          "stat": "V",
+          "value": 1
         },
+        "effects": [
+          {
+            "type": "missing",
+            "stat": "V",
+            "value": 1
+          }
+        ],
         "flavor": "La presenza scenica vale più del coltello."
       },
       "quote": "Qual è il tuo deliverable preferito?",
@@ -2764,21 +3482,35 @@
       },
       "active": {
         "name": "Fate Sealed",
-        "cost": 3,
-        "text": "Se vinci, puoi infliggere tutta la Breccia oltre il cap.",
+        "cost": 1,
+        "timing": "before_fight",
+        "text": "Prima del fight: +1 danni oltre il cap se vinci.",
         "effect": {
-          "type": "break-cap"
+          "type": "damage",
+          "value": 1
         },
+        "effects": [
+          {
+            "type": "damage",
+            "value": 1
+          }
+        ],
         "flavor": "Traccia una linea e il team ci cade dentro."
       },
       "passive": {
         "name": "Way of the Hunter",
-        "text": "+2 Breccia se attacchi con Lucidita.",
+        "timing": "always",
+        "text": "Sempre: +1 Breccia.",
         "effect": {
-          "type": "attack-stat-bonus",
-          "stat": "L",
-          "value": 2
+          "type": "flat-damage",
+          "value": 1
         },
+        "effects": [
+          {
+            "type": "flat-damage",
+            "value": 1
+          }
+        ],
         "flavor": "Non alza la voce: basta lo sguardo."
       },
       "quote": "La maschera nasconde il volto, non la review.",
@@ -2819,20 +3551,36 @@
       "active": {
         "name": "Pyroclasm",
         "cost": 2,
-        "text": "+4 danni oltre il cap se vinci il fight.",
+        "timing": "before_fight",
+        "text": "Prima del fight: +2 danni oltre il cap se vinci.",
         "effect": {
           "type": "damage",
-          "value": 4
+          "value": 2
         },
+        "effects": [
+          {
+            "type": "damage",
+            "value": 2
+          }
+        ],
         "flavor": "La soluzione è calda, instabile e approvata."
       },
       "passive": {
         "name": "Blaze",
-        "text": "+2 Breccia sempre attiva.",
+        "timing": "always",
+        "text": "Sempre: +2 Breccia se almeno 2 tue difese vengono colpite.",
         "effect": {
-          "type": "flat-damage",
+          "type": "defense-hit-bonus",
+          "count": 2,
           "value": 2
         },
+        "effects": [
+          {
+            "type": "defense-hit-bonus",
+            "count": 2,
+            "value": 2
+          }
+        ],
         "flavor": "Anche quando passa il turno, qualcosa continua a bruciare."
       },
       "quote": "Non ho acceso il fuoco. Ho ottimizzato l'ambiente.",
@@ -2872,22 +3620,37 @@
       },
       "active": {
         "name": "Death Sentence",
-        "cost": 3,
-        "text": "Ignora la difesa avversaria su Rigore.",
+        "cost": 2,
+        "timing": "before_fight",
+        "text": "Prima del fight: +2 danni oltre il cap se vinci.",
         "effect": {
-          "type": "ignore-defense",
-          "stat": "R"
+          "type": "damage",
+          "value": 2
         },
+        "effects": [
+          {
+            "type": "damage",
+            "value": 2
+          }
+        ],
         "flavor": "Tira dentro il problema anche se era fuori perimetro."
       },
       "passive": {
         "name": "Damnation",
-        "text": "+2 Breccia se attacchi con Opportunismo.",
+        "timing": "always",
+        "text": "Sempre: +2 Breccia se almeno 2 tue difese vengono colpite.",
         "effect": {
-          "type": "attack-stat-bonus",
-          "stat": "O",
+          "type": "defense-hit-bonus",
+          "count": 2,
           "value": 2
         },
+        "effects": [
+          {
+            "type": "defense-hit-bonus",
+            "count": 2,
+            "value": 2
+          }
+        ],
         "flavor": "Ogni errore altrui diventa una luce in più."
       },
       "quote": "Vieni, ti salvo. Forse.",
@@ -2927,22 +3690,37 @@
       },
       "active": {
         "name": "Great Wall",
-        "cost": 2,
-        "text": "+3 danni oltre il cap se vinci il fight.",
+        "cost": 3,
+        "timing": "before_fight",
+        "text": "Prima del fight: +3 danni oltre il cap se vinci.",
         "effect": {
           "type": "damage",
           "value": 3
         },
+        "effects": [
+          {
+            "type": "damage",
+            "value": 3
+          }
+        ],
         "flavor": "Firma il piano prima di leggerlo."
       },
       "passive": {
         "name": "WTF is a km?",
-        "text": "+2 Breccia se attacchi con Ego.",
+        "timing": "always",
+        "text": "Sempre: +1 Breccia se non usi Istinto nel piano.",
         "effect": {
-          "type": "attack-stat-bonus",
-          "stat": "E",
-          "value": 2
+          "type": "missing",
+          "stat": "I",
+          "value": 1
         },
+        "effects": [
+          {
+            "type": "missing",
+            "stat": "I",
+            "value": 1
+          }
+        ],
         "flavor": "Se lo ripete abbastanza, diventa roadmap."
       },
       "quote": "Questo sarà il miglior sprint. Forse il migliore di sempre.",
@@ -2982,21 +3760,37 @@
       },
       "active": {
         "name": "Death from Below",
-        "cost": 3,
-        "text": "Se vinci, puoi infliggere tutta la Breccia oltre il cap.",
+        "cost": 1,
+        "timing": "before_fight",
+        "text": "Prima del fight: +1 danni oltre il cap se vinci.",
         "effect": {
-          "type": "break-cap"
+          "type": "damage",
+          "value": 1
         },
+        "effects": [
+          {
+            "type": "damage",
+            "value": 1
+          }
+        ],
         "flavor": "Non prende appunti. Prende nomi."
       },
       "passive": {
         "name": "Gift of the drowned ones",
-        "text": "+2 Breccia se attacchi con Opportunismo.",
+        "timing": "always",
+        "text": "Sempre: +3 Breccia se attacchi con Opportunismo.",
         "effect": {
           "type": "attack-stat-bonus",
           "stat": "O",
-          "value": 2
+          "value": 3
         },
+        "effects": [
+          {
+            "type": "attack-stat-bonus",
+            "stat": "O",
+            "value": 3
+          }
+        ],
         "flavor": "Aspetta il momento giusto e poi emerge."
       },
       "quote": "Annegato nello scope, risorto per la vendetta.",
@@ -3036,22 +3830,37 @@
       },
       "active": {
         "name": "Bite",
-        "cost": 3,
-        "text": "+4 danni oltre il cap se vinci il fight.",
+        "cost": 2,
+        "timing": "before_fight",
+        "text": "Prima del fight: +2 danni oltre il cap se vinci.",
         "effect": {
           "type": "damage",
-          "value": 4
+          "value": 2
         },
+        "effects": [
+          {
+            "type": "damage",
+            "value": 2
+          }
+        ],
         "flavor": "The great white Valerio is back."
       },
       "passive": {
         "name": "Blood Thirsty",
-        "text": "+2 Breccia se attacchi con Opportunismo.",
+        "timing": "always",
+        "text": "Sempre: +3 Breccia se attacchi con Istinto.",
         "effect": {
           "type": "attack-stat-bonus",
-          "stat": "O",
-          "value": 2
+          "stat": "I",
+          "value": 3
         },
+        "effects": [
+          {
+            "type": "attack-stat-bonus",
+            "stat": "I",
+            "value": 3
+          }
+        ],
         "flavor": "The great white Valerio is back."
       },
       "quote": "The great white Valerio is back.",
@@ -3091,22 +3900,37 @@
       },
       "active": {
         "name": "Speed of Light",
-        "cost": 3,
-        "text": "+4 danni oltre il cap se vinci il fight.",
+        "cost": 2,
+        "timing": "before_fight",
+        "text": "Prima del fight: ignora la difesa avversaria su Rigore.",
         "effect": {
-          "type": "damage",
-          "value": 4
+          "type": "ignore-defense",
+          "stat": "R"
         },
+        "effects": [
+          {
+            "type": "ignore-defense",
+            "stat": "R"
+          }
+        ],
         "flavor": "The God of Speed is back."
       },
       "passive": {
         "name": "I, am the future Flash",
-        "text": "+2 Breccia se attacchi con Opportunismo.",
+        "timing": "always",
+        "text": "Sempre: +1 difesa virtuale se difendi con Ego.",
         "effect": {
-          "type": "attack-stat-bonus",
-          "stat": "O",
-          "value": 2
+          "type": "defense-stat-bonus",
+          "stat": "E",
+          "value": 1
         },
+        "effects": [
+          {
+            "type": "defense-stat-bonus",
+            "stat": "E",
+            "value": 1
+          }
+        ],
         "flavor": "The God of Speed is back."
       },
       "quote": "The God of Speed is back.",
@@ -3146,22 +3970,35 @@
       },
       "active": {
         "name": "Time travel",
-        "cost": 3,
-        "text": "+4 danni oltre il cap se vinci il fight.",
+        "cost": 2,
+        "timing": "before_fight",
+        "text": "Prima del fight: ignora la difesa avversaria su Rigore.",
         "effect": {
-          "type": "damage",
-          "value": 4
+          "type": "ignore-defense",
+          "stat": "R"
         },
+        "effects": [
+          {
+            "type": "ignore-defense",
+            "stat": "R"
+          }
+        ],
         "flavor": "The great white Valerio is back."
       },
       "passive": {
         "name": "Hate",
-        "text": "+2 Breccia se attacchi con Opportunismo.",
+        "timing": "always",
+        "text": "Sempre: +2 Breccia.",
         "effect": {
-          "type": "attack-stat-bonus",
-          "stat": "O",
+          "type": "flat-damage",
           "value": 2
         },
+        "effects": [
+          {
+            "type": "flat-damage",
+            "value": 2
+          }
+        ],
         "flavor": "The great white Valerio is back."
       },
       "quote": "The great white Valerio is back.",
@@ -3201,22 +4038,37 @@
       },
       "active": {
         "name": "Give me your speed",
-        "cost": 3,
-        "text": "+4 danni oltre il cap se vinci il fight.",
+        "cost": 2,
+        "timing": "before_fight",
+        "text": "Prima del fight: ignora la difesa avversaria su Rigore.",
         "effect": {
-          "type": "damage",
-          "value": 4
+          "type": "ignore-defense",
+          "stat": "R"
         },
+        "effects": [
+          {
+            "type": "ignore-defense",
+            "stat": "R"
+          }
+        ],
         "flavor": "The great white Valerio is back."
       },
       "passive": {
         "name": "Time stop",
-        "text": "+2 Breccia se attacchi con Opportunismo.",
+        "timing": "always",
+        "text": "Sempre: +1 difesa virtuale se difendi con Ego.",
         "effect": {
-          "type": "attack-stat-bonus",
-          "stat": "O",
-          "value": 2
+          "type": "defense-stat-bonus",
+          "stat": "E",
+          "value": 1
         },
+        "effects": [
+          {
+            "type": "defense-stat-bonus",
+            "stat": "E",
+            "value": 1
+          }
+        ],
         "flavor": "The great white Valerio is back."
       },
       "quote": "The great white Valerio is back.",
@@ -3257,21 +4109,36 @@
       "active": {
         "name": "Bach's Goldberg Variations",
         "cost": 3,
-        "text": "+4 danni oltre il cap se vinci il fight.",
+        "timing": "before_fight",
+        "text": "Prima del fight: +3 danni oltre il cap se vinci.",
         "effect": {
           "type": "damage",
-          "value": 4
+          "value": 3
         },
+        "effects": [
+          {
+            "type": "damage",
+            "value": 3
+          }
+        ],
         "flavor": "The great white Valerio is back."
       },
       "passive": {
         "name": "Bach's Goldberg Variations",
-        "text": "+2 Breccia se attacchi con Opportunismo.",
+        "timing": "always",
+        "text": "Sempre: +2 Breccia se non usi Astuzia nel piano.",
         "effect": {
-          "type": "attack-stat-bonus",
-          "stat": "O",
+          "type": "missing",
+          "stat": "A",
           "value": 2
         },
+        "effects": [
+          {
+            "type": "missing",
+            "stat": "A",
+            "value": 2
+          }
+        ],
         "flavor": "The great white Valerio is back."
       },
       "quote": "The great white Valerio is back.",
@@ -3311,22 +4178,37 @@
       },
       "active": {
         "name": "Beethovens 4th Symphony",
-        "cost": 3,
-        "text": "+4 danni oltre il cap se vinci il fight.",
+        "cost": 2,
+        "timing": "before_fight",
+        "text": "Prima del fight: ignora la difesa avversaria su Istinto.",
         "effect": {
-          "type": "damage",
-          "value": 4
+          "type": "ignore-defense",
+          "stat": "I"
         },
+        "effects": [
+          {
+            "type": "ignore-defense",
+            "stat": "I"
+          }
+        ],
         "flavor": "The great white Valerio is back."
       },
       "passive": {
         "name": "Moonlight",
-        "text": "+2 Breccia se attacchi con Opportunismo.",
+        "timing": "always",
+        "text": "Sempre: +1 Breccia se non usi Ego nel piano.",
         "effect": {
-          "type": "attack-stat-bonus",
-          "stat": "O",
-          "value": 2
+          "type": "missing",
+          "stat": "E",
+          "value": 1
         },
+        "effects": [
+          {
+            "type": "missing",
+            "stat": "E",
+            "value": 1
+          }
+        ],
         "flavor": "The great white Valerio is back."
       },
       "quote": "The great white Valerio is back.",
@@ -3366,22 +4248,37 @@
       },
       "active": {
         "name": "Mozart's Symphony No. 40",
-        "cost": 3,
-        "text": "+4 danni oltre il cap se vinci il fight.",
+        "cost": 4,
+        "timing": "before_fight",
+        "text": "Prima del fight: +4 danni oltre il cap se vinci.",
         "effect": {
           "type": "damage",
           "value": 4
         },
+        "effects": [
+          {
+            "type": "damage",
+            "value": 4
+          }
+        ],
         "flavor": "The great white Valerio is back."
       },
       "passive": {
         "name": "Eine kleine Nachtmusik",
-        "text": "+2 Breccia se attacchi con Opportunismo.",
+        "timing": "always",
+        "text": "Sempre: +3 Breccia se non usi Lucidita nel piano.",
         "effect": {
-          "type": "attack-stat-bonus",
-          "stat": "O",
-          "value": 2
+          "type": "missing",
+          "stat": "L",
+          "value": 3
         },
+        "effects": [
+          {
+            "type": "missing",
+            "stat": "L",
+            "value": 3
+          }
+        ],
         "flavor": "The great white Valerio is back."
       },
       "quote": "The great white Valerio is back.",
@@ -3421,22 +4318,35 @@
       },
       "active": {
         "name": "Play with Your Food",
-        "cost": 3,
-        "text": "+4 danni oltre il cap se vinci il fight.",
+        "cost": 4,
+        "timing": "before_fight",
+        "text": "Prima del fight: se vinci, la Breccia supera il cap.",
         "effect": {
-          "type": "damage",
-          "value": 4
+          "type": "break-cap"
         },
+        "effects": [
+          {
+            "type": "break-cap"
+          }
+        ],
         "flavor": "The great white Valerio is back."
       },
       "passive": {
         "name": "Save the Best for Last",
-        "text": "+2 Breccia se attacchi con Opportunismo.",
+        "timing": "always",
+        "text": "Sempre: +2 Breccia se non usi Astuzia nel piano.",
         "effect": {
-          "type": "attack-stat-bonus",
-          "stat": "O",
+          "type": "missing",
+          "stat": "A",
           "value": 2
         },
+        "effects": [
+          {
+            "type": "missing",
+            "stat": "A",
+            "value": 2
+          }
+        ],
         "flavor": "The great white Valerio is back."
       },
       "quote": "The great white Valerio is back.",
@@ -3476,22 +4386,37 @@
       },
       "active": {
         "name": "Fission",
-        "cost": 3,
-        "text": "+4 danni oltre il cap se vinci il fight.",
+        "cost": 2,
+        "timing": "before_fight",
+        "text": "Prima del fight: +2 danni oltre il cap se vinci.",
         "effect": {
           "type": "damage",
-          "value": 4
+          "value": 2
         },
+        "effects": [
+          {
+            "type": "damage",
+            "value": 2
+          }
+        ],
         "flavor": "The great white Valerio is back."
       },
       "passive": {
         "name": "u-235",
-        "text": "+2 Breccia se attacchi con Opportunismo.",
+        "timing": "always",
+        "text": "Sempre: +2 difesa virtuale se difendi con Vigore.",
         "effect": {
-          "type": "attack-stat-bonus",
-          "stat": "O",
+          "type": "defense-stat-bonus",
+          "stat": "V",
           "value": 2
         },
+        "effects": [
+          {
+            "type": "defense-stat-bonus",
+            "stat": "V",
+            "value": 2
+          }
+        ],
         "flavor": "The great white Valerio is back."
       },
       "quote": "The great white Valerio is back.",
@@ -3531,22 +4456,37 @@
       },
       "active": {
         "name": "Diritto Divino",
-        "cost": 3,
-        "text": "+4 danni oltre il cap se vinci il fight.",
+        "cost": 1,
+        "timing": "before_fight",
+        "text": "Prima del fight: +1 danni oltre il cap se vinci.",
         "effect": {
           "type": "damage",
-          "value": 4
+          "value": 1
         },
+        "effects": [
+          {
+            "type": "damage",
+            "value": 1
+          }
+        ],
         "flavor": "The great white Valerio is back."
       },
       "passive": {
         "name": "u-235",
-        "text": "+2 Breccia se attacchi con Opportunismo.",
+        "timing": "always",
+        "text": "Sempre: +3 difesa virtuale se difendi con Lucidita.",
         "effect": {
-          "type": "attack-stat-bonus",
-          "stat": "O",
-          "value": 2
+          "type": "defense-stat-bonus",
+          "stat": "L",
+          "value": 3
         },
+        "effects": [
+          {
+            "type": "defense-stat-bonus",
+            "stat": "L",
+            "value": 3
+          }
+        ],
         "flavor": "The great white Valerio is back."
       },
       "quote": "The great white Valerio is back.",
@@ -3586,22 +4526,37 @@
       },
       "active": {
         "name": "Accordo Finale",
-        "cost": 3,
-        "text": "+4 danni oltre il cap se vinci il fight.",
+        "cost": 2,
+        "timing": "before_fight",
+        "text": "Prima del fight: ignora la difesa avversaria su Opportunismo.",
         "effect": {
-          "type": "damage",
-          "value": 4
+          "type": "ignore-defense",
+          "stat": "O"
         },
+        "effects": [
+          {
+            "type": "ignore-defense",
+            "stat": "O"
+          }
+        ],
         "flavor": "The great white Valerio is back."
       },
       "passive": {
         "name": "Le Quattro Stagioni",
-        "text": "+2 Breccia se attacchi con Opportunismo.",
+        "timing": "always",
+        "text": "Sempre: +2 Breccia se non usi Astuzia nel piano.",
         "effect": {
-          "type": "attack-stat-bonus",
-          "stat": "O",
+          "type": "missing",
+          "stat": "A",
           "value": 2
         },
+        "effects": [
+          {
+            "type": "missing",
+            "stat": "A",
+            "value": 2
+          }
+        ],
         "flavor": "The great white Valerio is back."
       },
       "quote": "The great white Valerio is back.",
@@ -3642,21 +4597,36 @@
       "active": {
         "name": "Ghigliottina Solennee",
         "cost": 3,
-        "text": "+4 danni oltre il cap se vinci il fight.",
+        "timing": "before_fight",
+        "text": "Prima del fight: +3 danni oltre il cap se vinci.",
         "effect": {
           "type": "damage",
-          "value": 4
+          "value": 3
         },
+        "effects": [
+          {
+            "type": "damage",
+            "value": 3
+          }
+        ],
         "flavor": "The great white Valerio is back."
       },
       "passive": {
         "name": "Club dei Giacobini",
-        "text": "+2 Breccia se attacchi con Opportunismo.",
+        "timing": "always",
+        "text": "Sempre: +2 Breccia se non usi Astuzia nel piano.",
         "effect": {
-          "type": "attack-stat-bonus",
-          "stat": "O",
+          "type": "missing",
+          "stat": "A",
           "value": 2
         },
+        "effects": [
+          {
+            "type": "missing",
+            "stat": "A",
+            "value": 2
+          }
+        ],
         "flavor": "The great white Valerio is back."
       },
       "quote": "The great white Valerio is back.",
@@ -3696,22 +4666,33 @@
       },
       "active": {
         "name": "Cento Giorni",
-        "cost": 3,
-        "text": "+4 danni oltre il cap se vinci il fight.",
+        "cost": 4,
+        "timing": "before_fight",
+        "text": "Prima del fight: se vinci, la Breccia supera il cap.",
         "effect": {
-          "type": "damage",
-          "value": 4
+          "type": "break-cap"
         },
+        "effects": [
+          {
+            "type": "break-cap"
+          }
+        ],
         "flavor": "The great white Valerio is back."
       },
       "passive": {
         "name": "Waterloo",
-        "text": "+2 Breccia se attacchi con Opportunismo.",
+        "timing": "always",
+        "text": "Sempre: +2 Breccia.",
         "effect": {
-          "type": "attack-stat-bonus",
-          "stat": "O",
+          "type": "flat-damage",
           "value": 2
         },
+        "effects": [
+          {
+            "type": "flat-damage",
+            "value": 2
+          }
+        ],
         "flavor": "The great white Valerio is back."
       },
       "quote": "The great white Valerio is back.",
@@ -3751,22 +4732,37 @@
       },
       "active": {
         "name": "Morte Stellarei",
-        "cost": 3,
-        "text": "+4 danni oltre il cap se vinci il fight.",
+        "cost": 2,
+        "timing": "before_fight",
+        "text": "Prima del fight: +2 danni oltre il cap se vinci.",
         "effect": {
           "type": "damage",
-          "value": 4
+          "value": 2
         },
+        "effects": [
+          {
+            "type": "damage",
+            "value": 2
+          }
+        ],
         "flavor": "The great white Valerio is back."
       },
       "passive": {
         "name": "Radiazione di Hawking",
-        "text": "+2 Breccia se attacchi con Opportunismo.",
+        "timing": "always",
+        "text": "Sempre: +2 Breccia se attacchi con Rigore.",
         "effect": {
           "type": "attack-stat-bonus",
-          "stat": "O",
+          "stat": "R",
           "value": 2
         },
+        "effects": [
+          {
+            "type": "attack-stat-bonus",
+            "stat": "R",
+            "value": 2
+          }
+        ],
         "flavor": "The great white Valerio is back."
       },
       "quote": "The great white Valerio is back.",
@@ -3806,22 +4802,35 @@
       },
       "active": {
         "name": "Morte Stellarei",
-        "cost": 3,
-        "text": "+4 danni oltre il cap se vinci il fight.",
+        "cost": 2,
+        "timing": "before_fight",
+        "text": "Prima del fight: ignora la difesa avversaria su Istinto.",
         "effect": {
-          "type": "damage",
-          "value": 4
+          "type": "ignore-defense",
+          "stat": "I"
         },
+        "effects": [
+          {
+            "type": "ignore-defense",
+            "stat": "I"
+          }
+        ],
         "flavor": "The great white Valerio is back."
       },
       "passive": {
         "name": "Radiazione di Hawking",
-        "text": "+2 Breccia se attacchi con Opportunismo.",
+        "timing": "always",
+        "text": "Sempre: +3 Breccia.",
         "effect": {
-          "type": "attack-stat-bonus",
-          "stat": "O",
-          "value": 2
+          "type": "flat-damage",
+          "value": 3
         },
+        "effects": [
+          {
+            "type": "flat-damage",
+            "value": 3
+          }
+        ],
         "flavor": "The great white Valerio is back."
       },
       "quote": "The great white Valerio is back.",
@@ -3846,6 +4855,5 @@
       },
       "rarityRule": "epica: costo draft 4 secondo bilanciamento v7; nuova carta extra"
     }
-
   ]
 }

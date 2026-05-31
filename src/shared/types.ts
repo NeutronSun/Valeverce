@@ -13,8 +13,10 @@ export interface CardEffect {
 export interface CardAbility {
   name: string;
   cost?: number;
+  timing?: string;
   text: string;
   effect?: CardEffect;
+  effects?: CardEffect[];
 }
 
 export interface Card {

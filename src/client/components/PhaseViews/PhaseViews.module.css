@@ -30,6 +30,7 @@
 .home {
   display: grid;
   grid-template-columns: minmax(360px, 0.82fr) minmax(460px, 1.18fr);
+  align-items: start;
   gap: 14px;
   width: min(1240px, calc(100vw - 28px));
   margin: 0 auto;
@@ -63,12 +64,18 @@
 }
 
 .homeAccess {
+  grid-column: 1;
   align-content: start;
 }
 
 .publicLobbyPanel {
-  grid-row: span 2;
+  grid-column: 2;
+  grid-row: 2 / span 2;
   align-content: start;
+}
+
+.homeRules {
+  grid-column: 1;
 }
 
 .homeBrand {
@@ -1254,6 +1261,395 @@
   color: var(--term-color, var(--color-text));
 }
 
+.utilityDeckManager,
+.utilityGate,
+.utilityReaction {
+  --utility-accent: var(--color-utility);
+
+  position: relative;
+  display: grid;
+  gap: 12px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--utility-accent), transparent 62%);
+  border-radius: 10px;
+  padding: 14px;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--utility-accent), transparent 88%), transparent 44%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.028), transparent),
+    rgba(14, 17, 14, 0.94);
+  box-shadow:
+    0 18px 44px rgba(0, 0, 0, 0.3),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.026);
+  backdrop-filter: blur(10px);
+}
+
+.utilityDeckManager::before,
+.utilityGate::before,
+.utilityReaction::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: linear-gradient(180deg, var(--utility-accent), transparent);
+  opacity: 0.78;
+}
+
+.utilityDeckManager {
+  grid-column: 1;
+  align-content: start;
+}
+
+.compactUtilityDeckManager {
+  border-radius: 10px;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--utility-accent), transparent 92%), transparent 54%),
+    rgba(7, 8, 7, 0.55);
+}
+
+.utilityDeckList {
+  display: grid;
+  gap: 8px;
+}
+
+.utilityDeckRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  border: 1px solid var(--color-border-soft);
+  border-radius: 8px;
+  padding: 10px;
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--color-utility), transparent 91%), transparent),
+    rgba(7, 8, 7, 0.58);
+
+  & strong {
+    color: var(--color-text);
+    font-size: 0.84rem;
+  }
+
+  & small {
+    display: block;
+    overflow: hidden;
+    color: var(--color-muted);
+    font-size: 0.68rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.utilityDeckActions,
+.utilityBuilderHead,
+.targetPicker {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.utilityDeckActions button,
+.targetPicker button,
+.passButton {
+  min-height: 34px;
+  border-radius: 8px;
+  color: var(--color-text);
+  background: rgba(7, 8, 7, 0.72);
+  font-size: 0.72rem;
+  font-weight: 950;
+}
+
+.utilityDeckActions button:hover,
+.targetPicker button:hover,
+.passButton:hover {
+  border-color: color-mix(in srgb, var(--utility-accent), transparent 36%);
+  color: var(--color-text);
+  background: color-mix(in srgb, var(--utility-accent), rgba(7, 8, 7, 0.86) 84%);
+}
+
+.utilityBuilder {
+  display: grid;
+  gap: 10px;
+}
+
+.utilityBuilderHead {
+  justify-content: space-between;
+
+  & strong {
+    color: var(--color-gold);
+    font-size: 0.82rem;
+  }
+}
+
+.utilityCardPicker {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(172px, 1fr));
+  gap: 8px;
+  max-height: 330px;
+  overflow: auto;
+  padding-right: 2px;
+}
+
+.utilityPick,
+.utilityCardButton {
+  --card-type-color: var(--color-utility);
+
+  position: relative;
+  display: grid;
+  gap: 4px;
+  min-height: 76px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--card-type-color), transparent 62%);
+  border-radius: 8px;
+  padding: 9px 9px 9px 11px;
+  color: var(--color-text);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--card-type-color), transparent 86%), transparent 58%),
+    rgba(7, 8, 7, 0.72);
+  text-align: left;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    transform 160ms ease;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 3px;
+    background: var(--card-type-color);
+    opacity: 0.86;
+  }
+
+  & span {
+    width: fit-content;
+    border: 1px solid color-mix(in srgb, var(--card-type-color), transparent 44%);
+    border-radius: 999px;
+    padding: 2px 7px;
+    color: color-mix(in srgb, var(--card-type-color), white 18%);
+    background: color-mix(in srgb, var(--card-type-color), transparent 88%);
+    font-size: 0.62rem;
+    font-weight: 950;
+    text-transform: uppercase;
+  }
+
+  & strong {
+    overflow-wrap: anywhere;
+    font-size: 0.82rem;
+  }
+
+  & small {
+    color: var(--color-muted);
+    font-size: 0.66rem;
+  }
+}
+
+.utilityPick[data-card-type="defense"],
+.utilityCardButton[data-card-type="defense"],
+.utilityHandCard[data-card-type="defense"] {
+  --card-type-color: var(--color-defense);
+}
+
+.utilityPick[data-card-type="trap"],
+.utilityCardButton[data-card-type="trap"],
+.utilityHandCard[data-card-type="trap"] {
+  --card-type-color: var(--color-trap);
+}
+
+.utilityPick:hover,
+.utilityCardButton:hover {
+  border-color: color-mix(in srgb, var(--card-type-color), transparent 30%);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--card-type-color), transparent 78%), transparent 62%),
+    rgba(9, 12, 10, 0.9);
+  transform: translateY(-1px);
+}
+
+.selectedUtilityPick {
+  border-color: color-mix(in srgb, var(--card-type-color), white 10%);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--card-type-color), transparent 74%), transparent 58%),
+    rgba(7, 8, 7, 0.82);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--card-type-color), transparent 48%),
+    0 0 18px color-mix(in srgb, var(--card-type-color), transparent 86%);
+}
+
+.utilityGateCopy {
+  display: grid;
+  gap: 4px;
+
+  & strong {
+    color: var(--color-text);
+    font-size: 1rem;
+  }
+
+  & p {
+    margin: 0;
+    color: var(--color-muted);
+    font-size: 0.8rem;
+  }
+}
+
+.utilityHand {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(168px, 1fr));
+  align-items: end;
+  gap: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.055);
+  border-radius: 10px;
+  padding: 12px 12px 10px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.026), transparent),
+    rgba(5, 6, 5, 0.42);
+}
+
+.utilityHandCard {
+  display: grid;
+  gap: 7px;
+  transform: translateY(8px);
+  transition: transform 160ms ease;
+}
+
+.utilityHandCard:hover {
+  transform: translateY(0);
+}
+
+.utilityCardButton {
+  min-height: 94px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.26);
+}
+
+.targetPicker {
+  flex-wrap: wrap;
+}
+
+.selectedTarget {
+  border-color: color-mix(in srgb, var(--utility-accent), white 8%);
+  color: #10120f;
+  background: color-mix(in srgb, var(--utility-accent), white 22%);
+}
+
+.passButton {
+  align-self: stretch;
+  border-color: rgba(214, 174, 82, 0.58);
+  color: var(--color-gold);
+  background: rgba(7, 8, 7, 0.86);
+}
+
+.trapStrip,
+.utilityOverlayGrid,
+.effectLogGrid {
+  display: grid;
+  gap: 8px;
+}
+
+.trapStrip {
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+
+  & > div {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    border: 1px dashed color-mix(in srgb, var(--color-trap), transparent 56%);
+    border-radius: 8px;
+    padding: 8px;
+    background:
+      linear-gradient(90deg, color-mix(in srgb, var(--color-trap), transparent 91%), transparent),
+      rgba(7, 8, 7, 0.42);
+  }
+
+  & span {
+    color: var(--color-muted);
+    font-size: 0.66rem;
+    font-weight: 950;
+    text-transform: uppercase;
+  }
+
+  & b {
+    color: var(--color-text);
+    font-size: 0.72rem;
+  }
+}
+
+.utilityDeckOverlay {
+  border: 1px solid var(--color-border-soft);
+  border-radius: 8px;
+  padding: 8px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent),
+    rgba(7, 8, 7, 0.48);
+
+  & summary {
+    color: var(--color-gold);
+    cursor: pointer;
+    font-size: 0.74rem;
+    font-weight: 950;
+    text-transform: uppercase;
+  }
+}
+
+.utilityOverlayGrid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 8px;
+
+  & span {
+    display: grid;
+    gap: 2px;
+    border: 1px solid var(--color-border-soft);
+    border-radius: 8px;
+    padding: 7px;
+    color: var(--color-muted);
+    font-size: 0.68rem;
+    font-weight: 900;
+  }
+
+  & b {
+    color: var(--color-text);
+  }
+}
+
+.utilityMiniList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+
+  & span {
+    border-radius: 999px;
+    padding: 4px 8px;
+    color: var(--color-text);
+    background: rgba(77, 186, 154, 0.14);
+    font-size: 0.68rem;
+    font-weight: 850;
+  }
+}
+
+.effectLogGrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.effectLog {
+  display: grid;
+  gap: 6px;
+  border: 1px solid var(--color-border-soft);
+  border-radius: 8px;
+  padding: 8px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.022), transparent),
+    rgba(7, 8, 7, 0.42);
+
+  & strong {
+    color: var(--color-text);
+    font-size: 0.74rem;
+    text-transform: uppercase;
+  }
+
+  & span {
+    color: var(--color-muted);
+    font-size: 0.72rem;
+    font-weight: 800;
+  }
+}
+
 .rarityCommon { --rarity-color: var(--rarity-common); }
 .rarityRare { --rarity-color: var(--rarity-rare); }
 .rarityEpic { --rarity-color: var(--rarity-epic); }
@@ -1273,7 +1669,8 @@
   .home,
   .grid,
   .planner,
-  .scoreboard {
+  .scoreboard,
+  .effectLogGrid {
     grid-template-columns: 1fr;
   }
 
@@ -1283,7 +1680,14 @@
   }
 
   .publicLobbyPanel {
+    grid-column: auto;
     grid-row: auto;
+  }
+
+  .homeAccess,
+  .homeRules,
+  .utilityDeckManager {
+    grid-column: auto;
   }
 }
 
@@ -1291,6 +1695,8 @@
   .homeActions,
   .inlineForm,
   .homeRuleGrid,
+  .utilityDeckRow,
+  .utilityOverlayGrid,
   .publicLobbyTableHead,
   .publicLobbyRow {
     grid-template-columns: 1fr;

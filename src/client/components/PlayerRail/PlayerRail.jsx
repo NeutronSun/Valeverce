@@ -95,9 +95,20 @@ function PlayerPlate({ player, isSelf, isOpponent }) {
         <small>{isSelf ? "tu" : player.isActive ? "duello" : `${player.deckCount} carte`}</small>
       </div>
       <CardStrip player={player} />
+      <UtilityBadges player={player} />
       <ResourceBar type="health" label="PV" value={player.health} max={player.maxHealth} />
       <ResourceBar type="mana" label="Mana" value={player.mana} max={10} />
     </article>
+  );
+}
+
+function UtilityBadges({ player }) {
+  return (
+    <div className={styles.utilityBadges}>
+      <span>Mano {player.utilityHandCount ?? player.utilityHand?.length ?? 0}</span>
+      <span>Mazzo {player.utilityDrawCount ?? 0}</span>
+      <span>Trap {player.armedTrapCount ?? player.armedTraps?.length ?? 0}</span>
+    </div>
   );
 }
 

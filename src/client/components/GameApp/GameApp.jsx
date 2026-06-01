@@ -29,6 +29,9 @@ import {
 } from "../../ui.js";
 import styles from "./GameApp.module.css";
 
+const UTILITY_DECK_STORAGE_KEY = "valeverce.utilityDecks.v1";
+const MAX_STORED_UTILITY_DECKS = 12;
+
 export function GameApp({ initialLobbyId = "" }) {
   const { snapshot, connectionState, pingMs, lastError, clearError, emit, setName } = useGameSocket();
   const lobby = snapshot?.lobby ?? null;
@@ -39,6 +42,8 @@ export function GameApp({ initialLobbyId = "" }) {
   const [planPreview, setPlanPreview] = useState([]);
   const [menuOpen, setMenuOpen] = useState(false);
   const [draftGroupMode, setDraftGroupMode] = useState("rarity");
+  const [cardCatalog, setCardCatalog] = useState([]);
+  const [utilityDecks, setUtilityDecks] = useState([]);
   const [height, setHeight] = useState(0);
   const shellRef = useRef(null);
   const menuDialogRef = useRef(null);
@@ -61,6 +66,32 @@ export function GameApp({ initialLobbyId = "" }) {
   useEffect(() => {
     const savedName = window.localStorage.getItem("valeverce.playerName") ?? "";
     setNameState(savedName);
+    setUtilityDecks(readUtilityDecks());
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadCards() {
+      try {
+        const response = await fetch("/data/cards.json");
+        const data = await response.json();
+        const cards = Array.isArray(data) ? data : data.cards;
+        if (isMounted) {
+          setCardCatalog(Array.isArray(cards) ? cards : []);
+        }
+      } catch {
+        if (isMounted) {
+          setCardCatalog([]);
+        }
+      }
+    }
+
+    loadCards();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   useEffect(() => {
@@ -154,6 +185,10 @@ export function GameApp({ initialLobbyId = "" }) {
       targetId: group.targetId
     }));
   }, [draftGroupMode, lobby?.draft?.pool, lobby?.phase]);
+  const utilityCards = useMemo(
+    () => cardCatalog.filter((card) => ["utility", "defense", "trap"].includes(card.type)),
+    [cardCatalog]
+  );
 
   const updateName = useCallback(
     (value) => {
@@ -162,6 +197,12 @@ export function GameApp({ initialLobbyId = "" }) {
     },
     [setName]
   );
+
+  const saveUtilityDecks = useCallback((nextDecks) => {
+    const normalizedDecks = nextDecks.slice(0, MAX_STORED_UTILITY_DECKS);
+    setUtilityDecks(normalizedDecks);
+    window.localStorage.setItem(UTILITY_DECK_STORAGE_KEY, JSON.stringify(normalizedDecks));
+  }, []);
 
   const onPlanValue = useCallback(
     (section, key, value) => {
@@ -221,6 +262,9 @@ export function GameApp({ initialLobbyId = "" }) {
             emit={emit}
             connectionState={connectionState}
             pingMs={pingMs}
+            utilityCards={utilityCards}
+            utilityDecks={utilityDecks}
+            onUtilityDecksChange={saveUtilityDecks}
           />
         ) : (
           <>
@@ -236,12 +280,20 @@ export function GameApp({ initialLobbyId = "" }) {
               />
             ) : null}
             {lobby.phase === "select" ? (
-              <SelectView lobby={lobby} selectedCardId={selectedCardId} onSelectedCardId={setSelectedCardId} emit={emit} />
+              <SelectView
+                lobby={lobby}
+                selectedCardId={selectedCardId}
+                onSelectedCardId={setSelectedCardId}
+                emit={emit}
+                utilityCards={utilityCards}
+                utilityDecks={utilityDecks}
+                onUtilityDecksChange={saveUtilityDecks}
+              />
             ) : null}
             {lobby.phase === "plan" ? (
               <PlanFightView lobby={lobby} plan={plan} onPlanValue={onPlanValue} onPreviewLines={setPlanPreview} />
             ) : null}
-            {["reveal", "ended"].includes(lobby.phase) ? <RevealView lobby={lobby} /> : null}
+            {["reveal", "ended"].includes(lobby.phase) ? <RevealView lobby={lobby} emit={emit} /> : null}
           </>
         )}
       </main>
@@ -297,6 +349,15 @@ export function GameApp({ initialLobbyId = "" }) {
       </dialog>
     </div>
   );
+}
+
+function readUtilityDecks() {
+  try {
+    const parsed = JSON.parse(window.localStorage.getItem(UTILITY_DECK_STORAGE_KEY) ?? "[]");
+    return Array.isArray(parsed) ? parsed.filter((deck) => Array.isArray(deck.cardIds)) : [];
+  } catch {
+    return [];
+  }
 }
 
 function MatchHeader({ lobby, connectionState, pingMs }) {

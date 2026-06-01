@@ -20,5 +20,6 @@ export class LobbyState {
     this.players = new Map();
     this.lastResult = null;
     this.winnerId = null;
+    this.effectWindow = null;
   }
 }

@@ -87,12 +87,14 @@ export class LobbySerializer {
       hostId: lobby.hostId,
       phase: lobby.phase,
       round: lobby.round,
+      settings: lobby.settings,
       activePair: lobby.activePair,
       deadlineAt: lobby.deadlineAt,
       draft: this.serializeDraft(lobby, currentDrafterId, selfId),
       chat: lobby.chat,
       lastResult: lobby.lastResult,
       winnerId: lobby.winnerId,
+      effectWindow: this.serializeEffectWindow(lobby, selfId),
       players: [...lobby.players.values()].map((player) =>
         this.serializePlayer(lobby, player, selfId, currentDrafterId)
       ),
@@ -126,6 +128,11 @@ export class LobbySerializer {
       draftBudgetRemaining: Math.max(0, this.SETTINGS.draftBudget - player.draftSpent),
       cooldowns: player.cooldowns,
       alive: player.alive,
+      utilityDeckReady: Boolean(player.utilityDeckReady),
+      utilityHandCount: player.utilityHand?.length ?? 0,
+      utilityDrawCount: player.utilityDrawPile?.length ?? 0,
+      utilityDiscardCount: player.utilityDiscard?.length ?? 0,
+      armedTrapCount: player.armedTraps?.length ?? 0,
       isActive: this.isActiveDuelist(lobby, player.id),
       isCurrentDrafter: currentDrafterId === player.id,
       hasSelected: Boolean(player.selected?.cardId),
@@ -164,6 +171,21 @@ export class LobbySerializer {
       draftBudget: this.SETTINGS.draftBudget,
       draftBudgetRemaining: Math.max(0, this.SETTINGS.draftBudget - self.draftSpent),
       cooldowns: self.cooldowns,
+      utilityDeck: this.serializeCards(self.utilityDeck ?? []),
+      utilityDeckReady: Boolean(self.utilityDeckReady),
+      utilityHand: this.serializeCards(self.utilityHand ?? []),
+      utilityDrawCount: self.utilityDrawPile?.length ?? 0,
+      utilityDiscard: this.serializeCards(self.utilityDiscard ?? []),
+      utilityDiscardCount: self.utilityDiscard?.length ?? 0,
+      armedTraps: (self.armedTraps ?? []).map((trap) => ({
+        id: trap.id,
+        card: this.cardsById.get(trap.cardId) ?? null,
+        cardId: trap.cardId,
+        armedRound: trap.armedRound,
+        trigger: trap.trigger ?? null
+      })),
+      armedTrapCount: self.armedTraps?.length ?? 0,
+      privateEffectLog: self.privateEffectLog ?? [],
       selected: self.selected
         ? {
             ...self.selected,
@@ -175,6 +197,35 @@ export class LobbySerializer {
       isActive: this.isActiveDuelist(lobby, self.id),
       isCurrentDrafter: currentDrafterId === self.id,
       alive: self.alive
+    };
+  }
+
+  serializeCards(cardIds) {
+    return cardIds.map((cardId) => this.cardsById.get(cardId)).filter(Boolean);
+  }
+
+  serializeEffectWindow(lobby, viewerId) {
+    if (!lobby.effectWindow) {
+      return null;
+    }
+
+    const submissions = Object.fromEntries(
+      Object.entries(lobby.effectWindow.submissions ?? {}).map(([playerId, submission]) => [
+        playerId,
+        {
+          ...submission,
+          cardId: submission.type === "trap" && playerId !== viewerId ? null : submission.cardId
+        }
+      ])
+    );
+
+    return {
+      id: lobby.effectWindow.id,
+      round: lobby.effectWindow.round,
+      status: lobby.effectWindow.status,
+      playerIds: lobby.effectWindow.playerIds,
+      submissions,
+      publicLog: lobby.effectWindow.publicLog ?? []
     };
   }
 

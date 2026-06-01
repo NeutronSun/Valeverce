@@ -3,6 +3,7 @@ export function createSelectCardAction({
   sendError,
   isActiveDuelist,
   cardsById,
+  ensureUtilityDeckReady,
   advanceRoundIfReady,
   broadcastLobbyState
 }) {
@@ -23,6 +24,10 @@ export function createSelectCardAction({
     if (!player.alive) {
       sendError(client, "Sei fuori dalla partita");
       return;
+    }
+
+    if (!player.utilityDeckReady) {
+      ensureUtilityDeckReady?.(player);
     }
 
     if (!player.deck.includes(cardId) || !cardsById.has(cardId)) {

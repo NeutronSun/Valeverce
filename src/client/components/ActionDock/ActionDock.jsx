@@ -57,14 +57,15 @@ export function ActionDock({ lobby, plan, selectedCardId, previewCard, canSubmit
       </button>
     );
   } else if (lobby?.phase === "select") {
+    const utilityReady = !self?.isActive || Boolean(self?.utilityDeckReady);
     action = (
       <button
         type="button"
         className={styles.primary}
-        disabled={!self?.isActive || !selectedCardId}
+        disabled={!self?.isActive || !selectedCardId || !utilityReady}
         onClick={() => emit(CLIENT_EVENTS.SELECT_CARD, { cardId: selectedCardId })}
       >
-        {self?.isActive ? "Seleziona carta" : "Aspetta"}
+        {self?.isActive ? (utilityReady ? "Seleziona carta" : "Scegli utility deck") : "Aspetta"}
       </button>
     );
   } else if (lobby?.phase === "plan") {
@@ -79,9 +80,15 @@ export function ActionDock({ lobby, plan, selectedCardId, previewCard, canSubmit
       </button>
     );
   } else if (lobby?.phase === "reveal" && self?.id === lobby.hostId) {
+    const effectWindowOpen = lobby.effectWindow?.status === "waiting";
     action = (
-      <button type="button" className={styles.primary} onClick={() => emit(CLIENT_EVENTS.NEXT_ROUND)}>
-        Prossimo round
+      <button
+        type="button"
+        className={effectWindowOpen ? styles.secondary : styles.primary}
+        disabled={effectWindowOpen}
+        onClick={() => emit(CLIENT_EVENTS.NEXT_ROUND)}
+      >
+        {effectWindowOpen ? "Effetti in corso" : "Prossimo round"}
       </button>
     );
   }

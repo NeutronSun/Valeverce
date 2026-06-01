@@ -85,6 +85,16 @@ export interface PlayerSnapshot {
   draftBudgetRemaining: number;
   cooldowns: Record<string, number>;
   alive: boolean;
+  utilityDeckReady?: boolean;
+  utilityDeck?: Card[];
+  utilityHand?: Card[];
+  utilityHandCount?: number;
+  utilityDrawCount?: number;
+  utilityDiscard?: Card[];
+  utilityDiscardCount?: number;
+  armedTraps?: ArmedTrapSnapshot[];
+  armedTrapCount?: number;
+  privateEffectLog?: EffectLogEntry[];
   isActive: boolean;
   isCurrentDrafter?: boolean;
   hasSelected?: boolean;
@@ -92,6 +102,36 @@ export interface PlayerSnapshot {
   selectedCard?: Card | null;
   selected?: SelectedPlan | null;
   isHost?: boolean;
+}
+
+export interface ArmedTrapSnapshot {
+  id: string;
+  cardId: string;
+  card: Card | null;
+  armedRound: number;
+  trigger: TrapTrigger | null;
+}
+
+export interface EffectLogEntry {
+  id: string;
+  round?: number;
+  text: string;
+}
+
+export interface EffectWindowSnapshot {
+  id: string;
+  round: number;
+  status: "waiting" | "closed";
+  playerIds: string[];
+  submissions: Record<
+    string,
+    {
+      type: "card" | "trap" | "pass";
+      cardId: string | null;
+      targetPlayerId: string | null;
+    }
+  >;
+  publicLog: EffectLogEntry[];
 }
 
 export interface DraftCardSnapshot {
@@ -129,6 +169,7 @@ export interface LobbySnapshot {
   chat: ChatMessage[];
   lastResult: unknown;
   winnerId: string | null;
+  effectWindow: EffectWindowSnapshot | null;
   players: PlayerSnapshot[];
   self: PlayerSnapshot | null;
 }
@@ -155,12 +196,15 @@ export interface ClientEventPayloads {
   };
   startGame: Record<string, never>;
   draftCard: { cardId: string };
+  selectUtilityDeck: { cardIds: string[] };
   selectCard: { cardId: string };
   submitPlan: {
     attacks: Partial<Record<ValerioKey, number>>;
     defenses: Partial<Record<ValerioKey, number>>;
     useActive: boolean;
   };
+  playEffectCard: { cardId: string; targetPlayerId?: string | null };
+  passEffectWindow: Record<string, never>;
   nextRound: Record<string, never>;
   restartLobby: Record<string, never>;
   sendChat: { text: string };

@@ -50,6 +50,10 @@ const rarityClasses = {
   speciale: styles.raritySpecial
 };
 
+const MAX_UTILITY_DECK_SIZE = 8;
+const UTILITY_CARD_TYPES = Object.freeze(["utility", "defense", "trap"]);
+const TARGET_EFFECT_TYPES = Object.freeze(["damage", "swap_card", "steal_card", "swap_deck"]);
+
 function classNames(...items) {
   return items.filter(Boolean).join(" ");
 }
@@ -96,7 +100,17 @@ function sortPublicLobbies(lobbies) {
   });
 }
 
-export function HomeView({ snapshot, name, onNameChange, emit, connectionState, pingMs }) {
+export function HomeView({
+  snapshot,
+  name,
+  onNameChange,
+  emit,
+  connectionState,
+  pingMs,
+  utilityCards = [],
+  utilityDecks = [],
+  onUtilityDecksChange
+}) {
   const lobbies = snapshot?.lobbies ?? [];
   const publicLobbies = sortPublicLobbies(lobbies);
   const openLobbyCount = lobbies.filter((lobby) => lobby.isJoinable).length;
@@ -156,6 +170,12 @@ export function HomeView({ snapshot, name, onNameChange, emit, connectionState, 
           Vedi tutte le carte
         </a>
       </section>
+
+      <UtilityDeckManager
+        utilityCards={utilityCards}
+        utilityDecks={utilityDecks}
+        onUtilityDecksChange={onUtilityDecksChange}
+      />
 
       <section className={styles.publicLobbyPanel}>
         <div className={styles.publicLobbyHeader}>
@@ -225,6 +245,120 @@ export function HomeView({ snapshot, name, onNameChange, emit, connectionState, 
         </div>
       </section>
     </main>
+  );
+}
+
+function UtilityDeckManager({ utilityCards, utilityDecks, onUtilityDecksChange, compact = false, onSelectDeck = undefined }) {
+  const [selectedIds, setSelectedIds] = React.useState([]);
+  const [deckName, setDeckName] = React.useState("");
+  const cardMap = React.useMemo(() => new Map(utilityCards.map((card) => [card.id, card])), [utilityCards]);
+  const canSave = selectedIds.length > 0 && selectedIds.length <= MAX_UTILITY_DECK_SIZE;
+
+  function toggleCard(cardId) {
+    setSelectedIds((current) => {
+      if (current.includes(cardId)) {
+        return current.filter((id) => id !== cardId);
+      }
+
+      if (current.length >= MAX_UTILITY_DECK_SIZE) {
+        return current;
+      }
+
+      return [...current, cardId];
+    });
+  }
+
+  function saveDeck() {
+    if (!canSave || !onUtilityDecksChange) {
+      return;
+    }
+
+    const nextDeck = {
+      id: `utility_${Date.now()}`,
+      name: deckName.trim() || `Utility ${utilityDecks.length + 1}`,
+      cardIds: selectedIds
+    };
+    onUtilityDecksChange([...utilityDecks, nextDeck]);
+    setDeckName("");
+    setSelectedIds([]);
+  }
+
+  return (
+    <section className={classNames(styles.utilityDeckManager, compact && styles.compactUtilityDeckManager)}>
+      <div className={styles.homePanelHeader}>
+        <div className={styles.homePanelTitleGroup}>
+          <p className={styles.homePanelEyebrow}>utility deck</p>
+          <h2 className={styles.homePanelTitle}>Trappole e supporto</h2>
+        </div>
+        <span className={styles.homePanelMeta}>{utilityDecks.length} salvati</span>
+      </div>
+
+      {utilityDecks.length ? (
+        <div className={styles.utilityDeckList}>
+          {utilityDecks.map((deck) => (
+            <article key={deck.id} className={styles.utilityDeckRow}>
+              <div>
+                <strong>{deck.name}</strong>
+                <small>
+                  {deck.cardIds
+                    .map((cardId) => cardMap.get(cardId)?.name)
+                    .filter(Boolean)
+                    .join(" · ")}
+                </small>
+              </div>
+              <div className={styles.utilityDeckActions}>
+                {onSelectDeck ? (
+                  <button type="button" onClick={() => onSelectDeck(deck)}>
+                    Usa
+                  </button>
+                ) : null}
+                <button
+                  type="button"
+                  onClick={() => onUtilityDecksChange?.(utilityDecks.filter((item) => item.id !== deck.id))}
+                >
+                  Elimina
+                </button>
+              </div>
+            </article>
+          ))}
+        </div>
+      ) : (
+        <p className={styles.notice}>Nessun deck utility salvato.</p>
+      )}
+
+      <div className={styles.utilityBuilder}>
+        <label className={styles.homeField}>
+          <span className={styles.homeFieldLabel}>Nome deck</span>
+          <input
+            className={styles.homeInput}
+            value={deckName}
+            onChange={(event) => setDeckName(event.target.value)}
+            placeholder="Deck utility"
+          />
+        </label>
+        <div className={styles.utilityBuilderHead}>
+          <strong>{selectedIds.length}/{MAX_UTILITY_DECK_SIZE}</strong>
+          <button type="button" className={styles.homePrimaryButton} disabled={!canSave} onClick={saveDeck}>
+            Salva deck
+          </button>
+        </div>
+        <div className={styles.utilityCardPicker}>
+          {utilityCards.map((card) => (
+            <button
+              key={card.id}
+              type="button"
+              className={classNames(styles.utilityPick, selectedIds.includes(card.id) && styles.selectedUtilityPick)}
+              data-card-type={card.type}
+              onClick={() => toggleCard(card.id)}
+            >
+              <span>{cardTypeLabel(card.type)}</span>
+              <strong>{card.name}</strong>
+              <small>{effectTypeSummary(card)}</small>
+            </button>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -657,8 +791,35 @@ function DraftCardItem({ item, selected, onPreviewCard }) {
   );
 }
 
-export function SelectView({ lobby, selectedCardId, onSelectedCardId, emit }) {
+export function SelectView({
+  lobby,
+  selectedCardId,
+  onSelectedCardId,
+  emit,
+  utilityCards = [],
+  utilityDecks = [],
+  onUtilityDecksChange
+}) {
   const self = lobby.self;
+  const needsUtilityDeck = Boolean(self?.isActive && !self.utilityDeckReady);
+
+  if (needsUtilityDeck) {
+    return (
+      <section className={styles.phase}>
+        <div className={styles.phaseStrip}>
+          <strong>Scegli il deck utility</strong>
+          <span>Obbligatorio prima della carta attacco</span>
+        </div>
+        <UtilityDeckGate
+          utilityCards={utilityCards}
+          utilityDecks={utilityDecks}
+          onUtilityDecksChange={onUtilityDecksChange}
+          onSelectDeck={(deck) => emit(CLIENT_EVENTS.SELECT_UTILITY_DECK, { cardIds: deck.cardIds })}
+        />
+      </section>
+    );
+  }
+
   return (
     <section className={styles.phase}>
       <div className={styles.phaseStrip}>
@@ -683,6 +844,24 @@ export function SelectView({ lobby, selectedCardId, onSelectedCardId, emit }) {
           );
         })}
       </div>
+    </section>
+  );
+}
+
+function UtilityDeckGate({ utilityCards, utilityDecks, onUtilityDecksChange, onSelectDeck }) {
+  return (
+    <section className={styles.utilityGate}>
+      <div className={styles.utilityGateCopy}>
+        <strong>Deck utility locale</strong>
+        <p>Seleziona un deck salvato o creane uno adesso con massimo {MAX_UTILITY_DECK_SIZE} carte non attack.</p>
+      </div>
+      <UtilityDeckManager
+        utilityCards={utilityCards}
+        utilityDecks={utilityDecks}
+        onUtilityDecksChange={onUtilityDecksChange}
+        compact
+        onSelectDeck={onSelectDeck}
+      />
     </section>
   );
 }
@@ -890,15 +1069,16 @@ function RichText({ text }) {
   );
 }
 
-export function RevealView({ lobby }) {
+export function RevealView({ lobby, emit }) {
   const result = lobby.lastResult;
   if (!result) {
     return <section className={styles.panel}>Reveal in corso...</section>;
   }
 
   const selfPlay = result.plays.find((play) => play.playerId === lobby.self?.id);
-  const outcome = result.isTie ? "Pareggio" : result.winnerId === lobby.self?.id ? "Hai vinto" : "Hai perso";
-  const heroClass = result.isTie ? "is-tie" : result.winnerId === lobby.self?.id ? "is-win" : "is-lose";
+  const effectWindowOpen = lobby.effectWindow?.status === "waiting";
+  const outcome = effectWindowOpen ? "Reazione utility" : result.isTie ? "Pareggio" : result.winnerId === lobby.self?.id ? "Hai vinto" : "Hai perso";
+  const heroClass = effectWindowOpen ? "is-tie" : result.isTie ? "is-tie" : result.winnerId === lobby.self?.id ? "is-win" : "is-lose";
 
   return (
     <section className={styles.reveal}>
@@ -915,6 +1095,8 @@ export function RevealView({ lobby }) {
         ) : null}
       </div>
 
+      <UtilityReactionView lobby={lobby} emit={emit} />
+
       <div className={styles.scoreboard}>
         {result.plays.map((play) => (
           <RevealPlayerReport
@@ -927,6 +1109,173 @@ export function RevealView({ lobby }) {
       </div>
     </section>
   );
+}
+
+function UtilityReactionView({ lobby, emit }) {
+  const [targetByCard, setTargetByCard] = React.useState({});
+  const effectWindow = lobby.effectWindow;
+  const self = lobby.self;
+  const isParticipant = Boolean(effectWindow?.playerIds?.includes(self?.id));
+  const hasSubmitted = Boolean(effectWindow?.submissions?.[self?.id]);
+  const targetPlayers = lobby.players.filter((player) => effectWindow?.playerIds?.includes(player.id) && player.id !== self?.id);
+  const publicLog = effectWindow?.publicLog ?? [];
+  const privateLog = self?.privateEffectLog ?? [];
+
+  if (!effectWindow) {
+    return null;
+  }
+
+  return (
+    <section className={styles.utilityReaction}>
+      <div className={styles.sectionTitle}>
+        <div>
+          <strong>Finestra effetti</strong>
+          <small>{effectWindow.status === "waiting" ? "utility, defense, trap o passa" : "chiusa"}</small>
+        </div>
+        <span>{Object.keys(effectWindow.submissions ?? {}).length}/{effectWindow.playerIds.length}</span>
+      </div>
+
+      <TrapStrip lobby={lobby} />
+
+      {isParticipant && effectWindow.status === "waiting" && !hasSubmitted ? (
+        <div className={styles.utilityHand}>
+          {(self?.utilityHand ?? []).map((card) => {
+            const needsTarget = utilityCardNeedsTarget(card);
+            const targetPlayerId = targetByCard[card.id] ?? targetPlayers[0]?.id ?? null;
+            return (
+              <article key={card.id} className={styles.utilityHandCard} data-card-type={card.type}>
+                <button
+                  type="button"
+                  className={styles.utilityCardButton}
+                  data-card-type={card.type}
+                  onClick={() => {
+                    if (needsTarget && !targetPlayerId) {
+                      return;
+                    }
+
+                    emit(CLIENT_EVENTS.PLAY_EFFECT_CARD, {
+                      cardId: card.id,
+                      targetPlayerId: needsTarget ? targetPlayerId : null
+                    });
+                  }}
+                >
+                  <span>{cardTypeLabel(card.type)}</span>
+                  <strong>{card.name}</strong>
+                  <small>{effectTypeSummary(card)}</small>
+                </button>
+                {needsTarget ? (
+                  <div className={styles.targetPicker}>
+                    {targetPlayers.map((player) => (
+                      <button
+                        key={player.id}
+                        type="button"
+                        className={targetPlayerId === player.id ? styles.selectedTarget : ""}
+                        onClick={() => setTargetByCard((current) => ({ ...current, [card.id]: player.id }))}
+                      >
+                        {player.name}
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+              </article>
+            );
+          })}
+          <button type="button" className={styles.passButton} onClick={() => emit(CLIENT_EVENTS.PASS_EFFECT_WINDOW)}>
+            Passa
+          </button>
+        </div>
+      ) : (
+        <p className={styles.notice}>
+          {hasSubmitted ? "Hai confermato la finestra effetti." : "In attesa delle scelte utility."}
+        </p>
+      )}
+
+      <details className={styles.utilityDeckOverlay}>
+        <summary>Utility deck</summary>
+        <div className={styles.utilityOverlayGrid}>
+          <span>Mano <b>{self?.utilityHand?.length ?? self?.utilityHandCount ?? 0}</b></span>
+          <span>Mazzo <b>{self?.utilityDrawCount ?? 0}</b></span>
+          <span>Scarti <b>{self?.utilityDiscardCount ?? 0}</b></span>
+        </div>
+        <div className={styles.utilityMiniList}>
+          {(self?.utilityHand ?? []).map((card) => (
+            <span key={card.id}>{card.name}</span>
+          ))}
+        </div>
+      </details>
+
+      <div className={styles.effectLogGrid}>
+        <EffectLog title="Log pubblico" entries={publicLog} />
+        <EffectLog title="Log privato" entries={privateLog} />
+      </div>
+    </section>
+  );
+}
+
+function TrapStrip({ lobby }) {
+  const self = lobby.self;
+  const opponents = lobby.players.filter((player) => player.id !== self?.id && lobby.activePair.includes(player.id));
+
+  return (
+    <div className={styles.trapStrip}>
+      <div>
+        <span>Tue trap</span>
+        {(self?.armedTraps ?? []).length ? (
+          self.armedTraps.map((trap) => <b key={trap.id}>{trap.card?.name ?? "Trap"}</b>)
+        ) : (
+          <b>0</b>
+        )}
+      </div>
+      {opponents.map((player) => (
+        <div key={player.id}>
+          <span>{player.name}</span>
+          <b>{player.armedTrapCount ?? 0} coperte</b>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function EffectLog({ title, entries }) {
+  return (
+    <div className={styles.effectLog}>
+      <strong>{title}</strong>
+      {entries.length ? entries.map((entry) => <span key={entry.id}>{entry.text}</span>) : <span>Nessun evento.</span>}
+    </div>
+  );
+}
+
+function utilityCardNeedsTarget(card) {
+  return collectCardEffects(card).some(
+    (effect) => effect.target === "enemy" || (!effect.target && TARGET_EFFECT_TYPES.includes(String(effect.type ?? "")))
+  );
+}
+
+function effectTypeSummary(card) {
+  const types = collectCardEffects(card).map((effect) => String(effect.type ?? "")).filter(Boolean);
+  return types.length ? [...new Set(types)].join(" · ") : "effetto";
+}
+
+function collectCardEffects(card) {
+  return [card?.active, card?.passive, card].flatMap((source) => {
+    if (!source) {
+      return [];
+    }
+
+    if (Array.isArray(source.effects)) {
+      return source.effects;
+    }
+
+    return source.effect ? [source.effect] : [];
+  });
+}
+
+function cardTypeLabel(type) {
+  if (!UTILITY_CARD_TYPES.includes(type)) {
+    return "card";
+  }
+
+  return String(type);
 }
 
 function RevealPlayerReport({ play, isSelf, isWinner }) {

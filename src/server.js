@@ -18,9 +18,15 @@ import {
   validateValerioPlan
 } from "./game.js";
 import { createDraftCardAction } from "./server/actions/createDraftCardAction.js";
+import { createPassEffectWindowAction } from "./server/actions/createPassEffectWindowAction.js";
+import { createPlayEffectCardAction } from "./server/actions/createPlayEffectCardAction.js";
 import { createResolveRoundAction } from "./server/actions/createResolveRoundAction.js";
 import { createSelectCardAction } from "./server/actions/createSelectCardAction.js";
+import { createSelectUtilityDeckAction } from "./server/actions/createSelectUtilityDeckAction.js";
 import { createSubmitPlanAction } from "./server/actions/createSubmitPlanAction.js";
+import { EffectApplicator } from "./server/effects/EffectApplicator.js";
+import { EffectWindowSystem } from "./server/effects/EffectWindowSystem.js";
+import { TrapSystem } from "./server/effects/TrapSystem.js";
 import { LobbyManager } from "./server/lobby/LobbyManager.js";
 import { LobbySerializer } from "./server/lobby/LobbySerializer.js";
 import { LobbyState } from "./server/lobby/LobbyState.js";
@@ -45,9 +51,12 @@ let timerController;
 let lobbyManager;
 let lobbySerializer;
 let draftCard;
+let selectUtilityDeck;
 let selectCard;
 let submitPlan;
 let resolveRound;
+let playEffectCard;
+let passEffectWindow;
 
 const nextApp = next({ dev: isDev, dir: rootDir });
 const nextHandler = nextApp.getRequestHandler();
@@ -114,6 +123,15 @@ lobbySerializer = new LobbySerializer({
   getDraftCost
 });
 lobbyManager = new LobbyManager({ clients, lobbies, io, clientsBySocketId, sendState });
+const effectApplicator = new EffectApplicator({ SETTINGS, cardsById, shuffle });
+const trapSystem = new TrapSystem({ cardsById, effectApplicator, makeId });
+const effectWindowSystem = new EffectWindowSystem({
+  cardsById,
+  effectApplicator,
+  trapSystem,
+  getAlivePlayers,
+  SETTINGS
+});
 draftCard = createDraftCardAction({
   getClientLobby,
   sendError,
@@ -124,11 +142,20 @@ draftCard = createDraftCardAction({
   pushChat,
   finishOrAdvanceDraft
 });
+selectUtilityDeck = createSelectUtilityDeckAction({
+  getClientLobby,
+  sendError,
+  isActiveDuelist,
+  cardsById,
+  cardMoveApplicator: effectApplicator.cardMoves,
+  broadcastLobbyState
+});
 selectCard = createSelectCardAction({
   getClientLobby,
   sendError,
   isActiveDuelist,
   cardsById,
+  ensureUtilityDeckReady: assignFallbackUtilityDeck,
   advanceRoundIfReady,
   broadcastLobbyState
 });
@@ -151,7 +178,21 @@ resolveRound = createResolveRoundAction({
   getAlivePlayers,
   makeRoundSummary,
   clearActionTimer,
-  pushChat
+  pushChat,
+  trapSystem,
+  effectWindowSystem
+});
+playEffectCard = createPlayEffectCardAction({
+  getClientLobby,
+  sendError,
+  effectWindowSystem,
+  broadcastLobbyState
+});
+passEffectWindow = createPassEffectWindowAction({
+  getClientLobby,
+  sendError,
+  effectWindowSystem,
+  broadcastLobbyState
 });
 
 function readCards(data) {
@@ -194,11 +235,20 @@ function handleMessage(client, message) {
     case CLIENT_EVENTS.DRAFT_CARD:
       draftCard(client, String(payload.cardId ?? ""));
       break;
+    case CLIENT_EVENTS.SELECT_UTILITY_DECK:
+      selectUtilityDeck(client, payload);
+      break;
     case CLIENT_EVENTS.SELECT_CARD:
       selectCard(client, String(payload.cardId ?? ""));
       break;
     case CLIENT_EVENTS.SUBMIT_PLAN:
       submitPlan(client, payload);
+      break;
+    case CLIENT_EVENTS.PLAY_EFFECT_CARD:
+      playEffectCard(client, payload);
+      break;
+    case CLIENT_EVENTS.PASS_EFFECT_WINDOW:
+      passEffectWindow(client);
       break;
     case "submitFight":
       sendError(client, "Protocollo aggiornato: usa submitPlan");
@@ -304,11 +354,12 @@ function startGame(client) {
   lobby.round = 0;
   lobby.winnerId = null;
   lobby.lastResult = null;
+  lobby.effectWindow = null;
   lobby.activePair = [];
   lobby.pairCursor = 0;
   lobby.playerOrder = lobby.playerOrder.filter((playerId) => lobby.players.has(playerId));
   lobby.draft = {
-    pool: shuffle(cards.map((card) => card.id)),
+    pool: shuffle(cards.filter((card) => card.type === "attack").map((card) => card.id)),
     taken: [],
     pickIndex: 0,
     order: [...lobby.playerOrder],
@@ -357,6 +408,14 @@ function startNextRound(client) {
     return;
   }
 
+  if (lobby.effectWindow?.status === "waiting") {
+    effectWindowSystem.forcePassPending(lobby);
+    if (lobby.phase === "ended") {
+      broadcastLobbyState(lobby);
+      return;
+    }
+  }
+
   startRound(lobby);
 }
 
@@ -375,6 +434,7 @@ function restartLobby(client) {
   clearActionTimer(lobby);
   lobby.lastResult = null;
   lobby.winnerId = null;
+  lobby.effectWindow = null;
 
   for (const player of lobby.players.values()) {
     resetPlayerForGame(player);
@@ -408,6 +468,7 @@ function startRound(lobby) {
   lobby.round += 1;
   lobby.activePair = activePair;
   lobby.lastResult = null;
+  lobby.effectWindow = null;
 
   for (const player of lobby.players.values()) {
     player.selected = null;
@@ -527,7 +588,14 @@ function makePlayer(client) {
     draftSpent: 0,
     cooldowns: {},
     alive: true,
-    selected: null
+    selected: null,
+    utilityDeck: [],
+    utilityDeckReady: false,
+    utilityDrawPile: [],
+    utilityHand: [],
+    utilityDiscard: [],
+    armedTraps: [],
+    privateEffectLog: []
   };
 }
 
@@ -539,6 +607,13 @@ function resetPlayerForGame(player) {
   player.cooldowns = {};
   player.alive = true;
   player.selected = null;
+  player.utilityDeck = [];
+  player.utilityDeckReady = false;
+  player.utilityDrawPile = [];
+  player.utilityHand = [];
+  player.utilityDiscard = [];
+  player.armedTraps = [];
+  player.privateEffectLog = [];
 }
 
 function getClientLobby(client) {
@@ -711,6 +786,14 @@ function autoDraftCard(lobby) {
 function autoSelectCards(lobby) {
   for (const player of getActiveDuelists(lobby)) {
     if (!player.selected?.cardId) {
+      if (!player.utilityDeckReady) {
+        assignFallbackUtilityDeck(player);
+        pushChat(lobby, {
+          kind: "system",
+          text: `Timer scaduto: ${player.name} riceve un deck utility automatico`
+        });
+      }
+
       const cardId = findSelectableCardId(player);
       if (cardId) {
         player.selected = {
@@ -732,6 +815,16 @@ function autoSelectCards(lobby) {
     scheduleActionTimer(lobby, "select");
   }
   broadcastLobbyState(lobby);
+}
+
+function assignFallbackUtilityDeck(player) {
+  const fallbackDeck = shuffle(cards.filter((card) => card.type !== "attack").map((card) => card.id)).slice(0, 8);
+  player.utilityDeck = fallbackDeck;
+  player.utilityDrawPile = effectApplicator.cardMoves.shuffle(fallbackDeck);
+  player.utilityHand = [];
+  player.utilityDiscard = [];
+  player.utilityDeckReady = true;
+  effectApplicator.cardMoves.drawCards(player, 3);
 }
 
 function findSelectableCardId(player) {

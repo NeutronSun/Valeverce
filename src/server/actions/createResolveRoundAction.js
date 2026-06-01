@@ -6,7 +6,9 @@ export function createResolveRoundAction({
   getAlivePlayers,
   makeRoundSummary,
   clearActionTimer,
-  pushChat
+  pushChat,
+  trapSystem,
+  effectWindowSystem
 }) {
   return function resolveRound(lobby) {
     const duelists = getActiveDuelists(lobby);
@@ -63,13 +65,7 @@ export function createResolveRoundAction({
 
     for (const player of duelists) {
       player.mana = Math.min(SETTINGS.maxMana, player.mana + SETTINGS.roundManaGain);
-      if (player.health <= 0) {
-        player.alive = false;
-      }
     }
-
-    const stillAlive = getAlivePlayers(lobby);
-    const gameWinner = stillAlive.length === 1 ? stillAlive[0] : null;
 
     lobby.lastResult = {
       round: lobby.round,
@@ -127,8 +123,13 @@ export function createResolveRoundAction({
       })
     };
 
-    lobby.phase = gameWinner ? "ended" : "reveal";
-    lobby.winnerId = gameWinner?.id ?? null;
+    const publicLog = [];
+    const privateLog = new Map();
+    trapSystem.triggerArmedTraps(lobby, duelists, publicLog, privateLog);
+    effectWindowSystem.open(lobby, duelists, publicLog, privateLog);
+
+    lobby.phase = "reveal";
+    lobby.winnerId = null;
     clearActionTimer(lobby);
     pushChat(lobby, {
       kind: "system",

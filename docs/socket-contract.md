@@ -9,8 +9,11 @@
 - `updateLobbySettings`
 - `startGame`
 - `draftCard`
+- `selectUtilityDeck`
 - `selectCard`
 - `submitPlan`
+- `playEffectCard`
+- `passEffectWindow`
 - `nextRound`
 - `restartLobby`
 - `sendChat`
@@ -29,7 +32,10 @@ Internal mapping is allowed:
 
 ```txt
 draftCard -> draft.pick-card
+selectUtilityDeck -> utility.select-deck
 selectCard -> selection.choose-card
 submitPlan -> fight.submit-plan
+playEffectCard -> effects.play-card
+passEffectWindow -> effects.pass
 nextRound -> fight.next-round
 ```

@@ -1,5 +1,13 @@
 import type { Card as DomainCard } from "../../game/cards/CardTypes";
-import type { ChatMessage, GamePhase, ServerEventPayloads, ValerioKey } from "../../shared/types";
+import type {
+  ChatMessage,
+  EffectLogEntry,
+  EffectWindowSnapshot,
+  GamePhase,
+  ServerEventPayloads,
+  TrapTrigger,
+  ValerioKey
+} from "../../shared/types";
 
 type LobbyMap = Map<string, SerializedLobbyState>;
 type ClientMap = Map<string, ClientState>;
@@ -37,19 +45,38 @@ export type PlayerState = {
   readonly cooldowns: Record<string, number>;
   readonly alive: boolean;
   readonly selected: SelectedPlanState | null;
+  readonly utilityDeck?: string[];
+  readonly utilityDeckReady?: boolean;
+  readonly utilityDrawPile?: string[];
+  readonly utilityHand?: string[];
+  readonly utilityDiscard?: string[];
+  readonly armedTraps?: ArmedTrapState[];
+  readonly privateEffectLog?: EffectLogEntry[];
 };
+
+export type ArmedTrapState = {
+  readonly id: string;
+  readonly ownerId: string;
+  readonly cardId: string;
+  readonly armedRound: number;
+  readonly trigger?: TrapTrigger | null;
+};
+
+export type EffectWindowState = EffectWindowSnapshot;
 
 export type SerializedLobbyState = {
   readonly id: string;
   readonly hostId: string;
   readonly phase: GamePhase;
   readonly round: number;
+  readonly settings?: Record<string, unknown>;
   readonly activePair: string[];
   readonly deadlineAt: number | null;
   readonly draft: DraftState | null;
   readonly chat: ChatMessage[];
   readonly lastResult: unknown;
   readonly winnerId: string | null;
+  readonly effectWindow?: EffectWindowState | null;
   readonly players: Map<string, PlayerState>;
 };
 
@@ -76,6 +103,11 @@ export type SerializedPlayerPayload = {
   readonly draftBudgetRemaining: number;
   readonly cooldowns: Record<string, number>;
   readonly alive: boolean;
+  readonly utilityDeckReady: boolean;
+  readonly utilityHandCount: number;
+  readonly utilityDrawCount: number;
+  readonly utilityDiscardCount: number;
+  readonly armedTrapCount: number;
   readonly isActive: boolean;
   readonly isCurrentDrafter: boolean;
   readonly hasSelected: boolean;
@@ -89,6 +121,17 @@ export type SerializedSelfPayload = Omit<
   SerializedPlayerPayload,
   "draftCount" | "hasSelected" | "hasSubmittedPlan" | "selectedCard" | "selected" | "isHost"
 > & {
+  readonly utilityDeck: DomainCard[];
+  readonly utilityHand: DomainCard[];
+  readonly utilityDiscard: DomainCard[];
+  readonly armedTraps: Array<{
+    readonly id: string;
+    readonly card: DomainCard | null;
+    readonly cardId: string;
+    readonly armedRound: number;
+    readonly trigger: TrapTrigger | null;
+  }>;
+  readonly privateEffectLog: EffectLogEntry[];
   readonly selected:
     | (SelectedPlanState & {
         readonly selectedCard: DomainCard | null;
@@ -121,12 +164,14 @@ export type SerializedLobbyPayload = {
   readonly hostId: string;
   readonly phase: GamePhase;
   readonly round: number;
+  readonly settings?: Record<string, unknown>;
   readonly activePair: string[];
   readonly deadlineAt: number | null;
   readonly draft: SerializedDraftPayload | null;
   readonly chat: ChatMessage[];
   readonly lastResult: unknown;
   readonly winnerId: string | null;
+  readonly effectWindow: EffectWindowSnapshot | null;
   readonly players: SerializedPlayerPayload[];
   readonly self: SerializedSelfPayload | null;
 };

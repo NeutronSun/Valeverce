@@ -1,5 +1,6 @@
 import { VALERIO_KEYS } from "../valerio/Valerio";
-import type { Ability, RawAbility, RawCard } from "./CardTypes";
+import { ROUND_INTENT_NAMES } from "../round/RoundIntent";
+import { CARD_TYPES, TRAP_TRIGGERS, type Ability, type RawAbility, type RawCard } from "./CardTypes";
 import type { CardEffect } from "../systems/effects/EffectTypes";
 import type { ValerioKey } from "../../shared/types";
 
@@ -13,6 +14,14 @@ export class CardValidator {
 
     if (!card.name || typeof card.name !== "string") {
       errors.push(`Card ${String(card.id ?? "unknown")} name must be a non-empty string`);
+    }
+
+    errors.push(...this.validateCardType(card));
+    errors.push(...this.validateAllowedIntents(card));
+    errors.push(...this.validateTrapTrigger(card));
+
+    if (card.guardBonus !== undefined && typeof card.guardBonus !== "number") {
+      errors.push(`Card ${String(card.id ?? "unknown")} guardBonus must be a number`);
     }
 
     errors.push(...this.validateAbility(card.active, `${String(card.id ?? "unknown")}.active`));
@@ -102,8 +111,58 @@ export class CardValidator {
     return errors;
   }
 
+  private validateCardType(card: RawCard): string[] {
+    const errors: string[] = [];
+    const validTypes = Object.values(CARD_TYPES);
+
+    if (card.type !== undefined && !validTypes.includes(card.type)) {
+      errors.push(`Card ${String(card.id ?? "unknown")} type must be attack, utility, trap or defense`);
+    }
+
+    if (card.role !== undefined && !validTypes.includes(card.role)) {
+      errors.push(`Card ${String(card.id ?? "unknown")} role must be attack, utility, trap or defense`);
+    }
+
+    return errors;
+  }
+
+  private validateAllowedIntents(card: RawCard): string[] {
+    const errors: string[] = [];
+
+    if (card.allowedIntents === undefined) {
+      return errors;
+    }
+
+    if (!Array.isArray(card.allowedIntents)) {
+      return [`Card ${String(card.id ?? "unknown")} allowedIntents must be an array`];
+    }
+
+    for (const intent of card.allowedIntents) {
+      if (!ROUND_INTENT_NAMES.includes(intent)) {
+        errors.push(`Card ${String(card.id ?? "unknown")} has invalid intent ${String(intent)}`);
+      }
+    }
+
+    return errors;
+  }
+
+  private validateTrapTrigger(card: RawCard): string[] {
+    if (card.trigger === undefined) {
+      return [];
+    }
+
+    if (!card.trigger?.type || !Object.values(TRAP_TRIGGERS).includes(card.trigger.type)) {
+      return [`Card ${String(card.id ?? "unknown")} trigger type is invalid`];
+    }
+
+    if (card.trigger.stat !== undefined && !this.isValerioKey(card.trigger.stat)) {
+      return [`Card ${String(card.id ?? "unknown")} trigger stat is invalid`];
+    }
+
+    return [];
+  }
+
   private isValerioKey(value: unknown): value is ValerioKey {
     return typeof value === "string" && VALERIO_KEYS.includes(value as ValerioKey);
   }
 }
-

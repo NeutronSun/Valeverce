@@ -1,5 +1,21 @@
 import type { ValerioKey } from "../../../shared/types";
 
+export type EffectTarget = "self" | "enemy" | "chosen_card";
+
+export type CardZone = "deck" | "hand" | "selected" | "discard";
+
+export type CardSelection = "random_hand" | "random_deck" | "chosen_hand" | "chosen_deck" | "selected_card";
+
+export type CardMoveRequest = {
+  kind: "draw_cards" | "swap_deck" | "swap_card" | "swap_card_from_deck" | "swap_selected_card" | "steal_card";
+  target?: EffectTarget;
+  value?: number;
+  source?: CardZone;
+  destination?: CardZone;
+  selection?: CardSelection;
+  targetCardId?: string;
+};
+
 export type BaseCardEffect = {
   type: string;
 };
@@ -60,6 +76,60 @@ export type ContainsStatEffectData = {
   value: number;
 };
 
+export type HealEffectData = {
+  type: "heal";
+  target?: EffectTarget;
+  value: number;
+};
+
+export type ManaBonusEffectData = {
+  type: "mana_bonus";
+  target?: EffectTarget;
+  value: number;
+};
+
+export type DrawCardsEffectData = {
+  type: "draw_cards";
+  target?: EffectTarget;
+  value: number;
+  source?: CardZone;
+};
+
+export type SwapDeckEffectData = {
+  type: "swap_deck";
+  target?: EffectTarget;
+};
+
+export type SwapCardEffectData = {
+  type: "swap_card";
+  target?: EffectTarget;
+  source?: CardZone;
+  destination?: CardZone;
+  selection?: CardSelection;
+  targetCardId?: string;
+};
+
+export type SwapCardFromDeckEffectData = {
+  type: "swap_card_from_deck";
+  target?: EffectTarget;
+  selection?: "random_deck" | "chosen_deck";
+  targetCardId?: string;
+};
+
+export type SwapSelectedCardEffectData = {
+  type: "swap_selected_card";
+  target?: EffectTarget;
+  selection?: CardSelection;
+  targetCardId?: string;
+};
+
+export type StealCardEffectData = {
+  type: "steal_card";
+  target?: "enemy";
+  selection?: "random_hand" | "chosen_hand" | "random_deck" | "chosen_deck";
+  targetCardId?: string;
+};
+
 export type KnownCardEffect =
   | DamageEffectData
   | BreakCapEffectData
@@ -70,7 +140,15 @@ export type KnownCardEffect =
   | FlatDamageEffectData
   | DefenseHitBonusEffectData
   | MissingStatEffectData
-  | ContainsStatEffectData;
+  | ContainsStatEffectData
+  | HealEffectData
+  | ManaBonusEffectData
+  | DrawCardsEffectData
+  | SwapDeckEffectData
+  | SwapCardEffectData
+  | SwapCardFromDeckEffectData
+  | SwapSelectedCardEffectData
+  | StealCardEffectData;
 
 export type UnknownCardEffect = {
   type: string;
@@ -78,4 +156,3 @@ export type UnknownCardEffect = {
 };
 
 export type CardEffect = KnownCardEffect | UnknownCardEffect;
-

@@ -1,4 +1,5 @@
 import type { ValerioKey } from "../../../shared/types";
+import type { CardMoveRequest } from "./EffectTypes";
 
 export type EffectResult = {
   applied: boolean;
@@ -11,8 +12,11 @@ export type EffectResult = {
   defenseMultipliers: Partial<Record<ValerioKey, number>>;
   ignoredDefenseStats: ValerioKey[];
   breakDamageCap: boolean;
+  healAmount: number;
   manaBonus: number;
+  drawAmount: number;
   cooldownReduction: number;
+  cardMoves: CardMoveRequest[];
   notes: string[];
 };
 
@@ -29,8 +33,11 @@ export class EffectResultFactory {
       defenseMultipliers: {},
       ignoredDefenseStats: [],
       breakDamageCap: false,
+      healAmount: 0,
       manaBonus: 0,
+      drawAmount: 0,
       cooldownReduction: 0,
+      cardMoves: [],
       notes: []
     };
   }
@@ -47,8 +54,11 @@ export class EffectResultFactory {
       defenseMultipliers: EffectResultFactory.mergeStatMultipliers(merged.defenseMultipliers, result.defenseMultipliers),
       ignoredDefenseStats: [...new Set([...merged.ignoredDefenseStats, ...result.ignoredDefenseStats])],
       breakDamageCap: merged.breakDamageCap || result.breakDamageCap,
+      healAmount: merged.healAmount + result.healAmount,
       manaBonus: merged.manaBonus + result.manaBonus,
+      drawAmount: merged.drawAmount + result.drawAmount,
       cooldownReduction: merged.cooldownReduction + result.cooldownReduction,
+      cardMoves: [...merged.cardMoves, ...result.cardMoves],
       notes: [...merged.notes, ...result.notes]
     }), EffectResultFactory.empty());
   }
@@ -79,4 +89,3 @@ export class EffectResultFactory {
     return merged;
   }
 }
-

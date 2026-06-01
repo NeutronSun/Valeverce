@@ -22,6 +22,7 @@ import { createResolveRoundAction } from "./server/actions/createResolveRoundAct
 import { createSelectCardAction } from "./server/actions/createSelectCardAction.js";
 import { createSubmitPlanAction } from "./server/actions/createSubmitPlanAction.js";
 import { LobbyManager } from "./server/lobby/LobbyManager.js";
+import { LobbySerializer } from "./server/lobby/LobbySerializer.js";
 import { LobbyState } from "./server/lobby/LobbyState.js";
 import { ClientSession } from "./server/socket/ClientSession.js";
 import { TimerController } from "./server/timer/TimerController.js";
@@ -42,6 +43,7 @@ const clientsBySocketId = new Map();
 const lobbies = new Map();
 let timerController;
 let lobbyManager;
+let lobbySerializer;
 let draftCard;
 let selectCard;
 let submitPlan;
@@ -96,6 +98,21 @@ server.listen(port, "0.0.0.0", () => {
 });
 
 timerController = new TimerController();
+lobbySerializer = new LobbySerializer({
+  SETTINGS,
+  VALERIO_LABELS,
+  clients,
+  lobbies,
+  cardsById,
+  getClientLobby,
+  getCurrentDrafterId,
+  isActiveDuelist,
+  hasSubmittedPlan,
+  canPlayerDraftCard,
+  getAttackPool,
+  getDefensePool,
+  getDraftCost
+});
 lobbyManager = new LobbyManager({ clients, lobbies, io, clientsBySocketId, sendState });
 draftCard = createDraftCardAction({
   getClientLobby,
@@ -807,161 +824,7 @@ function broadcastLobbyList() {
 }
 
 function sendState(client) {
-  const lobby = getClientLobby(client);
-  send(client, {
-    type: "state",
-    selfId: client.id,
-    settings: SETTINGS,
-    valerioLabels: VALERIO_LABELS,
-    onlinePlayers: clients.size,
-    lobbies: serializeLobbyList(),
-    lobby: lobby ? serializeLobby(lobby, client.id) : null
-  });
-}
-
-function serializeLobbyList() {
-  return [...lobbies.values()].map((lobby) => ({
-    id: lobby.id,
-    phase: lobby.phase,
-    hostName: lobby.players.get(lobby.hostId)?.name ?? "Host",
-    players: lobby.players.size,
-    maxPlayers: SETTINGS.maxPlayers,
-    isJoinable: lobby.phase === "lobby" && lobby.players.size < SETTINGS.maxPlayers,
-    round: lobby.round,
-    names: [...lobby.players.values()].map((player) => player.name)
-  }));
-}
-
-function serializeLobby(lobby, selfId) {
-  const self = lobby.players.get(selfId);
-  const currentDrafterId = getCurrentDrafterId(lobby);
-
-  return {
-    id: lobby.id,
-    hostId: lobby.hostId,
-    phase: lobby.phase,
-    round: lobby.round,
-    activePair: lobby.activePair,
-    deadlineAt: lobby.deadlineAt,
-    draft: serializeDraft(lobby, currentDrafterId, selfId),
-    chat: lobby.chat,
-    lastResult: lobby.lastResult,
-    winnerId: lobby.winnerId,
-    players: [...lobby.players.values()].map((player) => serializePlayer(lobby, player, selfId, currentDrafterId)),
-    self: self ? serializeSelf(lobby, self, currentDrafterId) : null
-  };
-}
-
-function serializePlayer(lobby, player, viewerId, currentDrafterId) {
-  const selectedCard = shouldRevealSelectedCard(lobby, player, viewerId) ? cardsById.get(player.selected.cardId) : null;
-  const showPlan = shouldRevealPlan(lobby, player, viewerId);
-
-  return {
-    id: player.id,
-    name: player.name,
-    health: player.health,
-    maxHealth: SETTINGS.maxHealth,
-    mana: player.mana,
-    deck: player.deck.map((cardId) => cardsById.get(cardId)).filter(Boolean),
-    deckCount: player.deck.length,
-    draftCount: player.deck.length,
-    draftSpent: player.draftSpent,
-    draftBudget: SETTINGS.draftBudget,
-    draftBudgetRemaining: Math.max(0, SETTINGS.draftBudget - player.draftSpent),
-    cooldowns: player.cooldowns,
-    alive: player.alive,
-    isActive: isActiveDuelist(lobby, player.id),
-    isCurrentDrafter: currentDrafterId === player.id,
-    hasSelected: Boolean(player.selected?.cardId),
-    hasSubmittedPlan: hasSubmittedPlan(player),
-    selectedCard,
-    selected: selectedCard
-      ? {
-          cardId: player.selected.cardId,
-          attacks: showPlan ? player.selected.attacks : null,
-          defenses: showPlan ? player.selected.defenses : null,
-          useActive: showPlan ? player.selected.useActive : null,
-          attackPool: getAttackPool(selectedCard),
-          defensePool: getDefensePool(selectedCard)
-        }
-      : null,
-    isHost: player.id === lobby.hostId
-  };
-}
-
-function serializeSelf(lobby, self, currentDrafterId) {
-  const selectedCard = self.selected?.cardId ? cardsById.get(self.selected.cardId) : null;
-  return {
-    id: self.id,
-    name: self.name,
-    health: self.health,
-    maxHealth: SETTINGS.maxHealth,
-    mana: self.mana,
-    deck: self.deck.map((cardId) => cardsById.get(cardId)).filter(Boolean),
-    deckCount: self.deck.length,
-    draftSpent: self.draftSpent,
-    draftBudget: SETTINGS.draftBudget,
-    draftBudgetRemaining: Math.max(0, SETTINGS.draftBudget - self.draftSpent),
-    cooldowns: self.cooldowns,
-    selected: self.selected
-      ? {
-          ...self.selected,
-          selectedCard,
-          attackPool: selectedCard ? getAttackPool(selectedCard) : 0,
-          defensePool: selectedCard ? getDefensePool(selectedCard) : 0
-        }
-      : null,
-    isActive: isActiveDuelist(lobby, self.id),
-    isCurrentDrafter: currentDrafterId === self.id,
-    alive: self.alive
-  };
-}
-
-function serializeDraft(lobby, currentDrafterId, selfId) {
-  if (!lobby.draft) {
-    return null;
-  }
-
-  const self = lobby.players.get(selfId);
-  return {
-    target: lobby.draft.target,
-    budget: SETTINGS.draftBudget,
-    currentPlayerId: currentDrafterId,
-    taken: lobby.draft.taken,
-    pool: lobby.draft.pool.map((cardId) => {
-      const card = cardsById.get(cardId);
-      const takenBy = [...lobby.players.values()].find((player) => player.deck.includes(cardId));
-      const cost = getDraftCost(card);
-      const canPick = Boolean(!takenBy && self && currentDrafterId === selfId && canPlayerDraftCard(lobby, self, card).ok);
-      return {
-        card,
-        cost,
-        attackPool: getAttackPool(card),
-        defensePool: getDefensePool(card),
-        takenBy: takenBy?.id ?? null,
-        takenByName: takenBy?.name ?? null,
-        isAvailable: !takenBy,
-        canPick,
-        canAfford: Boolean(self && self.draftSpent + cost <= SETTINGS.draftBudget)
-      };
-    })
-  };
-}
-
-function shouldRevealSelectedCard(lobby, player, viewerId) {
-  if (!player.selected?.cardId) {
-    return false;
-  }
-
-  return player.id === viewerId || ["plan", "reveal", "ended"].includes(lobby.phase);
-}
-
-function shouldRevealPlan(lobby, player, viewerId) {
-  if (!hasSubmittedPlan(player)) {
-    return false;
-  }
-
-  return player.id === viewerId || ["reveal", "ended"].includes(lobby.phase);
+  send(client, lobbySerializer.serializeState(client));
 }
 
 function pushChat(lobby, entry) {

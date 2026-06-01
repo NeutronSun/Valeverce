@@ -1,13 +1,38 @@
 export type GamePhase = "lobby" | "draft" | "select" | "plan" | "reveal" | "ended";
 export type ValerioKey = "V" | "A" | "L" | "E" | "R" | "I" | "O";
+export type CardType = "attack" | "utility" | "trap" | "defense";
+export type CardRole = CardType;
+export type RoundIntent = "combat" | "guard" | "draw" | "focus" | "recover" | "utility" | "trap" | "control";
+export type EffectTarget = "self" | "enemy" | "chosen_card";
+export type CardZone = "deck" | "hand" | "selected" | "discard";
+export type CardSelection = "random_hand" | "random_deck" | "chosen_hand" | "chosen_deck" | "selected_card";
+export type TrapTriggerType =
+  | "enemy_attacks"
+  | "enemy_uses_active"
+  | "enemy_uses_utility"
+  | "enemy_draws"
+  | "enemy_focuses"
+  | "enemy_controls";
 
 export type ValerioMap = Record<ValerioKey, number>;
 
 export interface CardEffect {
   type: string;
   stat?: ValerioKey;
+  stats?: ValerioKey[];
   count?: number;
   value?: number;
+  target?: EffectTarget;
+  source?: CardZone;
+  destination?: CardZone;
+  selection?: CardSelection;
+  targetCardId?: string;
+}
+
+export interface TrapTrigger {
+  type: TrapTriggerType;
+  intent?: RoundIntent;
+  stat?: ValerioKey;
 }
 
 export interface CardAbility {
@@ -22,8 +47,14 @@ export interface CardAbility {
 export interface Card {
   id: string;
   name: string;
+  type?: CardType;
+  role?: CardRole;
   image?: string;
   rarity?: string;
+  allowedIntents?: RoundIntent[];
+  effects?: CardEffect[];
+  guardBonus?: number;
+  trigger?: TrapTrigger;
   valerio: ValerioMap;
   combat: {
     attackPower: number;

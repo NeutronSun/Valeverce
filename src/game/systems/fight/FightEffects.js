@@ -1,5 +1,16 @@
 import { VALERIO_KEYS, VALERIO_LABELS } from "../../valerio/Valerio.js";
 
+const NON_COMBAT_ACTIVE_EFFECTS = Object.freeze([
+  "heal",
+  "mana_bonus",
+  "draw_cards",
+  "swap_deck",
+  "swap_card",
+  "swap_card_from_deck",
+  "swap_selected_card",
+  "steal_card"
+]);
+
 export function resolveTraitEffects(effects, context) {
   return mergeTraitResults(effects.map((effect) => resolveTraitEffect(effect, context)));
 }
@@ -93,6 +104,10 @@ export function resolveActiveEffect(effect, context) {
       return { activeDamage: 0, breakCap: false, ignoredDefenseStats, notes };
     }
     default:
+      if (NON_COMBAT_ACTIVE_EFFECTS.includes(effect.type)) {
+        return { activeDamage: 0, breakCap: false, ignoredDefenseStats: [], notes };
+      }
+
       return { activeDamage: Number(effect.value ?? 0), breakCap: false, ignoredDefenseStats: [], notes };
   }
 }

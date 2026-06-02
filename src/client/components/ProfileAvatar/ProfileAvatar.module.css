@@ -9,24 +9,35 @@
   color: var(--color-text);
 }
 
-.initials {
+.initials,
+.image {
   display: grid;
   width: 34px;
   height: 34px;
   flex: 0 0 auto;
-  place-items: center;
   border: 1px solid color-mix(in srgb, var(--profile-color), white 12%);
   border-radius: 50%;
-  color: var(--profile-text);
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--profile-color), white 18%), var(--profile-color));
   box-shadow:
     0 0 18px color-mix(in srgb, var(--profile-color), transparent 76%),
     inset 0 0 0 1px rgba(255, 255, 255, 0.16);
+}
+
+.initials {
+  place-items: center;
+  color: var(--profile-text);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--profile-color), white 18%), var(--profile-color));
   font-size: 0.8rem;
   font-weight: 950;
   letter-spacing: 0;
   line-height: 1;
+}
+
+.image {
+  display: block;
+  overflow: hidden;
+  background: rgba(7, 8, 7, 0.72);
+  object-fit: cover;
 }
 
 .label {
@@ -39,19 +50,22 @@
   white-space: nowrap;
 }
 
-.sm .initials {
+.sm .initials,
+.sm .image {
   width: 28px;
   height: 28px;
   font-size: 0.68rem;
 }
 
-.lg .initials {
+.lg .initials,
+.lg .image {
   width: 58px;
   height: 58px;
   font-size: 1.08rem;
 }
 
-.xl .initials {
+.xl .initials,
+.xl .image {
   width: 86px;
   height: 86px;
   font-size: 1.45rem;

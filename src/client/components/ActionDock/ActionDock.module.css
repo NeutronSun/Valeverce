@@ -273,6 +273,17 @@
   }
 }
 
+.revealActions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(92px, 0.72fr);
+  gap: 7px;
+  height: 100%;
+
+  & > button {
+    height: 100%;
+  }
+}
+
 .primary,
 .secondary,
 .ability {

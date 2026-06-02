@@ -19,7 +19,8 @@ export type ValerioMap = Record<ValerioKey, number>;
 export type ProfileColorId = "gold" | "green" | "blue" | "red" | "violet" | "teal" | "pink" | "orange";
 
 export interface ProfileAvatarSnapshot {
-  kind: "initials";
+  kind: "image" | "initials";
+  iconId?: string;
   initials: string;
   colorId: ProfileColorId;
 }

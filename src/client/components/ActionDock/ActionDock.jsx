@@ -79,16 +79,33 @@ export function ActionDock({ lobby, plan, selectedCardId, previewCard, canSubmit
         Conferma configurazione
       </button>
     );
-  } else if (lobby?.phase === "reveal" && self?.id === lobby.hostId) {
+  } else if (lobby?.phase === "reveal" && lobby.effectWindow?.status === "waiting") {
     const effectWindowOpen = lobby.effectWindow?.status === "waiting";
+    const isEffectParticipant = Boolean(lobby.effectWindow?.playerIds?.includes(self?.id));
+    const hasSubmittedEffect = Boolean(lobby.effectWindow?.submissions?.[self?.id]);
+
+    action = isEffectParticipant && !hasSubmittedEffect ? (
+      <div className={styles.revealActions}>
+        <button type="button" className={styles.primary} onClick={() => emit(CLIENT_EVENTS.PASS_EFFECT_WINDOW)}>
+          Passa utility
+        </button>
+        <button
+          type="button"
+          className={styles.secondary}
+          onClick={() => document.querySelector("[data-utility-reaction]")?.scrollIntoView({ behavior: "smooth", block: "center" })}
+        >
+          Vedi utils
+        </button>
+      </div>
+    ) : (
+      <button type="button" className={styles.secondary} disabled={effectWindowOpen}>
+        {hasSubmittedEffect ? "Utility scelta" : "Effetti in corso"}
+      </button>
+    );
+  } else if (lobby?.phase === "reveal" && self?.id === lobby.hostId) {
     action = (
-      <button
-        type="button"
-        className={effectWindowOpen ? styles.secondary : styles.primary}
-        disabled={effectWindowOpen}
-        onClick={() => emit(CLIENT_EVENTS.NEXT_ROUND)}
-      >
-        {effectWindowOpen ? "Effetti in corso" : "Prossimo round"}
+      <button type="button" className={styles.primary} onClick={() => emit(CLIENT_EVENTS.NEXT_ROUND)}>
+        Prossimo round
       </button>
     );
   }

@@ -228,7 +228,8 @@ export class LobbySerializer {
       profileId: `fallback_${initials.toLowerCase()}`,
       username: String(fallbackName ?? "Player"),
       avatar: {
-        kind: "initials",
+        kind: "image",
+        iconId: "1",
         initials,
         colorId: "gold"
       },
@@ -247,7 +248,7 @@ export class LobbySerializer {
         playerId,
         {
           ...submission,
-          cardId: submission.type === "trap" && playerId !== viewerId ? null : submission.cardId
+          cardId: playerId === viewerId ? submission.cardId : null
         }
       ])
     );

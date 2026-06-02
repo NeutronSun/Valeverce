@@ -1,8 +1,10 @@
 export const PROFILE_COLOR_OPTIONS = Object.freeze(["gold", "green", "blue", "red", "violet", "teal", "pink", "orange"]);
+export const PROFILE_ICON_IDS = Object.freeze(["1", "2", "3", "4", "5", "6", "7", "8"]);
 
 export class PlayerProfile {
   static DEFAULT_USERNAME = "Player";
   static DEFAULT_COLOR_ID = "gold";
+  static DEFAULT_ICON_ID = "1";
   static MAX_USERNAME_LENGTH = 18;
   static MAX_INITIALS_LENGTH = 2;
 
@@ -61,11 +63,13 @@ export class PlayerProfile {
 
   static normalizeAvatar(avatar, username) {
     const source = avatar && typeof avatar === "object" ? avatar : {};
+    const iconId = PlayerProfile.normalizeIconId(source.iconId) ?? PlayerProfile.iconForName(username);
     const colorId = PROFILE_COLOR_OPTIONS.includes(source.colorId) ? source.colorId : PlayerProfile.colorForName(username);
     const initials = PlayerProfile.normalizeInitials(source.initials) || PlayerProfile.makeInitials(username);
 
     return {
-      kind: "initials",
+      kind: "image",
+      iconId,
       initials,
       colorId
     };
@@ -103,6 +107,21 @@ export class PlayerProfile {
     return PROFILE_COLOR_OPTIONS[total % PROFILE_COLOR_OPTIONS.length] ?? PlayerProfile.DEFAULT_COLOR_ID;
   }
 
+  static iconForName(username) {
+    const name = PlayerProfile.normalizeUsername(username);
+    let total = 0;
+    for (const character of name) {
+      total += character.charCodeAt(0);
+    }
+
+    return PROFILE_ICON_IDS[total % PROFILE_ICON_IDS.length] ?? PlayerProfile.DEFAULT_ICON_ID;
+  }
+
+  static normalizeIconId(value) {
+    const iconId = String(value ?? "").trim();
+    return PROFILE_ICON_IDS.includes(iconId) ? iconId : null;
+  }
+
   static normalizeProfileId(value) {
     const profileId = String(value ?? "").trim();
     return profileId || null;
@@ -128,6 +147,7 @@ export class PlayerProfile {
       username: this.username,
       avatar: {
         kind: this.avatar.kind,
+        iconId: this.avatar.iconId,
         initials: this.avatar.initials,
         colorId: this.avatar.colorId
       },

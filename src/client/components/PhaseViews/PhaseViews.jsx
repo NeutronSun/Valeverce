@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { CLIENT_EVENTS } from "../../../shared/events.js";
-import { PlayerProfile, PROFILE_COLOR_OPTIONS } from "../../../shared/profile/PlayerProfile.js";
+import { PlayerProfile, PROFILE_ICON_IDS } from "../../../shared/profile/PlayerProfile.js";
 import {
   SETTINGS,
   VALERIO_KEYS,
@@ -110,7 +110,7 @@ function sortPublicLobbies(lobbies) {
 
 export function CreateProfileGate({ initialName = "", connectionState, pingMs, onProfileCreate }) {
   const [username, setUsername] = React.useState(initialName || "");
-  const [colorId, setColorId] = React.useState(PlayerProfile.colorForName(initialName || PlayerProfile.DEFAULT_USERNAME));
+  const [iconId, setIconId] = React.useState(PlayerProfile.iconForName(initialName || PlayerProfile.DEFAULT_USERNAME));
   const profileIdRef = React.useRef(PlayerProfile.makeProfileId());
   const createdAtRef = React.useRef(new Date().toISOString());
   const canCreate = username.trim().length > 0;
@@ -119,9 +119,10 @@ export function CreateProfileGate({ initialName = "", connectionState, pingMs, o
     profileId: profileIdRef.current,
     username: cleanUsername,
     avatar: {
-      kind: "initials",
+      kind: "image",
+      iconId,
       initials: PlayerProfile.makeInitials(cleanUsername),
-      colorId
+      colorId: PlayerProfile.colorForName(cleanUsername)
     },
     createdAt: createdAtRef.current,
     updatedAt: new Date().toISOString()
@@ -152,7 +153,7 @@ export function CreateProfileGate({ initialName = "", connectionState, pingMs, o
             <ProfileAvatar profile={profilePreview} size="xl" />
             <div>
               <strong>{profilePreview.username}</strong>
-              <span>{profilePreview.avatar.initials} · {profilePreview.avatar.colorId}</span>
+              <span>Icona {profilePreview.avatar.iconId}</span>
             </div>
           </div>
 
@@ -167,7 +168,7 @@ export function CreateProfileGate({ initialName = "", connectionState, pingMs, o
             />
           </label>
 
-          <AvatarColorPicker username={cleanUsername} colorId={colorId} onColorIdChange={setColorId} />
+          <AvatarIconPicker username={cleanUsername} iconId={iconId} onIconIdChange={setIconId} />
 
           <button type="submit" className={styles.homePrimaryButton} disabled={!canCreate}>
             Crea account
@@ -398,12 +399,13 @@ function ProfileHomePage({ profile, onProfileChange }) {
     );
   }
 
-  function updateColor(colorId) {
+  function updateIcon(iconId) {
     onProfileChange?.(
       PlayerProfile.update(normalizedProfile, {
         avatar: {
           ...normalizedProfile.avatar,
-          colorId
+          kind: "image",
+          iconId
         }
       }).toJSON()
     );
@@ -437,10 +439,10 @@ function ProfileHomePage({ profile, onProfileChange }) {
             />
           </label>
 
-          <AvatarColorPicker
+          <AvatarIconPicker
             username={username}
-            colorId={normalizedProfile.avatar.colorId}
-            onColorIdChange={updateColor}
+            iconId={normalizedProfile.avatar.iconId}
+            onIconIdChange={updateIcon}
           />
         </div>
       </div>
@@ -448,18 +450,19 @@ function ProfileHomePage({ profile, onProfileChange }) {
   );
 }
 
-function AvatarColorPicker({ username, colorId, onColorIdChange }) {
+function AvatarIconPicker({ username, iconId, onIconIdChange }) {
   return (
     <div className={styles.avatarColorPicker}>
       <span className={styles.homeFieldLabel}>Avatar</span>
       <div className={styles.avatarColorGrid}>
-        {PROFILE_COLOR_OPTIONS.map((option) => {
+        {PROFILE_ICON_IDS.map((option) => {
           const previewProfile = PlayerProfile.from({
             username,
             avatar: {
-              kind: "initials",
+              kind: "image",
+              iconId: option,
               initials: PlayerProfile.makeInitials(username),
-              colorId: option
+              colorId: PlayerProfile.colorForName(username)
             }
           }).toJSON();
 
@@ -467,12 +470,12 @@ function AvatarColorPicker({ username, colorId, onColorIdChange }) {
             <button
               key={option}
               type="button"
-              className={classNames(styles.avatarColorButton, colorId === option && styles.avatarColorButtonActive)}
-              aria-pressed={colorId === option}
-              onClick={() => onColorIdChange(option)}
+              className={classNames(styles.avatarColorButton, iconId === option && styles.avatarColorButtonActive)}
+              aria-pressed={iconId === option}
+              onClick={() => onIconIdChange(option)}
             >
               <ProfileAvatar profile={previewProfile} size="lg" />
-              <span>{option}</span>
+              <span>Icona {option}</span>
             </button>
           );
         })}
@@ -1450,7 +1453,7 @@ function UtilityReactionView({ lobby, emit }) {
   }
 
   return (
-    <section className={styles.utilityReaction}>
+    <section className={styles.utilityReaction} data-utility-reaction>
       <div className={styles.sectionTitle}>
         <div>
           <strong>Finestra effetti</strong>
@@ -1460,6 +1463,17 @@ function UtilityReactionView({ lobby, emit }) {
       </div>
 
       <EffectTimeline effectWindow={effectWindow} publicLog={publicLog} />
+      <UtilityWindowBoard lobby={lobby} effectWindow={effectWindow} />
+      <UtilityDecisionPanel
+        self={self}
+        effectWindow={effectWindow}
+        isParticipant={isParticipant}
+        hasSubmitted={hasSubmitted}
+        onPass={() => {
+          emit(CLIENT_EVENTS.PASS_EFFECT_WINDOW);
+          setReactionToast("Hai passato la finestra effetti");
+        }}
+      />
       <TrapStrip lobby={lobby} />
       {reactionToast ? <div className={styles.reactionToast}>{reactionToast}</div> : null}
 
@@ -1549,6 +1563,133 @@ function UtilityReactionView({ lobby, emit }) {
       </details>
     </section>
   );
+}
+
+function UtilityWindowBoard({ lobby, effectWindow }) {
+  const self = lobby.self;
+  const players = effectWindow.playerIds.map((playerId) => {
+    const publicPlayer = lobby.players.find((player) => player.id === playerId);
+    return playerId === self?.id ? { ...publicPlayer, ...self } : publicPlayer;
+  }).filter(Boolean);
+
+  return (
+    <div className={styles.utilityBoard}>
+      {players.map((player) => {
+        const isSelf = player.id === self?.id;
+        const submission = effectWindow.submissions?.[player.id] ?? null;
+        const handCount = isSelf ? player.utilityHand?.length ?? 0 : player.utilityHandCount ?? 0;
+        const drawCount = player.utilityDrawCount ?? 0;
+        const discardCount = isSelf ? player.utilityDiscard?.length ?? player.utilityDiscardCount ?? 0 : player.utilityDiscardCount ?? 0;
+        const armedTraps = isSelf ? player.armedTraps ?? [] : [];
+        const armedTrapCount = isSelf ? armedTraps.length : player.armedTrapCount ?? 0;
+
+        return (
+          <article
+            key={player.id}
+            className={classNames(styles.utilityBoardPlayer, isSelf && styles.utilityBoardSelf)}
+            data-submitted={submission ? "true" : "false"}
+          >
+            <div className={styles.utilityBoardHead}>
+              <ProfileAvatar profile={player.profile} name={player.name} size="sm" />
+              <div>
+                <strong>{isSelf ? "Tu" : player.name}</strong>
+                <span>{submission ? "scelta in coda" : "deve scegliere"}</span>
+              </div>
+            </div>
+
+            <div className={styles.utilityZoneGrid}>
+              <span>Mano <b>{handCount}</b></span>
+              <span>Mazzo <b>{drawCount}</b></span>
+              <span>Scarti <b>{discardCount}</b></span>
+            </div>
+
+            <div className={styles.utilityTrapField}>
+              <span>In campo</span>
+              {armedTrapCount ? (
+                isSelf ? (
+                  armedTraps.map((trap) => <b key={trap.id}>{trap.card?.name ?? "Trap"}</b>)
+                ) : (
+                  <b>{armedTrapCount} trap coperte</b>
+                )
+              ) : (
+                <b>vuoto</b>
+              )}
+            </div>
+
+            <div className={styles.utilityQueueSlot}>
+              <span>Coda</span>
+              <b>{effectSubmissionLabel(submission, isSelf, player)}</b>
+            </div>
+          </article>
+        );
+      })}
+    </div>
+  );
+}
+
+function UtilityDecisionPanel({ self, effectWindow, isParticipant, hasSubmitted, onPass }) {
+  if (!isParticipant) {
+    return (
+      <div className={styles.utilityDecisionPanel}>
+        <strong>Stai guardando la finestra utility.</strong>
+        <span>Solo i duellanti possono giocare o passare.</span>
+      </div>
+    );
+  }
+
+  if (effectWindow.status !== "waiting") {
+    return (
+      <div className={styles.utilityDecisionPanel}>
+        <strong>Finestra utility chiusa.</strong>
+        <span>Gli effetti sono stati messi in coda e risolti.</span>
+      </div>
+    );
+  }
+
+  if (hasSubmitted) {
+    return (
+      <div className={styles.utilityDecisionPanel}>
+        <strong>Scelta confermata.</strong>
+        <span>In attesa dell’altro duellante o del prossimo round.</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className={styles.utilityDecisionPanel}>
+      <div>
+        <strong>Scegli una utility o passa.</strong>
+        <span>
+          Mano {self?.utilityHand?.length ?? 0} · Mazzo {self?.utilityDrawCount ?? 0} · Scarti {self?.utilityDiscardCount ?? 0}
+        </span>
+      </div>
+      <button type="button" className={styles.passButton} onClick={onPass}>
+        Non uso utility
+      </button>
+    </div>
+  );
+}
+
+function effectSubmissionLabel(submission, isSelf, player) {
+  if (!submission) {
+    return "in attesa";
+  }
+
+  if (submission.type === "pass") {
+    return "passa";
+  }
+
+  if (!isSelf) {
+    return submission.type === "trap" ? "trap coperta" : "carta coperta";
+  }
+
+  const knownCards = [...(player.utilityDiscard ?? []), ...(player.armedTraps ?? []).map((trap) => trap.card).filter(Boolean)];
+  const card = knownCards.find((item) => item?.id === submission.cardId);
+  if (card) {
+    return card.type === "trap" ? `${card.name} armata` : `${card.name} giocata`;
+  }
+
+  return submission.type === "trap" ? "trap armata" : "utility giocata";
 }
 
 function EffectTimeline({ effectWindow, publicLog }) {

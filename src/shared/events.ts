@@ -2,6 +2,7 @@ import type { ClientEventPayloads, ServerEventPayloads } from "./types";
 
 const CLIENT_EVENTS_DATA = {
   SET_NAME: "setName",
+  UPSERT_PROFILE: "upsertProfile",
   CREATE_LOBBY: "createLobby",
   JOIN_LOBBY: "joinLobby",
   LEAVE_LOBBY: "leaveLobby",

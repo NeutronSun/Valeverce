@@ -4,6 +4,7 @@ import type {
   EffectLogEntry,
   EffectWindowSnapshot,
   GamePhase,
+  PlayerProfileSnapshot,
   ServerEventPayloads,
   TrapTrigger,
   ValerioKey
@@ -20,6 +21,8 @@ export type LobbySerializerSettings = {
 
 export type ClientState = {
   readonly id: string;
+  readonly name?: string;
+  readonly profile?: PlayerProfileSnapshot;
 };
 
 export type DraftState = {
@@ -38,6 +41,7 @@ export type SelectedPlanState = {
 export type PlayerState = {
   readonly id: string;
   readonly name: string;
+  readonly profile?: PlayerProfileSnapshot;
   readonly health: number;
   readonly mana: number;
   readonly deck: string[];
@@ -92,6 +96,7 @@ export type SerializedSelectedPlanPayload = {
 export type SerializedPlayerPayload = {
   readonly id: string;
   readonly name: string;
+  readonly profile: PlayerProfileSnapshot;
   readonly health: number;
   readonly maxHealth: number;
   readonly mana: number;
@@ -185,6 +190,7 @@ export type LobbySerializerOptions = {
   readonly VALERIO_LABELS: Record<ValerioKey, string>;
   readonly clients: ClientMap;
   readonly lobbies: LobbyMap;
+  readonly profilesByClientId?: Map<string, PlayerProfileSnapshot>;
   readonly cardsById: Map<string, DomainCard>;
   readonly getClientLobby: (client: ClientState) => SerializedLobbyState | undefined;
   readonly getCurrentDrafterId: (lobby: SerializedLobbyState) => string | null;

@@ -3,6 +3,7 @@
 ## Public client events
 
 - `setName`
+- `upsertProfile`
 - `createLobby`
 - `joinLobby`
 - `leaveLobby`
@@ -31,6 +32,7 @@ Do not rename public events.
 Internal mapping is allowed:
 
 ```txt
+upsertProfile -> profile.upsert
 draftCard -> draft.pick-card
 selectUtilityDeck -> utility.select-deck
 selectCard -> selection.choose-card

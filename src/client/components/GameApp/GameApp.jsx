@@ -7,8 +7,10 @@ import { ActionDock } from "../ActionDock/ActionDock.jsx";
 import { ChatFloat } from "../ChatFloat/ChatFloat.jsx";
 import { ConnectionSignal } from "../ConnectionSignal/ConnectionSignal.jsx";
 import { PlayerRail } from "../PlayerRail/PlayerRail.jsx";
+import { ProfileAvatar } from "../ProfileAvatar/ProfileAvatar.jsx";
 import { RightPanel } from "../RightPanel/RightPanel.jsx";
 import {
+  CreateProfileGate,
   DraftView,
   HomeView,
   LobbyView,
@@ -16,6 +18,7 @@ import {
   RevealView,
   SelectView
 } from "../PhaseViews/PhaseViews.jsx";
+import { ProfileStore } from "../../profile/ProfileStore.js";
 import {
   SETTINGS,
   clampValue,
@@ -27,15 +30,18 @@ import {
   sumDistribution,
   validatePlanDraft
 } from "../../ui.js";
+import { PlayerProfile } from "../../../shared/profile/PlayerProfile.js";
 import styles from "./GameApp.module.css";
 
 const UTILITY_DECK_STORAGE_KEY = "valeverce.utilityDecks.v1";
 const MAX_STORED_UTILITY_DECKS = 12;
 
 export function GameApp({ initialLobbyId = "" }) {
-  const { snapshot, connectionState, pingMs, lastError, clearError, emit, setName } = useGameSocket();
+  const { snapshot, connectionState, pingMs, lastError, clearError, emit, setName, upsertProfile } = useGameSocket();
   const lobby = snapshot?.lobby ?? null;
   const [name, setNameState] = useState("");
+  const [profile, setProfile] = useState(null);
+  const [activeHomePage, setActiveHomePage] = useState("play");
   const [selectedCardId, setSelectedCardId] = useState("");
   const [previewCard, setPreviewCard] = useState(null);
   const [plan, setPlan] = useState(emptyPlan);
@@ -64,8 +70,10 @@ export function GameApp({ initialLobbyId = "" }) {
   }, []);
 
   useEffect(() => {
+    const savedProfile = ProfileStore.read();
     const savedName = window.localStorage.getItem("valeverce.playerName") ?? "";
-    setNameState(savedName);
+    setProfile(savedProfile);
+    setNameState(savedProfile?.username ?? savedName);
     setUtilityDecks(readUtilityDecks());
   }, []);
 
@@ -193,9 +201,30 @@ export function GameApp({ initialLobbyId = "" }) {
   const updateName = useCallback(
     (value) => {
       setNameState(value);
-      setName(value);
+      if (profile) {
+        const nextProfile = ProfileStore.update(profile, {
+          username: value,
+          avatar: {
+            ...profile.avatar,
+            initials: PlayerProfile.makeInitials(value)
+          }
+        });
+        setProfile(nextProfile);
+        upsertProfile(nextProfile);
+      } else {
+        setName(value);
+      }
     },
-    [setName]
+    [profile, setName, upsertProfile]
+  );
+
+  const saveProfile = useCallback(
+    (nextProfile) => {
+      const normalizedProfile = upsertProfile(nextProfile);
+      setProfile(normalizedProfile);
+      setNameState(normalizedProfile.username);
+    },
+    [upsertProfile]
   );
 
   const saveUtilityDecks = useCallback((nextDecks) => {
@@ -254,11 +283,22 @@ export function GameApp({ initialLobbyId = "" }) {
           </aside>
         ) : null}
 
-        {!lobby ? (
+        {!lobby && !profile ? (
+          <CreateProfileGate
+            initialName={name}
+            connectionState={connectionState}
+            pingMs={pingMs}
+            onProfileCreate={saveProfile}
+          />
+        ) : !lobby ? (
           <HomeView
             snapshot={snapshot}
             name={name}
             onNameChange={updateName}
+            profile={profile}
+            onProfileChange={saveProfile}
+            activePage={activeHomePage}
+            onActivePageChange={setActiveHomePage}
             emit={emit}
             connectionState={connectionState}
             pingMs={pingMs}
@@ -376,6 +416,7 @@ function MatchHeader({ lobby, connectionState, pingMs }) {
         </span>
         <span className={styles.metaItem}>
           <span className={styles.metaLabel}>Player</span>
+          <ProfileAvatar profile={self?.profile} name={self?.name} size="sm" />
           <b className={styles.metaValue}>{self?.name ?? "-"}</b>
         </span>
         <span className={styles.metaItem}>

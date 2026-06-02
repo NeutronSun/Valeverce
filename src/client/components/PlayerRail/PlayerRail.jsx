@@ -2,6 +2,7 @@
 
 import { SETTINGS } from "../../../game.js";
 import { cardImageSrc, rarityLabel, sortCardsByRarity } from "../../ui.js";
+import { ProfileAvatar } from "../ProfileAvatar/ProfileAvatar.jsx";
 import styles from "./PlayerRail.module.css";
 
 function classNames(...items) {
@@ -90,7 +91,7 @@ function PlayerPlate({ player, isSelf, isOpponent }) {
   return (
     <article className={classNames(styles.plate, isSelf && styles.self, isOpponent && styles.opponent, !player.alive && styles.out)}>
       <div className={styles.plateHead}>
-        <span>{player.deckCount ?? 0}</span>
+        <ProfileAvatar profile={player.profile} name={player.name} size="sm" />
         <strong>{player.name}</strong>
         <small>{isSelf ? "tu" : player.isActive ? "duello" : `${player.deckCount} carte`}</small>
       </div>

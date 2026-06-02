@@ -2,6 +2,7 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { CLIENT_EVENTS } from "../../../shared/events.js";
+import { ProfileAvatar } from "../ProfileAvatar/ProfileAvatar.jsx";
 import styles from "./ChatFloat.module.css";
 
 function classNames(...items) {
@@ -29,6 +30,7 @@ export function ChatFloat({ lobby, emit }) {
   const latestMessageId = latestMessage?.id;
   const chatLength = lobby?.chat?.length ?? 0;
   const selfId = lobby?.self?.id;
+  const self = lobby?.self;
 
   useEffect(() => {
     lastSeenMessageIdRef.current = latestMessageId ?? null;
@@ -140,7 +142,10 @@ export function ChatFloat({ lobby, emit }) {
   return (
     <section className={classNames(styles.root, visible && styles.visible)} style={positionStyle(position)}>
       <div className={styles.head} onMouseDown={startDrag}>
-        <span>chat</span>
+        <span>
+          <ProfileAvatar profile={self?.profile} name={self?.name} size="sm" />
+          chat
+        </span>
         <button type="button" className={styles.close} onClick={() => setVisible(false)} aria-label="Nascondi chat">
           x
         </button>

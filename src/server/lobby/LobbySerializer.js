@@ -18,6 +18,7 @@ export class LobbySerializer {
     VALERIO_LABELS,
     clients,
     lobbies,
+    profilesByClientId,
     cardsById,
     getClientLobby,
     getCurrentDrafterId,
@@ -32,6 +33,7 @@ export class LobbySerializer {
     this.VALERIO_LABELS = VALERIO_LABELS;
     this.clients = clients;
     this.lobbies = lobbies;
+    this.profilesByClientId = profilesByClientId;
     this.cardsById = cardsById;
     this.getClientLobby = getClientLobby;
     this.getCurrentDrafterId = getCurrentDrafterId;
@@ -52,6 +54,7 @@ export class LobbySerializer {
     return {
       type: SERVER_EVENTS.STATE,
       selfId: client.id,
+      profile: this.serializeProfile(client.profile ?? this.profilesByClientId?.get(client.id), client.name),
       settings: this.SETTINGS,
       valerioLabels: this.VALERIO_LABELS,
       onlinePlayers: this.clients.size,
@@ -61,16 +64,21 @@ export class LobbySerializer {
   }
 
   serializeLobbyList() {
-    return [...this.lobbies.values()].map((lobby) => ({
-      id: lobby.id,
-      phase: lobby.phase,
-      hostName: lobby.players.get(lobby.hostId)?.name ?? "Host",
-      players: lobby.players.size,
-      maxPlayers: this.SETTINGS.maxPlayers,
-      isJoinable: lobby.phase === GAME_PHASES.LOBBY && lobby.players.size < this.SETTINGS.maxPlayers,
-      round: lobby.round,
-      names: [...lobby.players.values()].map((player) => player.name)
-    }));
+    return [...this.lobbies.values()].map((lobby) => {
+      const host = lobby.players.get(lobby.hostId);
+
+      return {
+        id: lobby.id,
+        phase: lobby.phase,
+        hostName: host?.name ?? "Host",
+        hostProfile: this.serializeProfile(host?.profile, host?.name ?? "Host"),
+        players: lobby.players.size,
+        maxPlayers: this.SETTINGS.maxPlayers,
+        isJoinable: lobby.phase === GAME_PHASES.LOBBY && lobby.players.size < this.SETTINGS.maxPlayers,
+        round: lobby.round,
+        names: [...lobby.players.values()].map((player) => player.name)
+      };
+    });
   }
 
   /**
@@ -117,6 +125,7 @@ export class LobbySerializer {
     return {
       id: player.id,
       name: player.name,
+      profile: this.serializeProfile(player.profile, player.name),
       health: player.health,
       maxHealth: this.SETTINGS.maxHealth,
       mana: player.mana,
@@ -162,6 +171,7 @@ export class LobbySerializer {
     return {
       id: self.id,
       name: self.name,
+      profile: this.serializeProfile(self.profile, self.name),
       health: self.health,
       maxHealth: this.SETTINGS.maxHealth,
       mana: self.mana,
@@ -202,6 +212,29 @@ export class LobbySerializer {
 
   serializeCards(cardIds) {
     return cardIds.map((cardId) => this.cardsById.get(cardId)).filter(Boolean);
+  }
+
+  serializeProfile(profile, fallbackName = "Player") {
+    if (profile && typeof profile === "object") {
+      return profile;
+    }
+
+    const initials = String(fallbackName ?? "Player")
+      .trim()
+      .slice(0, 2)
+      .toUpperCase() || "PL";
+
+    return {
+      profileId: `fallback_${initials.toLowerCase()}`,
+      username: String(fallbackName ?? "Player"),
+      avatar: {
+        kind: "initials",
+        initials,
+        colorId: "gold"
+      },
+      createdAt: new Date(0).toISOString(),
+      updatedAt: new Date(0).toISOString()
+    };
   }
 
   serializeEffectWindow(lobby, viewerId) {

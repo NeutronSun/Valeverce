@@ -33,6 +33,7 @@ import { LobbyState } from "./server/lobby/LobbyState.js";
 import { ClientSession } from "./server/socket/ClientSession.js";
 import { TimerController } from "./server/timer/TimerController.js";
 import { CLIENT_EVENT_NAMES, CLIENT_EVENTS, SERVER_EVENTS } from "./shared/events.js";
+import { PlayerProfile } from "./shared/profile/PlayerProfile.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, "..");
@@ -47,6 +48,7 @@ const cardsById = new Map(cards.map((card) => [card.id, card]));
 const clients = new Map();
 const clientsBySocketId = new Map();
 const lobbies = new Map();
+const profilesByClientId = new Map();
 let timerController;
 let lobbyManager;
 let lobbySerializer;
@@ -75,8 +77,10 @@ const io = new SocketIOServer(server, {
 
 io.on("connection", (socket) => {
   const client = new ClientSession(socket, `Player ${clients.size + 1}`, makeId);
+  client.profile = PlayerProfile.from(null, client.name).toJSON();
   clients.set(client.id, client);
   clientsBySocketId.set(socket.id, client);
+  profilesByClientId.set(client.id, client.profile);
 
   socket.emit(SERVER_EVENTS.HELLO, { type: SERVER_EVENTS.HELLO, selfId: client.id });
   sendState(client);
@@ -112,6 +116,7 @@ lobbySerializer = new LobbySerializer({
   VALERIO_LABELS,
   clients,
   lobbies,
+  profilesByClientId,
   cardsById,
   getClientLobby,
   getCurrentDrafterId,
@@ -210,7 +215,12 @@ function handleMessage(client, message) {
   switch (message.type) {
     case CLIENT_EVENTS.SET_NAME:
       client.name = sanitizeName(payload.name);
+      upsertClientProfile(client, { ...getClientProfile(client), username: client.name });
       updatePlayerName(client);
+      broadcastClientScope(client);
+      break;
+    case CLIENT_EVENTS.UPSERT_PROFILE:
+      upsertClientProfile(client, payload.profile ?? payload);
       broadcastClientScope(client);
       break;
     case CLIENT_EVENTS.CREATE_LOBBY:
@@ -567,6 +577,7 @@ function disconnectClient(client) {
   leaveLobby(client, { broadcast: false });
   clients.delete(client.id);
   clientsBySocketId.delete(client.socket.id);
+  profilesByClientId.delete(client.id);
   broadcastAllStates();
 }
 
@@ -575,13 +586,44 @@ function updatePlayerName(client) {
   const player = lobby?.players.get(client.id);
   if (player) {
     player.name = client.name;
+    player.profile = getClientProfile(client);
   }
+}
+
+function upsertClientProfile(client, profileInput) {
+  const profile = PlayerProfile.from(profileInput, client.name).toJSON();
+  client.profile = profile;
+  client.name = profile.username;
+  profilesByClientId.set(client.id, profile);
+  updatePlayerProfile(client);
+}
+
+function updatePlayerProfile(client) {
+  const lobby = getClientLobby(client);
+  const player = lobby?.players.get(client.id);
+  if (player) {
+    player.name = client.name;
+    player.profile = getClientProfile(client);
+  }
+}
+
+function getClientProfile(client) {
+  const profile = client.profile ?? profilesByClientId.get(client.id);
+  if (profile) {
+    return PlayerProfile.from(profile, client.name).toJSON();
+  }
+
+  const fallbackProfile = PlayerProfile.from(null, client.name).toJSON();
+  client.profile = fallbackProfile;
+  profilesByClientId.set(client.id, fallbackProfile);
+  return fallbackProfile;
 }
 
 function makePlayer(client) {
   return {
     id: client.id,
     name: client.name,
+    profile: getClientProfile(client),
     health: SETTINGS.startingHealth,
     mana: SETTINGS.startingMana,
     deck: [],

@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { CLIENT_EVENTS } from "../../../shared/events.js";
+import { PlayerProfile, PROFILE_COLOR_OPTIONS } from "../../../shared/profile/PlayerProfile.js";
 import {
   SETTINGS,
   VALERIO_KEYS,
@@ -28,6 +29,7 @@ import {
 } from "../../ui.js";
 import { AbilityBox, GameCard } from "../Card/Card.jsx";
 import { ConnectionSignal } from "../ConnectionSignal/ConnectionSignal.jsx";
+import { ProfileAvatar } from "../ProfileAvatar/ProfileAvatar.jsx";
 import { ValerioStats } from "../ValerioStats/ValerioStats.jsx";
 import styles from "./PhaseViews.module.css";
 
@@ -53,6 +55,12 @@ const rarityClasses = {
 const MAX_UTILITY_DECK_SIZE = 8;
 const UTILITY_CARD_TYPES = Object.freeze(["utility", "defense", "trap"]);
 const TARGET_EFFECT_TYPES = Object.freeze(["damage", "swap_card", "steal_card", "swap_deck"]);
+const HOME_PAGES = Object.freeze([
+  { id: "play", label: "Gioca" },
+  { id: "profile", label: "Profilo" },
+  { id: "decks", label: "Deck Utility" },
+  { id: "cards", label: "Carte" }
+]);
 
 function classNames(...items) {
   return items.filter(Boolean).join(" ");
@@ -100,10 +108,88 @@ function sortPublicLobbies(lobbies) {
   });
 }
 
+export function CreateProfileGate({ initialName = "", connectionState, pingMs, onProfileCreate }) {
+  const [username, setUsername] = React.useState(initialName || "");
+  const [colorId, setColorId] = React.useState(PlayerProfile.colorForName(initialName || PlayerProfile.DEFAULT_USERNAME));
+  const profileIdRef = React.useRef(PlayerProfile.makeProfileId());
+  const createdAtRef = React.useRef(new Date().toISOString());
+  const canCreate = username.trim().length > 0;
+  const cleanUsername = PlayerProfile.normalizeUsername(username);
+  const profilePreview = PlayerProfile.from({
+    profileId: profileIdRef.current,
+    username: cleanUsername,
+    avatar: {
+      kind: "initials",
+      initials: PlayerProfile.makeInitials(cleanUsername),
+      colorId
+    },
+    createdAt: createdAtRef.current,
+    updatedAt: new Date().toISOString()
+  }).toJSON();
+
+  function submit(event) {
+    event.preventDefault();
+    if (!canCreate) {
+      return;
+    }
+    onProfileCreate(profilePreview);
+  }
+
+  return (
+    <main className={styles.profileGate}>
+      <section className={styles.profileGatePanel}>
+        <div className={styles.profileGateBrand}>
+          <span className={styles.homeMark}>V</span>
+          <div>
+            <p className={styles.homeEyebrow}>account locale</p>
+            <h1 className={styles.homeTitle}>VALEVERCE</h1>
+            <p className={styles.homeSubtitle}>Crea il profilo che userai in lobby e nei duelli.</p>
+          </div>
+        </div>
+
+        <form className={styles.profileForm} onSubmit={submit}>
+          <div className={styles.profilePreview}>
+            <ProfileAvatar profile={profilePreview} size="xl" />
+            <div>
+              <strong>{profilePreview.username}</strong>
+              <span>{profilePreview.avatar.initials} · {profilePreview.avatar.colorId}</span>
+            </div>
+          </div>
+
+          <label className={styles.homeField}>
+            <span className={styles.homeFieldLabel}>Username</span>
+            <input
+              className={styles.homeInput}
+              value={username}
+              maxLength={PlayerProfile.MAX_USERNAME_LENGTH}
+              placeholder="Scrivi username"
+              onChange={(event) => setUsername(event.target.value)}
+            />
+          </label>
+
+          <AvatarColorPicker username={cleanUsername} colorId={colorId} onColorIdChange={setColorId} />
+
+          <button type="submit" className={styles.homePrimaryButton} disabled={!canCreate}>
+            Crea account
+          </button>
+        </form>
+
+        <div className={styles.profileGateStatus}>
+          <ConnectionSignal connectionState={connectionState} pingMs={pingMs} />
+        </div>
+      </section>
+    </main>
+  );
+}
+
 export function HomeView({
   snapshot,
   name,
   onNameChange,
+  profile,
+  onProfileChange,
+  activePage = "play",
+  onActivePageChange,
   emit,
   connectionState,
   pingMs,
@@ -115,6 +201,7 @@ export function HomeView({
   const publicLobbies = sortPublicLobbies(lobbies);
   const openLobbyCount = lobbies.filter((lobby) => lobby.isJoinable).length;
   const totalPlayers = Number(snapshot?.onlinePlayers ?? lobbies.reduce((total, lobby) => total + Number(lobby.players ?? 0), 0));
+  const currentPage = HOME_PAGES.some((page) => page.id === activePage) ? activePage : "play";
 
   return (
     <main className={styles.home}>
@@ -129,6 +216,7 @@ export function HomeView({
         </div>
 
         <div className={styles.homeStats}>
+          <ProfileAvatar profile={profile} name={name} size="sm" label />
           <ConnectionSignal connectionState={connectionState} pingMs={pingMs} />
           <span className={styles.homeStat}>
             <span className={styles.homeStatLabel}>online</span>
@@ -141,6 +229,50 @@ export function HomeView({
         </div>
       </section>
 
+      <nav className={styles.homeNav} aria-label="Pagine home">
+        {HOME_PAGES.map((page) => (
+          <button
+            key={page.id}
+            type="button"
+            className={classNames(styles.homeNavButton, currentPage === page.id && styles.homeNavButtonActive)}
+            aria-current={currentPage === page.id ? "page" : undefined}
+            onClick={() => onActivePageChange?.(page.id)}
+          >
+            {page.label}
+          </button>
+        ))}
+      </nav>
+
+      <section className={styles.homePage}>
+        {currentPage === "play" ? (
+          <HomePlayPage
+            name={name}
+            onNameChange={onNameChange}
+            emit={emit}
+            connectionState={connectionState}
+            publicLobbies={publicLobbies}
+          />
+        ) : null}
+
+        {currentPage === "profile" ? <ProfileHomePage profile={profile} onProfileChange={onProfileChange} /> : null}
+
+        {currentPage === "decks" ? (
+          <UtilityDeckManager
+            utilityCards={utilityCards}
+            utilityDecks={utilityDecks}
+            onUtilityDecksChange={onUtilityDecksChange}
+          />
+        ) : null}
+
+        {currentPage === "cards" ? <CardsHomePage utilityCards={utilityCards} /> : null}
+      </section>
+    </main>
+  );
+}
+
+function HomePlayPage({ name, onNameChange, emit, connectionState, publicLobbies }) {
+  return (
+    <div className={styles.homePlayGrid}>
       <section className={styles.homeAccess}>
         <div className={styles.homePanelHeader}>
           <div className={styles.homePanelTitleGroup}>
@@ -171,12 +303,6 @@ export function HomeView({
         </a>
       </section>
 
-      <UtilityDeckManager
-        utilityCards={utilityCards}
-        utilityDecks={utilityDecks}
-        onUtilityDecksChange={onUtilityDecksChange}
-      />
-
       <section className={styles.publicLobbyPanel}>
         <div className={styles.publicLobbyHeader}>
           <div className={styles.homePanelTitleGroup}>
@@ -202,7 +328,10 @@ export function HomeView({
               onClick={() => emit(CLIENT_EVENTS.JOIN_LOBBY, { lobbyId: lobby.id })}
             >
               <span className={styles.publicLobbyCode}>{lobby.id}</span>
-              <span className={styles.publicLobbyHost}>{lobby.hostName ?? "-"}</span>
+              <span className={styles.publicLobbyHost}>
+                <ProfileAvatar profile={lobby.hostProfile} name={lobby.hostName} size="sm" />
+                <b>{lobby.hostName ?? "-"}</b>
+              </span>
               <span className={styles.publicLobbyPlayers}>
                 {lobby.players}/{lobby.maxPlayers}
               </span>
@@ -244,7 +373,154 @@ export function HomeView({
           </span>
         </div>
       </section>
-    </main>
+    </div>
+  );
+}
+
+function ProfileHomePage({ profile, onProfileChange }) {
+  const normalizedProfile = PlayerProfile.from(profile ?? {}).toJSON();
+  const [username, setUsername] = React.useState(normalizedProfile.username);
+
+  React.useEffect(() => {
+    setUsername(normalizedProfile.username);
+  }, [normalizedProfile.username]);
+
+  function updateUsername(value) {
+    setUsername(value);
+    onProfileChange?.(
+      PlayerProfile.update(normalizedProfile, {
+        username: value,
+        avatar: {
+          ...normalizedProfile.avatar,
+          initials: PlayerProfile.makeInitials(value)
+        }
+      }).toJSON()
+    );
+  }
+
+  function updateColor(colorId) {
+    onProfileChange?.(
+      PlayerProfile.update(normalizedProfile, {
+        avatar: {
+          ...normalizedProfile.avatar,
+          colorId
+        }
+      }).toJSON()
+    );
+  }
+
+  return (
+    <section className={styles.profilePage}>
+      <div className={styles.homePanelHeader}>
+        <div className={styles.homePanelTitleGroup}>
+          <p className={styles.homePanelEyebrow}>profilo locale</p>
+          <h2 className={styles.homePanelTitle}>Modifica profilo</h2>
+        </div>
+        <span className={styles.homePanelMeta}>local + RAM</span>
+      </div>
+
+      <div className={styles.profileEditorGrid}>
+        <div className={styles.profilePreviewLarge}>
+          <ProfileAvatar profile={normalizedProfile} size="xl" />
+          <strong>{normalizedProfile.username}</strong>
+          <span>{normalizedProfile.profileId}</span>
+        </div>
+
+        <div className={styles.profileForm}>
+          <label className={styles.homeField}>
+            <span className={styles.homeFieldLabel}>Username</span>
+            <input
+              className={styles.homeInput}
+              value={username}
+              maxLength={PlayerProfile.MAX_USERNAME_LENGTH}
+              onChange={(event) => updateUsername(event.target.value)}
+            />
+          </label>
+
+          <AvatarColorPicker
+            username={username}
+            colorId={normalizedProfile.avatar.colorId}
+            onColorIdChange={updateColor}
+          />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function AvatarColorPicker({ username, colorId, onColorIdChange }) {
+  return (
+    <div className={styles.avatarColorPicker}>
+      <span className={styles.homeFieldLabel}>Avatar</span>
+      <div className={styles.avatarColorGrid}>
+        {PROFILE_COLOR_OPTIONS.map((option) => {
+          const previewProfile = PlayerProfile.from({
+            username,
+            avatar: {
+              kind: "initials",
+              initials: PlayerProfile.makeInitials(username),
+              colorId: option
+            }
+          }).toJSON();
+
+          return (
+            <button
+              key={option}
+              type="button"
+              className={classNames(styles.avatarColorButton, colorId === option && styles.avatarColorButtonActive)}
+              aria-pressed={colorId === option}
+              onClick={() => onColorIdChange(option)}
+            >
+              <ProfileAvatar profile={previewProfile} size="lg" />
+              <span>{option}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function CardsHomePage({ utilityCards }) {
+  const typeCounts = React.useMemo(() => {
+    const counts = new Map();
+    for (const card of utilityCards) {
+      counts.set(card.type, Number(counts.get(card.type) ?? 0) + 1);
+    }
+    return [...counts.entries()].sort(([left], [right]) => String(left).localeCompare(String(right)));
+  }, [utilityCards]);
+
+  return (
+    <section className={styles.cardsHomePage}>
+      <div className={styles.homePanelHeader}>
+        <div className={styles.homePanelTitleGroup}>
+          <p className={styles.homePanelEyebrow}>catalogo</p>
+          <h2 className={styles.homePanelTitle}>Carte utility</h2>
+        </div>
+        <a className={styles.homeCatalogButton} href="/cards">
+          Catalogo completo
+        </a>
+      </div>
+
+      <div className={styles.cardTypeSummary}>
+        {typeCounts.map(([type, count]) => (
+          <article key={type} data-card-type={type}>
+            <span>{cardTypeLabel(type)}</span>
+            <strong>{count}</strong>
+          </article>
+        ))}
+      </div>
+
+      <div className={styles.utilityCardPicker}>
+        {utilityCards.map((card) => (
+          <div key={card.id} className={styles.utilityPick} data-card-type={card.type}>
+            <span>{cardTypeLabel(card.type)}</span>
+            <strong>{card.name}</strong>
+            <small>{effectTypeSummary(card)}</small>
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -252,6 +528,7 @@ function UtilityDeckManager({ utilityCards, utilityDecks, onUtilityDecksChange, 
   const [selectedIds, setSelectedIds] = React.useState([]);
   const [deckName, setDeckName] = React.useState("");
   const cardMap = React.useMemo(() => new Map(utilityCards.map((card) => [card.id, card])), [utilityCards]);
+  const selectedCards = selectedIds.map((cardId) => cardMap.get(cardId)).filter(Boolean);
   const canSave = selectedIds.length > 0 && selectedIds.length <= MAX_UTILITY_DECK_SIZE;
 
   function toggleCard(cardId) {
@@ -299,6 +576,7 @@ function UtilityDeckManager({ utilityCards, utilityDecks, onUtilityDecksChange, 
             <article key={deck.id} className={styles.utilityDeckRow}>
               <div>
                 <strong>{deck.name}</strong>
+                <span className={styles.utilityDeckCount}>{deck.cardIds.length}/{MAX_UTILITY_DECK_SIZE}</span>
                 <small>
                   {deck.cardIds
                     .map((cardId) => cardMap.get(cardId)?.name)
@@ -341,6 +619,17 @@ function UtilityDeckManager({ utilityCards, utilityDecks, onUtilityDecksChange, 
           <button type="button" className={styles.homePrimaryButton} disabled={!canSave} onClick={saveDeck}>
             Salva deck
           </button>
+        </div>
+        <div className={styles.utilitySelectedPreview}>
+          {selectedCards.length ? (
+            selectedCards.map((card) => (
+              <span key={card.id} data-card-type={card.type}>
+                {card.name}
+              </span>
+            ))
+          ) : (
+            <span>Seleziona utility, defense o trap dalla griglia.</span>
+          )}
         </div>
         <div className={styles.utilityCardPicker}>
           {utilityCards.map((card) => (
@@ -433,7 +722,7 @@ export function LobbyView({ lobby, emit }) {
           </div>
           {lobby.players.map((player) => (
             <article key={player.id} className={styles.lobbyPlayer}>
-              <span>{player.deckCount ?? 0}</span>
+              <ProfileAvatar profile={player.profile} name={player.name} size="sm" />
               <div>
                 <strong>{player.name}</strong>
                 <small>{player.id === lobby.hostId ? "Host partita" : "Player"}</small>
@@ -893,6 +1182,13 @@ export function PlanFightView({ lobby, plan, onPlanValue, onPreviewLines }) {
     return <section className={styles.panel}>Carte in reveal...</section>;
   }
 
+  const defenseTotal = sumDistribution(plan.defenses);
+  const attackTotal = sumDistribution(plan.attacks);
+  const defenseReady = defenseTotal > 0;
+  const attackReady = attackTotal > 0;
+  const selectedAttackStats = selectedStats(plan.attacks);
+  const selectedDefenseStats = selectedStats(plan.defenses);
+
   return (
     <section className={styles.fight}>
       <section className={styles.fightPanel}>
@@ -900,6 +1196,23 @@ export function PlanFightView({ lobby, plan, onPlanValue, onPreviewLines }) {
           <span>Fight · round {lobby.round}</span>
           <strong>Configura attacco e difesa</strong>
           <small>La configurazione avversaria resta nascosta fino al reveal.</small>
+        </div>
+
+        <div className={styles.fightCards}>
+          <PlanCardPanel title="La tua carta" card={selfCard} statsTone="attack" highlighted={selectedAttackStats} />
+          <PlanCardPanel title="Carta avversaria" card={opponentCard} statsTone="defense" highlighted={selectedDefenseStats} />
+        </div>
+
+        <div className={styles.fightSteps}>
+          <span className={classNames(styles.fightStep, defenseReady && styles.fightStepDone, !defenseReady && styles.fightStepActive)}>
+            Difesa
+          </span>
+          <span className={classNames(styles.fightStep, attackReady && styles.fightStepDone, defenseReady && !attackReady && styles.fightStepActive)}>
+            Attacco
+          </span>
+          <span className={classNames(styles.fightStep, plan.useActive && styles.fightStepDone, attackReady && styles.fightStepActive)}>
+            Attiva
+          </span>
         </div>
 
         <div className={styles.planner}>
@@ -929,14 +1242,14 @@ export function PlanFightView({ lobby, plan, onPlanValue, onPreviewLines }) {
           </section>
         </div>
 
-        <div className={styles.preview}>
+        <div className={classNames(styles.preview, styles.fightPreviewPanel)}>
           <div className={styles.sectionTitle}>
             <strong>Preview risultato</strong>
-            <span>breccia parziale</span>
+            <span>{selectedAttackStats.length ? "breccia parziale" : "in attesa attacco"}</span>
           </div>
           <div className={styles.list}>
-            {selectedStats(plan.attacks).length ? (
-              selectedStats(plan.attacks).map((key) => (
+            {selectedAttackStats.length ? (
+              selectedAttackStats.map((key) => (
                 <div key={key} className={styles.previewLine}>
                   <strong>{formatStatName(key)}</strong>
                   <small>
@@ -1032,7 +1345,7 @@ function lineEffectLabel(influence) {
   return "";
 }
 
-function PlanCardPanel({ title, card, tone, statsTone, highlighted }) {
+function PlanCardPanel({ title, card, statsTone, highlighted }) {
   return (
     <aside className={styles.panel}>
       <div className={styles.sectionTitle}>
@@ -1102,6 +1415,7 @@ export function RevealView({ lobby, emit }) {
           <RevealPlayerReport
             key={play.playerId}
             play={play}
+            profile={lobby.players.find((player) => player.id === play.playerId)?.profile}
             isSelf={play.playerId === lobby.self?.id}
             isWinner={play.playerId === result.winnerId}
           />
@@ -1113,6 +1427,7 @@ export function RevealView({ lobby, emit }) {
 
 function UtilityReactionView({ lobby, emit }) {
   const [targetByCard, setTargetByCard] = React.useState({});
+  const [reactionToast, setReactionToast] = React.useState("");
   const effectWindow = lobby.effectWindow;
   const self = lobby.self;
   const isParticipant = Boolean(effectWindow?.playerIds?.includes(self?.id));
@@ -1120,6 +1435,15 @@ function UtilityReactionView({ lobby, emit }) {
   const targetPlayers = lobby.players.filter((player) => effectWindow?.playerIds?.includes(player.id) && player.id !== self?.id);
   const publicLog = effectWindow?.publicLog ?? [];
   const privateLog = self?.privateEffectLog ?? [];
+
+  React.useEffect(() => {
+    if (!reactionToast) {
+      return undefined;
+    }
+
+    const timeoutId = window.setTimeout(() => setReactionToast(""), 1800);
+    return () => window.clearTimeout(timeoutId);
+  }, [reactionToast]);
 
   if (!effectWindow) {
     return null;
@@ -1135,7 +1459,9 @@ function UtilityReactionView({ lobby, emit }) {
         <span>{Object.keys(effectWindow.submissions ?? {}).length}/{effectWindow.playerIds.length}</span>
       </div>
 
+      <EffectTimeline effectWindow={effectWindow} publicLog={publicLog} />
       <TrapStrip lobby={lobby} />
+      {reactionToast ? <div className={styles.reactionToast}>{reactionToast}</div> : null}
 
       {isParticipant && effectWindow.status === "waiting" && !hasSubmitted ? (
         <div className={styles.utilityHand}>
@@ -1157,14 +1483,17 @@ function UtilityReactionView({ lobby, emit }) {
                       cardId: card.id,
                       targetPlayerId: needsTarget ? targetPlayerId : null
                     });
+                    setReactionToast(card.type === "trap" ? "Trappola armata per il prossimo round" : `${card.name} giocata`);
                   }}
                 >
                   <span>{cardTypeLabel(card.type)}</span>
                   <strong>{card.name}</strong>
                   <small>{effectTypeSummary(card)}</small>
+                  <em>{card.type === "trap" ? "Arma trap" : "Gioca"}</em>
                 </button>
                 {needsTarget ? (
                   <div className={styles.targetPicker}>
+                    <span>Bersaglio</span>
                     {targetPlayers.map((player) => (
                       <button
                         key={player.id}
@@ -1180,7 +1509,14 @@ function UtilityReactionView({ lobby, emit }) {
               </article>
             );
           })}
-          <button type="button" className={styles.passButton} onClick={() => emit(CLIENT_EVENTS.PASS_EFFECT_WINDOW)}>
+          <button
+            type="button"
+            className={styles.passButton}
+            onClick={() => {
+              emit(CLIENT_EVENTS.PASS_EFFECT_WINDOW);
+              setReactionToast("Hai passato la finestra effetti");
+            }}
+          >
             Passa
           </button>
         </div>
@@ -1204,11 +1540,41 @@ function UtilityReactionView({ lobby, emit }) {
         </div>
       </details>
 
-      <div className={styles.effectLogGrid}>
-        <EffectLog title="Log pubblico" entries={publicLog} />
-        <EffectLog title="Log privato" entries={privateLog} />
-      </div>
+      <details className={styles.effectLogDetails}>
+        <summary>Log effetti</summary>
+        <div className={styles.effectLogGrid}>
+          <EffectLog title="Log pubblico" entries={publicLog} />
+          <EffectLog title="Log privato" entries={privateLog} />
+        </div>
+      </details>
     </section>
+  );
+}
+
+function EffectTimeline({ effectWindow, publicLog }) {
+  const submittedCount = Object.keys(effectWindow.submissions ?? {}).length;
+  const hasTrapLog = publicLog.some((entry) => String(entry.text ?? "").toLowerCase().includes("trap"));
+  const isClosed = effectWindow.status === "closed";
+  const steps = [
+    { id: "combat", label: "Combat risolto", done: true },
+    { id: "traps", label: "Trap precedenti", done: hasTrapLog || submittedCount > 0 },
+    { id: "choice", label: "Scelta utility", done: submittedCount >= effectWindow.playerIds.length },
+    { id: "effects", label: "Effetti applicati", done: publicLog.length > 0 },
+    { id: "next", label: "Prossimo round", done: isClosed }
+  ];
+
+  return (
+    <ol className={styles.effectTimeline}>
+      {steps.map((step, index) => (
+        <li
+          key={step.id}
+          className={classNames(styles.effectTimelineStep, step.done && styles.effectTimelineDone, !step.done && index === steps.findIndex((item) => !item.done) && styles.effectTimelineActive)}
+        >
+          <span>{index + 1}</span>
+          <strong>{step.label}</strong>
+        </li>
+      ))}
+    </ol>
   );
 }
 
@@ -1278,10 +1644,11 @@ function cardTypeLabel(type) {
   return String(type);
 }
 
-function RevealPlayerReport({ play, isSelf, isWinner }) {
+function RevealPlayerReport({ play, profile, isSelf, isWinner }) {
   return (
     <article className={styles.report}>
       <div className={styles.reportHead}>
+        <ProfileAvatar profile={profile} name={play.playerName} size="lg" />
         <div className={styles.thumb}>
           <img src={cardImageSrc(play.card)} alt={play.cardName} />
         </div>

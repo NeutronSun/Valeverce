@@ -1,5 +1,6 @@
 export const CLIENT_EVENTS = Object.freeze({
   SET_NAME: "setName",
+  UPSERT_PROFILE: "upsertProfile",
   CREATE_LOBBY: "createLobby",
   JOIN_LOBBY: "joinLobby",
   LEAVE_LOBBY: "leaveLobby",

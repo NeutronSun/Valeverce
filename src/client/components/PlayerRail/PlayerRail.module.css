@@ -166,22 +166,9 @@
 
 .plateHead {
   display: grid;
-  grid-template-columns: 26px minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 8px;
-
-  & span {
-    display: grid;
-    width: 26px;
-    height: 26px;
-    place-items: center;
-    border: 1px solid var(--color-border);
-    border-radius: 50%;
-    color: var(--color-text);
-    background: rgba(7, 8, 7, 0.86);
-    font-size: 0.72rem;
-    font-weight: 950;
-  }
 
   & strong {
     overflow: hidden;

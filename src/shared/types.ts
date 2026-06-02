@@ -16,6 +16,22 @@ export type TrapTriggerType =
 
 export type ValerioMap = Record<ValerioKey, number>;
 
+export type ProfileColorId = "gold" | "green" | "blue" | "red" | "violet" | "teal" | "pink" | "orange";
+
+export interface ProfileAvatarSnapshot {
+  kind: "initials";
+  initials: string;
+  colorId: ProfileColorId;
+}
+
+export interface PlayerProfileSnapshot {
+  profileId: string;
+  username: string;
+  avatar: ProfileAvatarSnapshot;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface CardEffect {
   type: string;
   stat?: ValerioKey;
@@ -75,6 +91,7 @@ export interface SelectedPlan {
 export interface PlayerSnapshot {
   id: string;
   name: string;
+  profile?: PlayerProfileSnapshot;
   health: number;
   maxHealth: number;
   mana: number;
@@ -185,6 +202,7 @@ export interface ChatMessage {
 
 export interface ClientEventPayloads {
   setName: { name: string };
+  upsertProfile: { profile: PlayerProfileSnapshot };
   createLobby: Record<string, never>;
   joinLobby: { lobbyId: string };
   leaveLobby: Record<string, never>;
@@ -216,6 +234,7 @@ export interface ServerEventPayloads {
   state: {
     type: "state";
     selfId: string;
+    profile: PlayerProfileSnapshot;
     settings: Record<string, unknown>;
     valerioLabels: Record<ValerioKey, string>;
     onlinePlayers: number;
@@ -223,6 +242,7 @@ export interface ServerEventPayloads {
       id: string;
       phase: GamePhase;
       hostName: string;
+      hostProfile?: PlayerProfileSnapshot;
       players: number;
       maxPlayers: number;
       isJoinable: boolean;

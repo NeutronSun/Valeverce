@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { io } from "socket.io-client";
 import { CLIENT_EVENTS, SERVER_EVENTS } from "../shared/events.js";
+import { ProfileStore } from "./profile/ProfileStore.js";
 
 const storedNameKey = "valeverce.playerName";
 const pingIntervalMs = 2500;
@@ -50,8 +51,11 @@ export function useGameSocket() {
 
     socket.on("connect", () => {
       setConnectionState("connected");
+      const savedProfile = ProfileStore.read();
       const savedName = window.localStorage.getItem(storedNameKey);
-      if (savedName) {
+      if (savedProfile) {
+        socket.emit(CLIENT_EVENTS.UPSERT_PROFILE, { profile: savedProfile });
+      } else if (savedName) {
         socket.emit(CLIENT_EVENTS.SET_NAME, { name: savedName });
       }
       startPing();
@@ -97,6 +101,15 @@ export function useGameSocket() {
     [emit]
   );
 
+  const upsertProfile = useCallback(
+    (profile) => {
+      const nextProfile = ProfileStore.save(profile);
+      emit(CLIENT_EVENTS.UPSERT_PROFILE, { profile: nextProfile });
+      return nextProfile;
+    },
+    [emit]
+  );
+
   return useMemo(
     () => ({
       socket: socketRef.current,
@@ -107,8 +120,9 @@ export function useGameSocket() {
       lastError,
       clearError: () => setLastError(""),
       emit,
-      setName
+      setName,
+      upsertProfile
     }),
-    [snapshot, selfId, connectionState, pingMs, lastError, emit, setName]
+    [snapshot, selfId, connectionState, pingMs, lastError, emit, setName, upsertProfile]
   );
 }

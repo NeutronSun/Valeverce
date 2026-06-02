@@ -57,14 +57,15 @@ export function ActionDock({ lobby, plan, selectedCardId, previewCard, canSubmit
       </button>
     );
   } else if (lobby?.phase === "select") {
+    const utilityReady = !self?.isActive || Boolean(self?.utilityDeckReady);
     action = (
       <button
         type="button"
         className={styles.primary}
-        disabled={!self?.isActive || !selectedCardId}
+        disabled={!self?.isActive || !selectedCardId || !utilityReady}
         onClick={() => emit(CLIENT_EVENTS.SELECT_CARD, { cardId: selectedCardId })}
       >
-        {self?.isActive ? "Seleziona carta" : "Aspetta"}
+        {self?.isActive ? (utilityReady ? "Seleziona carta" : "Scegli utility deck") : "Aspetta"}
       </button>
     );
   } else if (lobby?.phase === "plan") {
@@ -76,6 +77,29 @@ export function ActionDock({ lobby, plan, selectedCardId, previewCard, canSubmit
         onClick={() => emit(CLIENT_EVENTS.SUBMIT_PLAN, compactPlan(plan))}
       >
         Conferma configurazione
+      </button>
+    );
+  } else if (lobby?.phase === "reveal" && lobby.effectWindow?.status === "waiting") {
+    const effectWindowOpen = lobby.effectWindow?.status === "waiting";
+    const isEffectParticipant = Boolean(lobby.effectWindow?.playerIds?.includes(self?.id));
+    const hasSubmittedEffect = Boolean(lobby.effectWindow?.submissions?.[self?.id]);
+
+    action = isEffectParticipant && !hasSubmittedEffect ? (
+      <div className={styles.revealActions}>
+        <button type="button" className={styles.primary} onClick={() => emit(CLIENT_EVENTS.PASS_EFFECT_WINDOW)}>
+          Passa utility
+        </button>
+        <button
+          type="button"
+          className={styles.secondary}
+          onClick={() => document.querySelector("[data-utility-reaction]")?.scrollIntoView({ behavior: "smooth", block: "center" })}
+        >
+          Vedi utils
+        </button>
+      </div>
+    ) : (
+      <button type="button" className={styles.secondary} disabled={effectWindowOpen}>
+        {hasSubmittedEffect ? "Utility scelta" : "Effetti in corso"}
       </button>
     );
   } else if (lobby?.phase === "reveal" && self?.id === lobby.hostId) {

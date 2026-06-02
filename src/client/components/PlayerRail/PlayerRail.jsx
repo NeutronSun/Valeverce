@@ -2,6 +2,7 @@
 
 import { SETTINGS } from "../../../game.js";
 import { cardImageSrc, rarityLabel, sortCardsByRarity } from "../../ui.js";
+import { ProfileAvatar } from "../ProfileAvatar/ProfileAvatar.jsx";
 import styles from "./PlayerRail.module.css";
 
 function classNames(...items) {
@@ -90,14 +91,25 @@ function PlayerPlate({ player, isSelf, isOpponent }) {
   return (
     <article className={classNames(styles.plate, isSelf && styles.self, isOpponent && styles.opponent, !player.alive && styles.out)}>
       <div className={styles.plateHead}>
-        <span>{player.deckCount ?? 0}</span>
+        <ProfileAvatar profile={player.profile} name={player.name} size="sm" />
         <strong>{player.name}</strong>
         <small>{isSelf ? "tu" : player.isActive ? "duello" : `${player.deckCount} carte`}</small>
       </div>
       <CardStrip player={player} />
+      <UtilityBadges player={player} />
       <ResourceBar type="health" label="PV" value={player.health} max={player.maxHealth} />
       <ResourceBar type="mana" label="Mana" value={player.mana} max={10} />
     </article>
+  );
+}
+
+function UtilityBadges({ player }) {
+  return (
+    <div className={styles.utilityBadges}>
+      <span>Mano {player.utilityHandCount ?? player.utilityHand?.length ?? 0}</span>
+      <span>Mazzo {player.utilityDrawCount ?? 0}</span>
+      <span>Trap {player.armedTrapCount ?? player.armedTraps?.length ?? 0}</span>
+    </div>
   );
 }
 

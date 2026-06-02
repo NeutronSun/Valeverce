@@ -166,22 +166,9 @@
 
 .plateHead {
   display: grid;
-  grid-template-columns: 26px minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 8px;
-
-  & span {
-    display: grid;
-    width: 26px;
-    height: 26px;
-    place-items: center;
-    border: 1px solid var(--color-border);
-    border-radius: 50%;
-    color: var(--color-text);
-    background: rgba(7, 8, 7, 0.86);
-    font-size: 0.72rem;
-    font-weight: 950;
-  }
 
   & strong {
     overflow: hidden;
@@ -234,6 +221,26 @@
     background: rgba(7, 8, 7, 0.58);
     font-size: 0.7rem;
     font-weight: 950;
+  }
+}
+
+.utilityBadges {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+
+  & span {
+    border: 1px solid rgba(77, 191, 158, 0.2);
+    border-radius: 999px;
+    padding: 4px 6px;
+    color: color-mix(in srgb, var(--color-utility), white 16%);
+    background:
+      linear-gradient(180deg, rgba(77, 191, 158, 0.09), transparent),
+      rgba(7, 8, 7, 0.58);
+    font-size: 0.58rem;
+    font-weight: 950;
+    text-align: center;
+    text-transform: uppercase;
   }
 }
 

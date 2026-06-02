@@ -7,6 +7,7 @@
   display: grid;
   gap: 4px;
   pointer-events: none;
+  filter: drop-shadow(0 18px 34px rgba(0, 0, 0, 0.34));
 
   &.withCard .cardArt {
     border-color: var(--color-border);
@@ -169,11 +170,11 @@
   grid-template-rows: auto auto auto;
   gap: 6px;
   border: 1px solid var(--color-border);
-  border-radius: 10px;
+  border-radius: 8px;
   padding: 8px;
   background:
-    linear-gradient(180deg, rgba(214, 174, 82, 0.07), rgba(0, 0, 0, 0.08)),
-    rgba(10, 12, 10, 0.94);
+    linear-gradient(180deg, rgba(214, 174, 82, 0.075), rgba(77, 191, 158, 0.025)),
+    rgba(10, 12, 10, 0.95);
   box-shadow: 0 20px 52px rgba(0, 0, 0, 0.42);
 }
 
@@ -241,11 +242,11 @@
   grid-template-rows: auto 1fr;
   gap: 7px;
   border: 1px solid var(--color-border);
-  border-radius: 10px;
+  border-radius: 8px;
   padding: 8px;
   background:
-    linear-gradient(180deg, rgba(214, 174, 82, 0.07), rgba(0, 0, 0, 0.08)),
-    rgba(10, 12, 10, 0.94);
+    linear-gradient(180deg, rgba(214, 174, 82, 0.075), rgba(77, 191, 158, 0.025)),
+    rgba(10, 12, 10, 0.95);
   box-shadow: 0 20px 52px rgba(0, 0, 0, 0.42);
 
   &.single {
@@ -266,6 +267,17 @@
 .mainAction {
   display: grid;
   min-height: 0;
+
+  & > button {
+    height: 100%;
+  }
+}
+
+.revealActions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(92px, 0.72fr);
+  gap: 7px;
+  height: 100%;
 
   & > button {
     height: 100%;

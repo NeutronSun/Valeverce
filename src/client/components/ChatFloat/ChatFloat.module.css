@@ -56,6 +56,13 @@
   }
 }
 
+.head > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
 .close {
   display: grid;
   width: 26px;

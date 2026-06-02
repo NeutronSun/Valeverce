@@ -1,66 +1,69 @@
-# valeverce
+# Valerio Codex Agents Pack
 
-Gioco di carte locale per 2-4 player sulla stessa rete. Il server Node avvia Next.js e Socket.IO, serve la UI React e gestisce lobby in memoria, draft, PV, mana, cooldown e turni.
+Questo pacchetto contiene una struttura professionale per far lavorare Codex sul grande refactor di Valerio The Game.
 
-## Avvio
+## Cosa contiene
 
-```bash
-PORT=3000 npm run dev
+```txt
+AGENTS.md
+.codex/prompts/
+  orchestrator.md
+  planner.md
+  architecture-reviewer.md
+  implementation.md
+  type-safety-reviewer.md
+  compatibility-reviewer.md
+  code-style-validator.md
+  test-reviewer.md
+  reviewer.md
+  cleanup.md
+  step-1-contracts.md
+  step-2-rules.md
+  step-3-server-extraction.md
+  step-4-serializer.md
+docs/
+  architecture.md
+  state-contract.md
+  socket-contract.md
+  refactor-plan.md
+scripts/
+  validate-contracts.mjs
+  validate-style.mjs
+  validate-refactor.mjs
+.github/workflows/ci.yml
 ```
 
-Apri `http://localhost:3000` sul computer host. Gli altri player entrano usando uno degli indirizzi `Network` stampati dal server, per esempio `http://192.168.1.20:3000`.
+## Come installarlo
 
-Per deploy su VPS o macchina LAN con Docker:
+Copia tutto il contenuto di questa cartella nel root del progetto.
 
-```bash
-docker compose up --build
-```
-
-Il client usa Socket.IO same-origin di default. Se serve un endpoint separato, imposta `NEXT_PUBLIC_SOCKET_URL`.
-
-## Regole
-
-- A inizio partita si fa un draft da pool comune con budget 20 e massimo 6 carte.
-- Ogni carta ha statistiche VALERIO, potenza attacco, potenza difesa e costo draft.
-- Ogni round e un duello 1v1. Con 3/4 player la rotazione e 1 vs 2, 2 vs 3, 3 vs 4, 4 vs 1.
-- In `select` i duellanti scelgono una carta coperta; le carte in cooldown non sono selezionabili.
-- In `plan` le carte vengono rivelate e ogni duellante sceglie 3 attacchi, 3 difese e la distribuzione punti.
-- La Breccia di ogni linea e `attackPoints + attackerValerio - defenderValerio - defensePoints`, mai sotto 0.
-- Vince il fight chi ha Breccia maggiore. In pareggio nessuno perde PV.
-- Solo il vincitore infligge danno ai PV; il danno normale e cappato, l'attiva puo superare il cap.
-- Il Tratto/passiva e sempre attivo se la condizione e vera, senza mana.
-- A fine round entrambi i duellanti guadagnano +1 mana, fino a 10.
-- La carta usata va in cooldown. Vince chi porta gli avversari a 0 PV.
-
-## Carte
-
-I dati sono in `public/data/cards.json`. Ogni entry usa come `id` il nome del PNG in `public/cards/`.
-
-Struttura minima carta:
+Poi, se vuoi usare gli script, aggiungi al `package.json`:
 
 ```json
 {
-  "id": "Magister",
-  "name": "Il Magister",
-  "valerio": { "V": 3, "A": 7, "L": 9, "E": 8, "R": 6, "I": 4, "O": 3 },
-  "combat": { "attackPower": 80, "defensePower": 60, "draftCost": 4 },
-  "active": { "name": "Attiva", "cost": 2, "text": "...", "effect": { "type": "damage", "value": 4 } },
-  "passive": { "name": "Tratto", "text": "...", "effect": { "type": "flat-damage", "value": 2 } }
+  "scripts": {
+    "validate:contracts": "node scripts/validate-contracts.mjs",
+    "validate:style": "node scripts/validate-style.mjs",
+    "validate:refactor": "node scripts/validate-refactor.mjs"
+  }
 }
 ```
 
-Le immagini vanno messe in `public/cards/` usando l'ID della carta:
+## Prompt iniziale per Codex
 
-```text
-public/cards/Magister.png
-public/cards/Athene.png
+```txt
+Read AGENTS.md and docs/architecture.md, docs/state-contract.md, docs/socket-contract.md.
+
+Use .codex/prompts/orchestrator.md as workflow.
+
+Current step:
+Run .codex/prompts/step-1-contracts.md.
+
+Only one writer may edit code.
+All reviewers are read-only.
+If any reviewer blocks, stop and report blockers.
 ```
 
-## Comandi
+## Regola principale
 
-```bash
-npm run check
-npm run build
-npm run validate:cards
-npm run smoke
-```
+Un solo agent scrive codice. Gli altri validano.

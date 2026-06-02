@@ -98,7 +98,8 @@ function PlayerPlate({ player, isSelf, isOpponent }) {
       <CardStrip player={player} />
       <UtilityBadges player={player} />
       <ResourceBar type="health" label="PV" value={player.health} max={player.maxHealth} />
-      <ResourceBar type="mana" label="Mana" value={player.mana} max={10} />
+      <ResourceBar type="mana" label="Mana" value={player.mana} max={player.maxMana ?? 3} />
+      <ResourceBar type="energy" label="Energy" value={player.energy ?? 0} max={player.maxEnergy ?? 5} />
     </article>
   );
 }
@@ -154,7 +155,15 @@ export function ResourceBar({ type, label, value, max, compact = false }) {
   const safeMax = Math.max(1, Number(max ?? 1));
 
   return (
-    <div className={classNames(styles.resource, type === "mana" && styles.mana, compact && styles.compact)} style={ratioStyle(value, safeMax)}>
+    <div
+      className={classNames(
+        styles.resource,
+        type === "mana" && styles.mana,
+        type === "energy" && styles.energy,
+        compact && styles.compact
+      )}
+      style={ratioStyle(value, safeMax)}
+    >
       <i />
       <span>
         {compact ? `${value}/${safeMax}` : `${label} ${value}/${safeMax}`}

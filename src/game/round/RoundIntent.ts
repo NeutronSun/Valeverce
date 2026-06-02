@@ -6,7 +6,8 @@ export const ROUND_INTENTS = {
   RECOVER: "recover",
   UTILITY: "utility",
   TRAP: "trap",
-  CONTROL: "control"
+  CONTROL: "control",
+  ENERGY: "energy"
 } as const;
 
 export type RoundIntent = (typeof ROUND_INTENTS)[keyof typeof ROUND_INTENTS];

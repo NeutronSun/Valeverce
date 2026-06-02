@@ -97,6 +97,7 @@ export class LobbySerializer {
       round: lobby.round,
       settings: lobby.settings,
       activePair: lobby.activePair,
+      phaseCode: this.getPhaseCode(lobby.phase),
       deadlineAt: lobby.deadlineAt,
       draft: this.serializeDraft(lobby, currentDrafterId, selfId),
       chat: lobby.chat,
@@ -121,15 +122,25 @@ export class LobbySerializer {
       ? this.cardsById.get(player.selected.cardId)
       : null;
     const showPlan = this.shouldRevealPlan(lobby, player, viewerId);
+    const visibleDeckIds = this.getVisibleDeckIds(player, viewerId);
+    const visibleSpellDeckIds = player.id === viewerId ? (player.spellDeck ?? []) : [];
+    const visibleSpellHandIds = player.id === viewerId ? (player.spellHand ?? player.deck ?? []) : [];
 
     return {
       id: player.id,
       name: player.name,
       profile: this.serializeProfile(player.profile, player.name),
       health: player.health,
-      maxHealth: this.SETTINGS.maxHealth,
+      maxHealth: player.maxHealth ?? this.SETTINGS.maxHealth,
       mana: player.mana,
-      deck: player.deck.map((cardId) => this.cardsById.get(cardId)).filter(Boolean),
+      maxMana: player.maxMana ?? this.SETTINGS.maxMana,
+      energy: player.energy,
+      maxEnergy: player.maxEnergy ?? 5,
+      deck: visibleDeckIds.map((cardId) => this.cardsById.get(cardId)).filter(Boolean),
+      spellDeck: this.serializeCards(visibleSpellDeckIds),
+      spellHand: this.serializeCards(visibleSpellHandIds),
+      spellDrawCount: player.spellDrawPile?.length ?? 0,
+      spellDiscardCount: player.spellDiscard?.length ?? 0,
       deckCount: player.deck.length,
       draftCount: player.deck.length,
       draftSpent: player.draftSpent,
@@ -153,6 +164,8 @@ export class LobbySerializer {
             attacks: showPlan ? player.selected.attacks : null,
             defenses: showPlan ? player.selected.defenses : null,
             useActive: showPlan ? player.selected.useActive : null,
+            intent: showPlan ? player.selected.intent : null,
+            energyCardId: showPlan ? player.selected.energyCardId : null,
             attackPool: this.getAttackPool(selectedCard),
             defensePool: this.getDefensePool(selectedCard)
           }
@@ -173,9 +186,16 @@ export class LobbySerializer {
       name: self.name,
       profile: this.serializeProfile(self.profile, self.name),
       health: self.health,
-      maxHealth: this.SETTINGS.maxHealth,
+      maxHealth: self.maxHealth ?? this.SETTINGS.maxHealth,
       mana: self.mana,
+      maxMana: self.maxMana ?? this.SETTINGS.maxMana,
+      energy: self.energy,
+      maxEnergy: self.maxEnergy ?? 5,
       deck: self.deck.map((cardId) => this.cardsById.get(cardId)).filter(Boolean),
+      spellDeck: this.serializeCards(self.spellDeck ?? []),
+      spellHand: this.serializeCards(self.spellHand ?? self.deck ?? []),
+      spellDrawCount: self.spellDrawPile?.length ?? 0,
+      spellDiscardCount: self.spellDiscard?.length ?? 0,
       deckCount: self.deck.length,
       draftSpent: self.draftSpent,
       draftBudget: this.getDraftBudget(lobby),
@@ -303,6 +323,23 @@ export class LobbySerializer {
 
   getDraftBudget(lobby) {
     return Math.max(0, Number(lobby.draft?.budget ?? lobby.settings?.draftBudget ?? this.SETTINGS.draftBudget));
+  }
+
+  getVisibleDeckIds(player, viewerId) {
+    if (player.id === viewerId || !player.spellDeckReady) {
+      return player.deck ?? [];
+    }
+
+    return [];
+  }
+
+  getPhaseCode(phase) {
+    return {
+      select: "SELECT_SPELL_CARD",
+      plan: "DECISION_PHASE",
+      reveal: "REVEAL_INTENT",
+      ended: "END_ROUND"
+    }[phase] ?? String(phase ?? "LOBBY").toUpperCase();
   }
 
   /**

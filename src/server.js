@@ -43,6 +43,18 @@ const publicDir = path.join(rootDir, "public");
 const port = Number(process.env.PORT ?? 3001);
 const isDev = process.env.NODE_ENV !== "production";
 
+const VALEVERCE_SETTINGS = Object.freeze({
+  startingHealth: 50,
+  maxHealth: 50,
+  startingMana: 10,
+  maxMana: 10,
+  roundManaGain: 0,
+  startingEnergy: 2,
+  maxEnergy: 5,
+  handSize: 4,
+  energyDeckSize: 3
+});
+
 const cardData = JSON.parse(await readFile(path.join(publicDir, "data", "cards.json"), "utf8"));
 const cards = readCards(cardData);
 const cardsById = new Map(cards.map((card) => [card.id, card]));
@@ -410,7 +422,7 @@ function startGame(client) {
   }
 
   for (const player of lobby.players.values()) {
-    resetPlayerForGame(player);
+    resetPlayerForGame(player, { preserveDecks: true });
   }
 
   lobby.round = 0;
@@ -421,8 +433,18 @@ function startGame(client) {
   lobby.activePair = [];
   lobby.pairCursor = 0;
   lobby.playerOrder = lobby.playerOrder.filter((playerId) => lobby.players.has(playerId));
+
+  if ([...lobby.players.values()].every((player) => player.spellDeckReady && player.utilityDeckReady)) {
+    for (const player of lobby.players.values()) {
+      prepareValeverceDecks(player);
+    }
+    pushChat(lobby, { kind: "system", text: "Partita avviata con Spell Deck e Energy Deck" });
+    startRound(lobby);
+    return;
+  }
+
   lobby.draft = {
-    pool: shuffle(cards.filter((card) => card.type === "attack").map((card) => card.id)),
+    pool: shuffle(cards.filter((card) => isSpellDeckCard(card)).map((card) => card.id)),
     taken: [],
     pickIndex: 0,
     order: [...lobby.playerOrder],
@@ -517,6 +539,14 @@ function startRound(lobby) {
   }
 
   tickCooldowns(lobby);
+  if (lobby.round > 0) {
+    for (const player of lobby.players.values()) {
+      prepareNextSpellHand(player);
+      player.mana = Math.min(player.maxMana ?? SETTINGS.maxMana, player.mana + VALEVERCE_SETTINGS.roundManaGain);
+      player.energyUsedThisRound = false;
+      player.activeUsedThisRound = false;
+    }
+  }
 
   const activePair = pickActivePair(lobby);
   if (activePair.length < SETTINGS.minPlayers) {
@@ -533,6 +563,8 @@ function startRound(lobby) {
 
   for (const player of lobby.players.values()) {
     player.selected = null;
+    player.energyUsedThisRound = false;
+    player.activeUsedThisRound = false;
   }
 
   pushChat(lobby, {
@@ -553,6 +585,8 @@ function enterPlan(lobby) {
       player.selected.attacks = null;
       player.selected.defenses = null;
       player.selected.useActive = null;
+      player.selected.intent = null;
+      player.selected.energyCardId = null;
     }
   }
 }
@@ -676,8 +710,17 @@ function makePlayer(client) {
     name: client.name,
     profile: getClientProfile(client),
     health: SETTINGS.startingHealth,
+    maxHealth: SETTINGS.maxHealth,
     mana: SETTINGS.startingMana,
+    maxMana: SETTINGS.maxMana,
+    energy: 0,
+    maxEnergy: VALEVERCE_SETTINGS.maxEnergy,
     deck: [],
+    spellDeck: [],
+    spellDeckReady: false,
+    spellDrawPile: [],
+    spellHand: [],
+    spellDiscard: [],
     draftSpent: 0,
     cooldowns: {},
     alive: true,
@@ -688,6 +731,8 @@ function makePlayer(client) {
     utilityHand: [],
     utilityDiscard: [],
     armedTraps: [],
+    energyUsedThisRound: false,
+    activeUsedThisRound: false,
     privateEffectLog: []
   };
 }
@@ -708,20 +753,36 @@ async function persistClientProfileAsync(client, profile) {
   }
 }
 
-function resetPlayerForGame(player) {
-  player.health = SETTINGS.startingHealth;
-  player.mana = SETTINGS.startingMana;
-  player.deck = [];
+function resetPlayerForGame(player, options = {}) {
+  const preservedSpellDeck = options.preserveDecks ? [...(player.spellDeck?.length ? player.spellDeck : player.deck)] : [];
+  const preservedEnergyDeck = options.preserveDecks ? [...(player.utilityDeck ?? [])] : [];
+  const hadSpellDeck = options.preserveDecks && Boolean(player.spellDeckReady && preservedSpellDeck.length);
+  const hadUtilityDeck = options.preserveDecks && Boolean(player.utilityDeckReady && preservedEnergyDeck.length);
+
+  player.health = hadSpellDeck ? VALEVERCE_SETTINGS.startingHealth : SETTINGS.startingHealth;
+  player.maxHealth = hadSpellDeck ? VALEVERCE_SETTINGS.maxHealth : SETTINGS.maxHealth;
+  player.mana = hadSpellDeck ? VALEVERCE_SETTINGS.startingMana : SETTINGS.startingMana;
+  player.maxMana = hadSpellDeck ? VALEVERCE_SETTINGS.maxMana : SETTINGS.maxMana;
+  player.energy = hadSpellDeck ? VALEVERCE_SETTINGS.startingEnergy : 0;
+  player.maxEnergy = VALEVERCE_SETTINGS.maxEnergy;
+  player.deck = hadSpellDeck ? [...preservedSpellDeck] : [];
+  player.spellDeck = hadSpellDeck ? preservedSpellDeck : [];
+  player.spellDeckReady = hadSpellDeck;
+  player.spellDrawPile = [];
+  player.spellHand = [];
+  player.spellDiscard = [];
   player.draftSpent = 0;
   player.cooldowns = {};
   player.alive = true;
   player.selected = null;
-  player.utilityDeck = [];
-  player.utilityDeckReady = false;
+  player.utilityDeck = hadUtilityDeck ? preservedEnergyDeck : [];
+  player.utilityDeckReady = hadUtilityDeck;
   player.utilityDrawPile = [];
-  player.utilityHand = [];
+  player.utilityHand = hadUtilityDeck ? [...preservedEnergyDeck] : [];
   player.utilityDiscard = [];
   player.armedTraps = [];
+  player.energyUsedThisRound = false;
+  player.activeUsedThisRound = false;
   player.privateEffectLog = [];
 }
 
@@ -946,7 +1007,9 @@ function autoSelectCards(lobby) {
           cardId,
           attacks: null,
           defenses: null,
-          useActive: null
+          useActive: null,
+          intent: null,
+          energyCardId: null
         };
         pushChat(lobby, {
           kind: "system",
@@ -964,17 +1027,80 @@ function autoSelectCards(lobby) {
 }
 
 function assignFallbackUtilityDeck(player) {
-  const fallbackDeck = shuffle(cards.filter((card) => card.type !== "attack").map((card) => card.id)).slice(0, 8);
+  const fallbackDeck = shuffle(cards.filter((card) => isEnergyDeckCard(card)).map((card) => card.id)).slice(
+    0,
+    VALEVERCE_SETTINGS.energyDeckSize
+  );
   player.utilityDeck = fallbackDeck;
-  player.utilityDrawPile = effectApplicator.cardMoves.shuffle(fallbackDeck);
-  player.utilityHand = [];
+  player.utilityDrawPile = [...fallbackDeck];
+  player.utilityHand = [...fallbackDeck];
   player.utilityDiscard = [];
   player.utilityDeckReady = true;
-  effectApplicator.cardMoves.drawCards(player, 3);
 }
 
 function findSelectableCardId(player) {
   return player.deck.find((cardId) => Number(player.cooldowns[cardId] ?? 0) <= 0 && cardsById.has(cardId));
+}
+
+function prepareValeverceDecks(player) {
+  player.spellDrawPile = shuffle(player.spellDeck);
+  player.spellHand = [];
+  player.spellDiscard = [];
+  drawSpellCards(player, VALEVERCE_SETTINGS.handSize);
+  syncSpellHand(player);
+  player.utilityDrawPile = [...player.utilityDeck];
+  player.utilityHand = [...player.utilityDeck];
+  player.utilityDiscard = [];
+}
+
+function prepareNextSpellHand(player) {
+  if (player.selected?.cardId) {
+    removeCardId(player.spellHand, player.selected.cardId);
+    player.spellDiscard.push(player.selected.cardId);
+  }
+
+  drawSpellCards(player, Math.max(0, VALEVERCE_SETTINGS.handSize - player.spellHand.length));
+  syncSpellHand(player);
+}
+
+function drawSpellCards(player, count) {
+  for (let index = 0; index < count; index += 1) {
+    if (!player.spellDrawPile.length) {
+      break;
+    }
+
+    const cardId = player.spellDrawPile.shift();
+    if (cardId) {
+      player.spellHand.push(cardId);
+    }
+  }
+}
+
+function syncSpellHand(player) {
+  player.deck = [...(player.spellHand ?? [])];
+}
+
+function removeCardId(cardIds, cardId) {
+  const index = cardIds.indexOf(cardId);
+  if (index >= 0) {
+    cardIds.splice(index, 1);
+  }
+}
+
+function isSpellDeckCard(card) {
+  if (card?.deckType) {
+    return card.deckType === "spell";
+  }
+
+  return ["attack", "defense"].includes(card?.type) && card?.usesCombat !== false;
+}
+
+function isEnergyDeckCard(card) {
+  if (card?.deckType) {
+    return card.deckType === "energy";
+  }
+
+  return ["utility", "trap"].includes(card?.type) && Number.isInteger(card?.energyCost);
 }
 
 function getLobbyActionSeconds(lobby) {
@@ -1011,16 +1137,24 @@ function hasSubmittedPlan(player) {
     player.selected?.attacks &&
       player.selected?.defenses &&
       player.selected?.useActive !== null &&
-      player.selected?.useActive !== undefined
+      player.selected?.useActive !== undefined &&
+      player.selected?.intent
   );
 }
 
 function normalizePlan(payload) {
   return {
+    intent: normalizeIntent(payload.intent),
     attacks: normalizeDistribution(payload.attacks),
     defenses: normalizeDistribution(payload.defenses),
-    useActive: Boolean(payload.useActive)
+    useActive: Boolean(payload.useActive),
+    energyCardId: payload.energyCardId ? String(payload.energyCardId) : null
   };
+}
+
+function normalizeIntent(intent) {
+  const value = String(intent ?? "attack").toLowerCase();
+  return ["attack", "defense", "focus"].includes(value) ? value : "attack";
 }
 
 function normalizeDistribution(distribution) {

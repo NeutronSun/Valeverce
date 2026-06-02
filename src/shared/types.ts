@@ -2,7 +2,8 @@ export type GamePhase = "lobby" | "draft" | "select" | "plan" | "reveal" | "ende
 export type ValerioKey = "V" | "A" | "L" | "E" | "R" | "I" | "O";
 export type CardType = "attack" | "utility" | "trap" | "defense";
 export type CardRole = CardType;
-export type RoundIntent = "combat" | "guard" | "draw" | "focus" | "recover" | "utility" | "trap" | "control";
+export type RoundIntent = "combat" | "guard" | "draw" | "focus" | "recover" | "utility" | "trap" | "control" | "energy";
+export type BattleIntent = "attack" | "defense" | "focus";
 export type EffectTarget = "self" | "enemy" | "chosen_card";
 export type CardZone = "deck" | "hand" | "selected" | "discard";
 export type CardSelection = "random_hand" | "random_deck" | "chosen_hand" | "chosen_deck" | "selected_card";
@@ -55,6 +56,7 @@ export interface TrapTrigger {
 export interface CardAbility {
   name: string;
   cost?: number;
+  costResource?: "mana" | "energy";
   timing?: string;
   text: string;
   effect?: CardEffect;
@@ -69,6 +71,10 @@ export interface Card {
   image?: string;
   rarity?: string;
   allowedIntents?: RoundIntent[];
+  deckType?: "spell" | "energy";
+  energyCost?: number | null;
+  usesValerio?: boolean;
+  usesCombat?: boolean;
   effects?: CardEffect[];
   guardBonus?: number;
   trigger?: TrapTrigger;
@@ -87,6 +93,8 @@ export interface SelectedPlan {
   attacks: Partial<Record<ValerioKey, number>> | null;
   defenses: Partial<Record<ValerioKey, number>> | null;
   useActive: boolean | null;
+  intent?: BattleIntent | null;
+  energyCardId?: string | null;
 }
 
 export interface PlayerSnapshot {
@@ -96,7 +104,14 @@ export interface PlayerSnapshot {
   health: number;
   maxHealth: number;
   mana: number;
+  maxMana?: number;
+  energy?: number;
+  maxEnergy?: number;
   deck: Card[];
+  spellDeck?: Card[];
+  spellHand?: Card[];
+  spellDrawCount?: number;
+  spellDiscardCount?: number;
   deckCount: number;
   draftSpent: number;
   draftBudget: number;
@@ -215,12 +230,14 @@ export interface ClientEventPayloads {
   };
   startGame: Record<string, never>;
   draftCard: { cardId: string };
-  selectUtilityDeck: { cardIds: string[] };
+  selectUtilityDeck: { cardIds?: string[]; spellDeck?: string[]; energyDeck?: string[] };
   selectCard: { cardId: string };
   submitPlan: {
+    intent?: BattleIntent;
     attacks: Partial<Record<ValerioKey, number>>;
     defenses: Partial<Record<ValerioKey, number>>;
     useActive: boolean;
+    energyCardId?: string | null;
   };
   playEffectCard: { cardId: string; targetPlayerId?: string | null };
   passEffectWindow: Record<string, never>;
@@ -254,4 +271,14 @@ export interface ServerEventPayloads {
   };
   error: { type: "error"; message: string };
   lobbyList: { type: "lobbyList" };
+}
+
+export interface SavedValeverceDeck {
+  id: string;
+  account: string;
+  name: string;
+  spellDeck: string[];
+  energyDeck: string[];
+  createdAt: string;
+  updatedAt: string;
 }

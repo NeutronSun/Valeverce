@@ -191,6 +191,7 @@ export class EffectWindowSystem {
       if (player) {
         play.healthAfter = player.health;
         play.manaAfter = player.mana;
+        play.energyAfter = player.energy;
       }
     }
   }

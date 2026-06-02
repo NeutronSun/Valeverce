@@ -35,6 +35,7 @@ import styles from "./GameApp.module.css";
 
 const UTILITY_DECK_STORAGE_KEY = "valeverce.utilityDecks.v1";
 const MAX_STORED_UTILITY_DECKS = 12;
+const SELECTED_DECK_STORAGE_KEY = "valeverce.selectedDeck.v1";
 
 export function GameApp({ initialAuth = null, initialLobbyId = "" }) {
   const { snapshot, connectionState, pingMs, lastError, clearError, emit, setName, upsertProfile } = useGameSocket({
@@ -53,10 +54,13 @@ export function GameApp({ initialAuth = null, initialLobbyId = "" }) {
   const [draftGroupMode, setDraftGroupMode] = useState("rarity");
   const [cardCatalog, setCardCatalog] = useState([]);
   const [utilityDecks, setUtilityDecks] = useState(initialAuth?.decks ?? []);
+  const [valeverceDecks, setValeverceDecks] = useState([]);
+  const [selectedMatchDeckId, setSelectedMatchDeckId] = useState("");
   const [height, setHeight] = useState(0);
   const shellRef = useRef(null);
   const menuDialogRef = useRef(null);
   const autoJoinRef = useRef(false);
+  const lobbyDeckSyncRef = useRef("");
 
   useLayoutEffect(() => {
     const updateHeight = () => {
@@ -79,6 +83,7 @@ export function GameApp({ initialAuth = null, initialLobbyId = "" }) {
       setProfile(initialAuth.profile);
       setNameState(initialAuth.profile.username);
       setUtilityDecks(initialDecks);
+      setSelectedMatchDeckId(window.localStorage.getItem(SELECTED_DECK_STORAGE_KEY) ?? "");
       ProfileStore.save(initialAuth.profile);
       window.localStorage.setItem(UTILITY_DECK_STORAGE_KEY, JSON.stringify(initialDecks));
       return;
@@ -89,6 +94,37 @@ export function GameApp({ initialAuth = null, initialLobbyId = "" }) {
     setProfile(savedProfile);
     setNameState(savedProfile?.username ?? savedName);
     setUtilityDecks(readUtilityDecks());
+    setSelectedMatchDeckId(window.localStorage.getItem(SELECTED_DECK_STORAGE_KEY) ?? "");
+  }, [initialAuth]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadValeverceDecks() {
+      try {
+        const response = await fetch("/api/player/valeverce-decks");
+        const data = await response.json();
+        if (isMounted && response.ok) {
+          setValeverceDecks(Array.isArray(data.decks) ? data.decks : []);
+        }
+      } catch {
+        if (isMounted) {
+          setValeverceDecks(readValeverceDecks());
+        }
+      }
+    }
+
+    if (initialAuth) {
+      loadValeverceDecks();
+      return () => {
+        isMounted = false;
+      };
+    }
+
+    setValeverceDecks(readValeverceDecks());
+    return () => {
+      isMounted = false;
+    };
   }, [initialAuth]);
 
   useEffect(() => {
@@ -211,6 +247,29 @@ export function GameApp({ initialAuth = null, initialLobbyId = "" }) {
     () => cardCatalog.filter((card) => ["utility", "defense", "trap"].includes(card.type)),
     [cardCatalog]
   );
+  const spellCards = useMemo(() => cardCatalog.filter((card) => isSpellDeckCard(card)), [cardCatalog]);
+  const energyCards = useMemo(() => cardCatalog.filter((card) => isEnergyDeckCard(card)), [cardCatalog]);
+  const selectedMatchDeck = useMemo(
+    () => valeverceDecks.find((deck) => deck.id === selectedMatchDeckId) ?? null,
+    [selectedMatchDeckId, valeverceDecks]
+  );
+
+  useEffect(() => {
+    if (!lobby?.id || lobby.phase !== "lobby" || !selectedMatchDeck) {
+      return;
+    }
+
+    const syncKey = `${lobby.id}:${selectedMatchDeck.id}`;
+    if (lobbyDeckSyncRef.current === syncKey) {
+      return;
+    }
+
+    lobbyDeckSyncRef.current = syncKey;
+    emit(CLIENT_EVENTS.SELECT_UTILITY_DECK, {
+      spellDeck: selectedMatchDeck.spellDeck,
+      energyDeck: selectedMatchDeck.energyDeck
+    });
+  }, [emit, lobby?.id, lobby?.phase, selectedMatchDeck]);
 
   const persistProfile = useCallback(async (nextProfile) => {
     try {
@@ -295,6 +354,80 @@ export function GameApp({ initialAuth = null, initialLobbyId = "" }) {
     [auth, persistUtilityDecks]
   );
 
+  const saveValeverceDeck = useCallback(
+    async (deck) => {
+      const isExisting = valeverceDecks.some((item) => item.id === deck.id);
+      const optimisticDeck = {
+        ...deck,
+        id: deck.id || `valeverce_${Date.now()}`,
+        createdAt: deck.createdAt ?? new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      const nextDecks = isExisting
+        ? valeverceDecks.map((item) => (item.id === optimisticDeck.id ? optimisticDeck : item))
+        : [optimisticDeck, ...valeverceDecks];
+
+      setValeverceDecks(nextDecks);
+      window.localStorage.setItem("valeverce.decks.v1", JSON.stringify(nextDecks));
+
+      if (!auth) {
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          isExisting ? `/api/player/valeverce-decks/${encodeURIComponent(optimisticDeck.id)}` : "/api/player/valeverce-decks",
+          {
+            method: isExisting ? "PUT" : "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ deck: optimisticDeck })
+          }
+        );
+        const data = await response.json();
+        if (response.ok && data.deck) {
+          setValeverceDecks((current) =>
+            isExisting
+              ? current.map((item) => (item.id === data.deck.id ? data.deck : item))
+              : [data.deck, ...current.filter((item) => item.id !== optimisticDeck.id)]
+          );
+        }
+      } catch {
+        return;
+      }
+    },
+    [auth, valeverceDecks]
+  );
+
+  const deleteValeverceDeck = useCallback(
+    async (deckId) => {
+      const nextDecks = valeverceDecks.filter((deck) => deck.id !== deckId);
+      setValeverceDecks(nextDecks);
+      window.localStorage.setItem("valeverce.decks.v1", JSON.stringify(nextDecks));
+      if (selectedMatchDeckId === deckId) {
+        setSelectedMatchDeckId("");
+        window.localStorage.removeItem(SELECTED_DECK_STORAGE_KEY);
+      }
+
+      if (!auth) {
+        return;
+      }
+
+      try {
+        await fetch(`/api/player/valeverce-decks/${encodeURIComponent(deckId)}`, { method: "DELETE" });
+      } catch {
+        return;
+      }
+    },
+    [auth, selectedMatchDeckId, valeverceDecks]
+  );
+
+  const selectMatchDeck = useCallback((deckId) => {
+    setSelectedMatchDeckId(deckId);
+    window.localStorage.setItem(SELECTED_DECK_STORAGE_KEY, deckId);
+  }, []);
+
   const logout = useCallback(async () => {
     try {
       await fetch("/api/auth/logout", { method: "POST" });
@@ -376,6 +509,13 @@ export function GameApp({ initialAuth = null, initialLobbyId = "" }) {
             utilityCards={utilityCards}
             utilityDecks={utilityDecks}
             onUtilityDecksChange={saveUtilityDecks}
+            spellCards={spellCards}
+            energyCards={energyCards}
+            valeverceDecks={valeverceDecks}
+            selectedMatchDeckId={selectedMatchDeckId}
+            onValeverceDeckSave={saveValeverceDeck}
+            onValeverceDeckDelete={deleteValeverceDeck}
+            onSelectedMatchDeckChange={selectMatchDeck}
           />
         ) : (
           <>
@@ -402,7 +542,13 @@ export function GameApp({ initialAuth = null, initialLobbyId = "" }) {
               />
             ) : null}
             {lobby.phase === "plan" ? (
-              <PlanFightView lobby={lobby} plan={plan} onPlanValue={onPlanValue} onPreviewLines={setPlanPreview} />
+              <PlanFightView
+                lobby={lobby}
+                plan={plan}
+                onPlanValue={onPlanValue}
+                onPlanPatch={(patch) => setPlan((current) => ({ ...current, ...patch }))}
+                onPreviewLines={setPlanPreview}
+              />
             ) : null}
             {["reveal", "ended"].includes(lobby.phase) ? <RevealView lobby={lobby} emit={emit} /> : null}
           </>
@@ -469,6 +615,31 @@ function readUtilityDecks() {
   } catch {
     return [];
   }
+}
+
+function readValeverceDecks() {
+  try {
+    const parsed = JSON.parse(window.localStorage.getItem("valeverce.decks.v1") ?? "[]");
+    return Array.isArray(parsed) ? parsed.filter((deck) => Array.isArray(deck.spellDeck) && Array.isArray(deck.energyDeck)) : [];
+  } catch {
+    return [];
+  }
+}
+
+function isSpellDeckCard(card) {
+  if (card?.deckType) {
+    return card.deckType === "spell";
+  }
+
+  return ["attack", "defense"].includes(card?.type) && card?.usesCombat !== false;
+}
+
+function isEnergyDeckCard(card) {
+  if (card?.deckType) {
+    return card.deckType === "energy";
+  }
+
+  return ["utility", "trap"].includes(card?.type) && Number.isInteger(card?.energyCost);
 }
 
 function MatchHeader({ lobby, connectionState, pingMs }) {

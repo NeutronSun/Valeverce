@@ -193,7 +193,10 @@ export function ActionDock({ lobby, plan, selectedCardId, previewCard, canSubmit
           <DockStats card={selectedCard} plan={plan} />
           <div className={styles.bars}>
             <ResourceBar type="health" label="PV" value={self?.health ?? 0} max={self?.maxHealth ?? 50} compact />
-            <ResourceBar type="mana" label="Mana" value={self?.mana ?? 0} max={10} compact />
+            <div className={styles.resourceSplit}>
+              <ResourceBar type="mana" label="Mana" value={self?.mana ?? 0} max={self?.maxMana ?? 3} compact />
+              <ResourceBar type="energy" label="Energy" value={self?.energy ?? 0} max={self?.maxEnergy ?? 5} compact />
+            </div>
           </div>
         </div>
         <div className={classNames(styles.actions, abilityControls.length ? styles.hasAbilities : styles.single)}>

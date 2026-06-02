@@ -43,17 +43,21 @@ export function compactDistribution(distribution) {
 
 export function compactPlan(plan) {
   return {
+    intent: plan.intent ?? "attack",
     attacks: compactDistribution(plan.attacks),
     defenses: compactDistribution(plan.defenses),
-    useActive: Boolean(plan.useActive)
+    useActive: Boolean(plan.useActive),
+    energyCardId: plan.energyCardId ?? null
   };
 }
 
 export function emptyPlan() {
   return {
+    intent: "attack",
     attacks: Object.fromEntries(VALERIO_KEYS.map((key) => [key, 0])),
     defenses: Object.fromEntries(VALERIO_KEYS.map((key) => [key, 0])),
-    useActive: false
+    useActive: false,
+    energyCardId: null
   };
 }
 

@@ -10,11 +10,13 @@ export function getValerioTotal(card) {
 export function validateCardValerio(card) {
   const issues = [];
   const valerio = getCardValerio(card);
+  const usesValerio = card?.usesValerio !== false && card?.deckType !== "energy";
 
   for (const key of VALERIO_KEYS) {
     const value = valerio[key];
-    if (!Number.isInteger(value) || value < 1 || value > 10) {
-      issues.push(`${card?.id ?? "card"}: VALERIO ${key} deve essere un intero tra 1 e 10`);
+    const minValue = usesValerio ? 1 : 0;
+    if (!Number.isInteger(value) || value < minValue || value > 10) {
+      issues.push(`${card?.id ?? "card"}: VALERIO ${key} deve essere un intero tra ${minValue} e 10`);
     }
   }
 
@@ -25,8 +27,9 @@ export function validateCardValerio(card) {
   }
 
   const total = getValerioTotal(card);
-  if (total > SETTINGS.cardValerioBudget) {
-    issues.push(`${card?.id ?? "card"}: totale VALERIO ${total} oltre budget ${SETTINGS.cardValerioBudget}`);
+  const maxBudget = card?.deckType === "spell" ? 42 : SETTINGS.cardValerioBudget;
+  if (usesValerio && total > maxBudget) {
+    issues.push(`${card?.id ?? "card"}: totale VALERIO ${total} oltre budget ${maxBudget}`);
   }
 
   return { ok: issues.length === 0, issues, total };

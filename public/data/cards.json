@@ -4,7 +4,7 @@
     "id": "valerio_multiverse",
     "name": "Valerio Multiverse Cards",
     "language": "it",
-    "description": "Set completo delle carte Valerio bilanciato per draft budget 20, 6 carte per player, rarità, costo draft e potenza di combattimento coerenti.",
+    "description": "Set completo delle carte Valerio bilanciato per il sistema Spell Deck 10 + Energy Deck 3, retrocompatibile con la struttura JSON precedente.",
     "stats_legend": {
       "V": "Vigore",
       "A": "Astuzia",
@@ -32,40 +32,70 @@
       "swap_selected_card",
       "steal_card"
     ],
-    "design_note": "Bilanciamento v7: la rarità impone un costo minimo. Le carte comuni/rare permettono mazzi completi, mentre leggendarie/mitiche/speciali costano abbastanza da limitarne il numero nel draft.",
-    "name_revision": "v7_balanced_rarity_cost",
+    "design_note": "v11: mantiene bilanciamento e retrocompatibilità v10; aggiorna nomi, testi e flavor di attive/passive. Per i champion League of Legends usa nomi ufficiali inglesi per active/passive, cambiando solo il nome e non la struttura effetti.",
+    "name_revision": "v11_named_effects_spell_energy_retrocompatible",
     "draft_rules": {
       "draftBudget": 20,
       "cardsPerPlayer": 6,
       "minCardCost": 2,
       "maxCardCost": 6,
-      "note": "Con budget 20 e 6 carte: 6 comuni sono sempre possibili, 6 rare sono possibili, 6 epiche no, e carte leggendarie/mitiche/speciali da 6 punti sono realisticamente limitate a massimo 2 per deck."
+      "note": "Con budget 20 e 6 carte: 6 comuni sono sempre possibili, 6 rare sono possibili, 6 epiche no, e carte leggendarie/mitiche/speciali da 6 punti sono realisticamente limitate a massimo 2 per deck.",
+      "legacyCompatible": true,
+      "newFormat": {
+        "spellDeckBudget": 30,
+        "spellDeckCards": 10,
+        "energyDeckBudget": 10,
+        "energyDeckCards": 3
+      }
     },
     "rarity_rules": {
       "comune": {
-        "draftCost": 2,
-        "role": "filler buono / carta economica"
+        "deckCost": 2,
+        "spellValerioTotal": 35,
+        "energyCost": 2
       },
       "rara": {
-        "draftCost": 3,
-        "role": "carta solida da mazzo completo"
+        "deckCost": 3,
+        "spellValerioTotal": 37,
+        "energyCost": 3
       },
       "epica": {
-        "draftCost": 4,
-        "role": "carta forte, non draftabile in full set da 6"
+        "deckCost": 4,
+        "spellValerioTotal": 39,
+        "energyCost": 4
       },
       "leggendaria": {
-        "draftCost": 6,
-        "role": "premium card, massimo 2 in un deck completo da 20 budget"
+        "deckCost": 5,
+        "spellValerioTotal": 41,
+        "energyCost": 5
       },
       "mitica": {
-        "draftCost": 6,
-        "role": "boss card, massimo 2 in un deck completo da 20 budget"
-      },
-      "speciale": {
-        "draftCost": 6,
-        "role": "carta unica, trattata come premium per il draft"
+        "deckCost": 6,
+        "spellValerioTotal": 42,
+        "energyCost": 5
       }
+    },
+    "deck_rules": {
+      "spellDeck": {
+        "slots": 10,
+        "budget": 30,
+        "eligibleDeckType": "spell",
+        "usesValerio": true
+      },
+      "energyDeck": {
+        "slots": 3,
+        "budget": 10,
+        "eligibleDeckType": "energy",
+        "usesValerio": false,
+        "maxCardUsePerRound": 1
+      },
+      "startingHand": 4,
+      "maxHand": 5,
+      "startingHp": 12,
+      "startingMana": 0,
+      "maxMana": 3,
+      "startingEnergy": 2,
+      "maxEnergy": 5
     }
   },
   "cards": [
@@ -83,10 +113,10 @@
         "icon": "stratega"
       },
       "active": {
-        "name": "Richiamo dal Mazzo",
+        "name": "Piano dell’Olimpo",
         "cost": 4,
         "timing": "before_fight",
-        "text": "Attiva: prepara lo swap di una carta dal mazzo.",
+        "text": "Attiva: prepara la prossima giocata scegliendo o filtrando una carta dal mazzo.",
         "effect": {
           "type": "swap_card_from_deck",
           "target": "self",
@@ -99,12 +129,13 @@
             "selection": "random_deck"
           }
         ],
-        "flavor": "Prima protegge il piano, poi lo rende inevitabile."
+        "flavor": "La vittoria era già scritta tre mosse fa.",
+        "costResource": "energy"
       },
       "passive": {
-        "name": "Archivio Mobile",
+        "name": "Egida Strategica",
         "timing": "always",
-        "text": "Sempre: prepara pesca 1 carta dal mazzo.",
+        "text": "Sempre: se scegli Defense o Focus, prepari un vantaggio difensivo o la prossima pescata.",
         "effect": {
           "type": "draw_cards",
           "target": "self",
@@ -119,7 +150,7 @@
             "source": "deck"
           }
         ],
-        "flavor": "Vede il problema tre sprint prima degli altri."
+        "flavor": "Protegge il piano prima ancora della carta."
       },
       "quote": "Non è micromanagement, è mitologia applicata.",
       "tags": [
@@ -128,6 +159,43 @@
         "controllo"
       ],
       "valerio": {
+        "V": 0,
+        "A": 0,
+        "L": 0,
+        "E": 0,
+        "R": 0,
+        "I": 0,
+        "O": 0
+      },
+      "combat": {
+        "attackPower": 0,
+        "defensePower": 0,
+        "draftCost": 4
+      },
+      "rarityRule": "epica: deck cost 4 secondo bilanciamento v10 spell/energy retrocompatibile",
+      "type": "utility",
+      "role": "utility",
+      "allowedIntents": [
+        "utility",
+        "focus",
+        "recover"
+      ],
+      "guardBonus": 0,
+      "deckCost": 4,
+      "legacyType": "utility",
+      "legacyRole": "utility",
+      "deckType": "energy",
+      "roundIntents": [
+        "energy"
+      ],
+      "usablePhase": "decision_phase",
+      "usesValerio": false,
+      "usesCombat": false,
+      "energyCost": 4,
+      "maxUsesPerRound": 1,
+      "maxUsesPerMatch": 1,
+      "passiveDisabledInEnergyDeck": true,
+      "legacyValerio": {
         "V": 3,
         "A": 7,
         "L": 7,
@@ -136,21 +204,11 @@
         "I": 5,
         "O": 6
       },
-      "combat": {
+      "legacyCombat": {
         "attackPower": 70,
         "defensePower": 90,
         "draftCost": 4
-      },
-      "rarityRule": "epica: costo draft 4 secondo bilanciamento v7; rarità precedente: epica",
-      "type": "utility",
-      "role": "utility",
-      "allowedIntents": [
-        "utility",
-        "draw",
-        "focus",
-        "recover"
-      ],
-      "guardBonus": 1
+      }
     },
     {
       "id": "Magister",
@@ -166,10 +224,10 @@
         "icon": "laurel"
       },
       "active": {
-        "name": "Pesca dal Mazzo",
+        "name": "Lectio Magistralis",
         "cost": 3,
         "timing": "before_fight",
-        "text": "Attiva: pesca 1 carte dal mazzo.",
+        "text": "Attiva: pesca o filtra carte dal mazzo per correggere la mano.",
         "effect": {
           "type": "draw_cards",
           "target": "self",
@@ -184,12 +242,13 @@
             "source": "deck"
           }
         ],
-        "flavor": "La domanda era fuori programma. Anche il programma."
+        "flavor": "La spiegazione è lunga, ma il vantaggio è immediato.",
+        "costResource": "energy"
       },
       "passive": {
-        "name": "Rigenerazione",
+        "name": "Nota a Margine",
         "timing": "always",
-        "text": "Sempre: prepara cura 1 PV.",
+        "text": "Sempre: quando giochi in modo difensivo o preparatorio, ottieni un piccolo recupero.",
         "effect": {
           "type": "heal",
           "target": "self",
@@ -202,7 +261,7 @@
             "value": 1
           }
         ],
-        "flavor": "Il Senato è il giudice del progetto."
+        "flavor": "Anche l’errore avversario riceve una nota."
       },
       "quote": "Apriamo una parentesi. Non la chiuderemo.",
       "tags": [
@@ -211,6 +270,43 @@
         "pressione psicologica"
       ],
       "valerio": {
+        "V": 0,
+        "A": 0,
+        "L": 0,
+        "E": 0,
+        "R": 0,
+        "I": 0,
+        "O": 0
+      },
+      "combat": {
+        "attackPower": 0,
+        "defensePower": 0,
+        "draftCost": 3
+      },
+      "rarityRule": "rara: deck cost 3 secondo bilanciamento v10 spell/energy retrocompatibile",
+      "type": "utility",
+      "role": "utility",
+      "allowedIntents": [
+        "utility",
+        "focus",
+        "recover"
+      ],
+      "guardBonus": 0,
+      "deckCost": 3,
+      "legacyType": "utility",
+      "legacyRole": "utility",
+      "deckType": "energy",
+      "roundIntents": [
+        "energy"
+      ],
+      "usablePhase": "decision_phase",
+      "usesValerio": false,
+      "usesCombat": false,
+      "energyCost": 3,
+      "maxUsesPerRound": 1,
+      "maxUsesPerMatch": 1,
+      "passiveDisabledInEnergyDeck": true,
+      "legacyValerio": {
         "V": 2,
         "A": 7,
         "L": 10,
@@ -219,21 +315,11 @@
         "I": 2,
         "O": 5
       },
-      "combat": {
+      "legacyCombat": {
         "attackPower": 65,
         "defensePower": 80,
         "draftCost": 3
-      },
-      "rarityRule": "rara: costo draft 3 secondo bilanciamento v7; rarità precedente: rara",
-      "type": "utility",
-      "role": "utility",
-      "allowedIntents": [
-        "utility",
-        "draw",
-        "focus",
-        "recover"
-      ],
-      "guardBonus": 1
+      }
     },
     {
       "id": "Nasus",
@@ -249,10 +335,10 @@
         "icon": "ankh"
       },
       "active": {
-        "name": "Furto Preparato",
+        "name": "Siphoning Strike",
         "cost": 4,
         "timing": "on_reveal",
-        "text": "Trappola: ruba una carta casuale dalla mano nemica se il trigger scatta.",
+        "text": "Attiva: se vinci il confronto, infliggi danno extra e prepari scaling futuro.",
         "effect": {
           "type": "steal_card",
           "target": "enemy",
@@ -265,12 +351,13 @@
             "selection": "random_hand"
           }
         ],
-        "flavor": "Ogni Q è una riunione sopravvissuta."
+        "flavor": "Ogni round perso dall’altro diventa una stack.",
+        "costResource": "energy"
       },
       "passive": {
-        "name": "Esca di Carta",
+        "name": "Soul Eater",
         "timing": "always",
-        "text": "Sempre: prepara scambio carta casuale.",
+        "text": "Sempre: le giocate lente e preparatorie aumentano il valore dei round successivi.",
         "effect": {
           "type": "swap_card",
           "target": "self",
@@ -287,7 +374,7 @@
             "selection": "random_hand"
           }
         ],
-        "flavor": "Quando sembra finita, inizia il late game."
+        "flavor": "Il late game è solo una questione di pazienza."
       },
       "quote": "Il tempo è una risorsa. La stack pure.",
       "tags": [
@@ -296,6 +383,44 @@
         "sabbie"
       ],
       "valerio": {
+        "V": 0,
+        "A": 0,
+        "L": 0,
+        "E": 0,
+        "R": 0,
+        "I": 0,
+        "O": 0
+      },
+      "combat": {
+        "attackPower": 0,
+        "defensePower": 0,
+        "draftCost": 4
+      },
+      "rarityRule": "epica: deck cost 4 secondo bilanciamento v10 spell/energy retrocompatibile",
+      "type": "trap",
+      "role": "trap",
+      "allowedIntents": [
+        "trap"
+      ],
+      "guardBonus": 0,
+      "trigger": {
+        "type": "enemy_controls"
+      },
+      "deckCost": 4,
+      "legacyType": "trap",
+      "legacyRole": "trap",
+      "deckType": "energy",
+      "roundIntents": [
+        "energy"
+      ],
+      "usablePhase": "decision_phase",
+      "usesValerio": false,
+      "usesCombat": false,
+      "energyCost": 4,
+      "maxUsesPerRound": 1,
+      "maxUsesPerMatch": 1,
+      "passiveDisabledInEnergyDeck": true,
+      "legacyValerio": {
         "V": 9,
         "A": 5,
         "L": 7,
@@ -304,20 +429,10 @@
         "I": 3,
         "O": 4
       },
-      "combat": {
+      "legacyCombat": {
         "attackPower": 70,
         "defensePower": 90,
         "draftCost": 4
-      },
-      "rarityRule": "epica: costo draft 4 secondo bilanciamento v7; rarità precedente: leggendaria",
-      "type": "trap",
-      "role": "trap",
-      "allowedIntents": [
-        "trap"
-      ],
-      "guardBonus": 3,
-      "trigger": {
-        "type": "enemy_controls"
       }
     },
     {
@@ -334,10 +449,10 @@
         "icon": "katana"
       },
       "active": {
-        "name": "Assalto Calcolato",
+        "name": "Iaijutsu Calcolato",
         "cost": 2,
         "timing": "before_fight",
-        "text": "Prima del fight: +3 danni oltre il cap se vinci.",
+        "text": "Attiva: se attacchi con precisione, ottieni danno extra.",
         "effect": {
           "type": "damage",
           "value": 3
@@ -348,12 +463,13 @@
             "value": 3
           }
         ],
-        "flavor": "Estrae la soluzione prima ancora del problema."
+        "flavor": "La lama esce solo quando il risultato è già deciso.",
+        "costResource": "mana"
       },
       "passive": {
-        "name": "Sacca di Mana",
+        "name": "Codice della Lama",
         "timing": "always",
-        "text": "Sempre: prepara +1 mana.",
+        "text": "Sempre: ottieni un piccolo vantaggio quando vinci senza affidarti a trucchi esterni.",
         "effect": {
           "type": "mana_bonus",
           "target": "self",
@@ -366,7 +482,7 @@
             "value": 1
           }
         ],
-        "flavor": "Il codice d'onore consente le Crocs."
+        "flavor": "Onore, disciplina e una build pulita."
       },
       "quote": "Una lama, un branch, zero conflitti.",
       "tags": [
@@ -380,7 +496,7 @@
         "L": 5,
         "E": 3,
         "R": 6,
-        "I": 8,
+        "I": 7,
         "O": 3
       },
       "combat": {
@@ -388,14 +504,27 @@
         "defensePower": 65,
         "draftCost": 3
       },
-      "rarityRule": "rara: costo draft 3 secondo bilanciamento v7; rarità precedente: epica",
+      "rarityRule": "rara: deck cost 3 secondo bilanciamento v10 spell/energy retrocompatibile",
       "type": "attack",
       "role": "attack",
       "allowedIntents": [
         "combat",
         "guard"
       ],
-      "guardBonus": 0
+      "guardBonus": 1,
+      "deckCost": 3,
+      "legacyType": "attack",
+      "legacyRole": "attack",
+      "deckType": "spell",
+      "roundIntents": [
+        "attack",
+        "defense",
+        "focus"
+      ],
+      "usablePhase": "spell_selection",
+      "usesValerio": true,
+      "usesCombat": true,
+      "energyCost": null
     },
     {
       "id": "Sir",
@@ -411,10 +540,10 @@
         "icon": "lion"
       },
       "active": {
-        "name": "Scambio Carta",
+        "name": "Duello d’Onore",
         "cost": 3,
         "timing": "before_fight",
-        "text": "Attiva: prepara lo scambio di una carta dalla mano.",
+        "text": "Attiva: riposiziona la mano o forza una giocata più controllata.",
         "effect": {
           "type": "swap_card",
           "target": "self",
@@ -431,12 +560,13 @@
             "selection": "chosen_hand"
           }
         ],
-        "flavor": "Vince anche quando compila il form per perdere."
+        "flavor": "Anche la resa può essere elegante.",
+        "costResource": "energy"
       },
       "passive": {
-        "name": "Batteria Interna",
+        "name": "Cortesia Reale",
         "timing": "always",
-        "text": "Sempre: prepara +2 mana.",
+        "text": "Sempre: quando scegli Defense, ottieni un piccolo vantaggio di risorsa.",
         "effect": {
           "type": "mana_bonus",
           "target": "self",
@@ -458,6 +588,43 @@
         "diplomazia"
       ],
       "valerio": {
+        "V": 0,
+        "A": 0,
+        "L": 0,
+        "E": 0,
+        "R": 0,
+        "I": 0,
+        "O": 0
+      },
+      "combat": {
+        "attackPower": 0,
+        "defensePower": 0,
+        "draftCost": 3
+      },
+      "rarityRule": "rara: deck cost 3 secondo bilanciamento v10 spell/energy retrocompatibile",
+      "type": "utility",
+      "role": "utility",
+      "allowedIntents": [
+        "utility",
+        "focus",
+        "recover"
+      ],
+      "guardBonus": 0,
+      "deckCost": 3,
+      "legacyType": "utility",
+      "legacyRole": "utility",
+      "deckType": "energy",
+      "roundIntents": [
+        "energy"
+      ],
+      "usablePhase": "decision_phase",
+      "usesValerio": false,
+      "usesCombat": false,
+      "energyCost": 3,
+      "maxUsesPerRound": 1,
+      "maxUsesPerMatch": 1,
+      "passiveDisabledInEnergyDeck": true,
+      "legacyValerio": {
         "V": 3,
         "A": 7,
         "L": 7,
@@ -466,21 +633,11 @@
         "I": 3,
         "O": 6
       },
-      "combat": {
+      "legacyCombat": {
         "attackPower": 75,
         "defensePower": 70,
         "draftCost": 3
-      },
-      "rarityRule": "rara: costo draft 3 secondo bilanciamento v7; rarità precedente: rara",
-      "type": "utility",
-      "role": "utility",
-      "allowedIntents": [
-        "utility",
-        "draw",
-        "focus",
-        "recover"
-      ],
-      "guardBonus": 2
+      }
     },
     {
       "id": "auditore",
@@ -496,10 +653,10 @@
         "icon": "hidden-blade"
       },
       "active": {
-        "name": "Spacco del Limite",
-        "cost": 3,
+        "name": "Lama Celata",
+        "cost": 2,
         "timing": "before_fight",
-        "text": "Prima del fight: la Breccia puo superare il cap normale.",
+        "text": "Attiva: il tuo attacco può superare una parte della difesa avversaria.",
         "effect": {
           "type": "break-cap"
         },
@@ -508,12 +665,13 @@
             "type": "break-cap"
           }
         ],
-        "flavor": "Entra in call silenzioso, esce con la milestone."
+        "flavor": "Il colpo migliore è quello che arriva dalla folla.",
+        "costResource": "mana"
       },
       "passive": {
-        "name": "Sacca di Mana",
+        "name": "Fede dell’Assassino",
         "timing": "always",
-        "text": "Sempre: prepara +2 mana.",
+        "text": "Sempre: se l’avversario si espone con Focus o Utility, ottieni un vantaggio offensivo.",
         "effect": {
           "type": "mana_bonus",
           "target": "self",
@@ -526,7 +684,7 @@
             "value": 2
           }
         ],
-        "flavor": "Manca sempre una piuma o una acceptance criteria."
+        "flavor": "Nulla è vero, tutto è backlog."
       },
       "quote": "Nulla è vero, tutto è backlog.",
       "tags": [
@@ -536,7 +694,7 @@
       ],
       "valerio": {
         "V": 5,
-        "A": 6,
+        "A": 5,
         "L": 6,
         "E": 6,
         "R": 5,
@@ -544,18 +702,31 @@
         "O": 6
       },
       "combat": {
-        "attackPower": 90,
-        "defensePower": 70,
+        "attackPower": 88,
+        "defensePower": 75,
         "draftCost": 4
       },
-      "rarityRule": "epica: costo draft 4 secondo bilanciamento v7; rarità precedente: leggendaria",
+      "rarityRule": "epica: deck cost 4 secondo bilanciamento v10 spell/energy retrocompatibile",
       "type": "attack",
       "role": "attack",
       "allowedIntents": [
         "combat",
         "guard"
       ],
-      "guardBonus": 1
+      "guardBonus": 1,
+      "deckCost": 4,
+      "legacyType": "attack",
+      "legacyRole": "attack",
+      "deckType": "spell",
+      "roundIntents": [
+        "attack",
+        "defense",
+        "focus"
+      ],
+      "usablePhase": "spell_selection",
+      "usesValerio": true,
+      "usesCombat": true,
+      "energyCost": null
     },
     {
       "id": "cave",
@@ -571,10 +742,10 @@
         "icon": "club"
       },
       "active": {
-        "name": "Spacco del Limite",
+        "name": "BONK Primordiale",
         "cost": 1,
         "timing": "before_fight",
-        "text": "Prima del fight: la Breccia puo superare il cap normale.",
+        "text": "Attiva: se attacchi, puoi superare il limite normale del danno.",
         "effect": {
           "type": "break-cap"
         },
@@ -583,12 +754,13 @@
             "type": "break-cap"
           }
         ],
-        "flavor": "Soluzione binaria: funziona o clava."
+        "flavor": "Ugh. Deploy.",
+        "costResource": "mana"
       },
       "passive": {
-        "name": "Sacca di Mana",
+        "name": "Istinto Rupestre",
         "timing": "always",
-        "text": "Sempre: prepara +2 mana.",
+        "text": "Sempre: le giocate basate su forza e resistenza ottengono un piccolo bonus.",
         "effect": {
           "type": "mana_bonus",
           "target": "self",
@@ -610,7 +782,7 @@
         "bonk"
       ],
       "valerio": {
-        "V": 10,
+        "V": 9,
         "A": 3,
         "L": 2,
         "E": 2,
@@ -623,14 +795,27 @@
         "defensePower": 55,
         "draftCost": 2
       },
-      "rarityRule": "comune: costo draft 2 secondo bilanciamento v7; rarità precedente: comune",
+      "rarityRule": "comune: deck cost 2 secondo bilanciamento v10 spell/energy retrocompatibile",
       "type": "attack",
       "role": "attack",
       "allowedIntents": [
         "combat",
         "guard"
       ],
-      "guardBonus": 1
+      "guardBonus": 1,
+      "deckCost": 2,
+      "legacyType": "attack",
+      "legacyRole": "attack",
+      "deckType": "spell",
+      "roundIntents": [
+        "attack",
+        "defense",
+        "focus"
+      ],
+      "usablePhase": "spell_selection",
+      "usesValerio": true,
+      "usesCombat": true,
+      "energyCost": null
     },
     {
       "id": "doom",
@@ -646,10 +831,10 @@
         "icon": "helmet"
       },
       "active": {
-        "name": "Scambio Forzato",
-        "cost": 6,
+        "name": "Decreto di Latveria",
+        "cost": 3,
         "timing": "on_reveal",
-        "text": "Trappola: prepara uno scambio carta contro il nemico.",
+        "text": "Trappola: se il trigger scatta, imponi uno scambio o una penalità alla scelta nemica.",
         "effect": {
           "type": "swap_card",
           "target": "enemy",
@@ -666,12 +851,13 @@
             "selection": "random_hand"
           }
         ],
-        "flavor": "Prima spiega il problema, poi lo cancella dall'esistenza."
+        "flavor": "Doom non risponde al problema. Lo governa.",
+        "costResource": "mana"
       },
       "passive": {
-        "name": "Trappola Archivio",
+        "name": "Armatura Arcano-Tecnologica",
         "timing": "always",
-        "text": "Sempre: prepara pesca 1 carta dal mazzo.",
+        "text": "Sempre: riduci il primo danno o punisci una Utility nemica.",
         "effect": {
           "type": "draw_cards",
           "target": "self",
@@ -686,7 +872,7 @@
             "source": "deck"
           }
         ],
-        "flavor": "Ogni escalation parte con un riff."
+        "flavor": "Il potere è più efficiente quando è inevitabile."
       },
       "quote": "Non ho bug. Ho demoni da ottimizzare.",
       "tags": [
@@ -695,7 +881,7 @@
         "rigore"
       ],
       "valerio": {
-        "V": 9,
+        "V": 10,
         "A": 6,
         "L": 4,
         "E": 2,
@@ -704,20 +890,31 @@
         "O": 3
       },
       "combat": {
-        "attackPower": 100,
-        "defensePower": 80,
-        "draftCost": 6
+        "attackPower": 94,
+        "defensePower": 82,
+        "draftCost": 5
       },
-      "rarityRule": "leggendaria: costo draft 6 secondo bilanciamento v7; rarità precedente: mitica",
-      "type": "trap",
-      "role": "trap",
+      "rarityRule": "leggendaria: deck cost 5 secondo bilanciamento v10 spell/energy retrocompatibile",
+      "type": "attack",
+      "role": "attack",
       "allowedIntents": [
-        "trap"
+        "combat",
+        "guard"
       ],
-      "guardBonus": 4,
-      "trigger": {
-        "type": "enemy_uses_utility"
-      }
+      "guardBonus": 1,
+      "deckCost": 5,
+      "legacyType": "trap",
+      "legacyRole": "trap",
+      "deckType": "spell",
+      "roundIntents": [
+        "attack",
+        "defense",
+        "focus"
+      ],
+      "usablePhase": "spell_selection",
+      "usesValerio": true,
+      "usesCombat": true,
+      "energyCost": null
     },
     {
       "id": "genshis",
@@ -733,10 +930,10 @@
         "icon": "wish"
       },
       "active": {
-        "name": "Pesca dal Mazzo",
+        "name": "Desiderio Garantito",
         "cost": 2,
         "timing": "before_fight",
-        "text": "Attiva: pesca 2 carte dal mazzo.",
+        "text": "Attiva: pesca o filtra carte; se la fortuna tradisce, ottieni una compensazione.",
         "effect": {
           "type": "draw_cards",
           "target": "self",
@@ -751,12 +948,13 @@
             "source": "deck"
           }
         ],
-        "flavor": "Nove doppioni e una soluzione."
+        "flavor": "Non è gambling, è resource planning.",
+        "costResource": "energy"
       },
       "passive": {
-        "name": "Archivio Mobile",
+        "name": "Pity del Conquistatore",
         "timing": "always",
-        "text": "Sempre: prepara pesca 1 carta dal mazzo.",
+        "text": "Sempre: dopo un round perso, la prossima pescata diventa più favorevole.",
         "effect": {
           "type": "draw_cards",
           "target": "self",
@@ -771,7 +969,7 @@
             "source": "deck"
           }
         ],
-        "flavor": "Perde fiducia, poi trova la pull giusta."
+        "flavor": "Nove doppioni e una soluzione."
       },
       "quote": "Non è gambling, è resource planning.",
       "tags": [
@@ -780,6 +978,43 @@
         "anime"
       ],
       "valerio": {
+        "V": 0,
+        "A": 0,
+        "L": 0,
+        "E": 0,
+        "R": 0,
+        "I": 0,
+        "O": 0
+      },
+      "combat": {
+        "attackPower": 0,
+        "defensePower": 0,
+        "draftCost": 2
+      },
+      "rarityRule": "comune: deck cost 2 secondo bilanciamento v10 spell/energy retrocompatibile",
+      "type": "utility",
+      "role": "utility",
+      "allowedIntents": [
+        "utility",
+        "focus",
+        "recover"
+      ],
+      "guardBonus": 0,
+      "deckCost": 2,
+      "legacyType": "utility",
+      "legacyRole": "utility",
+      "deckType": "energy",
+      "roundIntents": [
+        "energy"
+      ],
+      "usablePhase": "decision_phase",
+      "usesValerio": false,
+      "usesCombat": false,
+      "energyCost": 2,
+      "maxUsesPerRound": 1,
+      "maxUsesPerMatch": 1,
+      "passiveDisabledInEnergyDeck": true,
+      "legacyValerio": {
         "V": 3,
         "A": 6,
         "L": 5,
@@ -788,21 +1023,11 @@
         "I": 6,
         "O": 7
       },
-      "combat": {
+      "legacyCombat": {
         "attackPower": 60,
         "defensePower": 65,
         "draftCost": 2
-      },
-      "rarityRule": "comune: costo draft 2 secondo bilanciamento v7; rarità precedente: rara",
-      "type": "utility",
-      "role": "utility",
-      "allowedIntents": [
-        "utility",
-        "draw",
-        "focus",
-        "recover"
-      ],
-      "guardBonus": 2
+      }
     },
     {
       "id": "gta",
@@ -818,10 +1043,10 @@
         "icon": "palm"
       },
       "active": {
-        "name": "Assalto Calcolato",
+        "name": "Fuga a Cinque Stelle",
         "cost": 2,
         "timing": "before_fight",
-        "text": "Prima del fight: +2 danni oltre il cap se vinci.",
+        "text": "Attiva: dopo il reveal, ottieni danno o riposizionamento.",
         "effect": {
           "type": "damage",
           "value": 2
@@ -832,12 +1057,13 @@
             "value": 2
           }
         ],
-        "flavor": "Quando arriva il QA, ha già cambiato veicolo."
+        "flavor": "Quando arriva il QA, ha già cambiato veicolo.",
+        "costResource": "mana"
       },
       "passive": {
-        "name": "Sacca di Mana",
+        "name": "Caos Urbano",
         "timing": "always",
-        "text": "Sempre: prepara +1 mana.",
+        "text": "Sempre: quando entrambi attaccano, ottieni un piccolo vantaggio.",
         "effect": {
           "type": "mana_bonus",
           "target": "self",
@@ -850,7 +1076,7 @@
             "value": 1
           }
         ],
-        "flavor": "La soluzione è tecnicamente in divieto di sosta."
+        "flavor": "Mission passed. Respect +3."
       },
       "quote": "Mission passed. Respect +3.",
       "tags": [
@@ -865,28 +1091,41 @@
         "E": 4,
         "R": 6,
         "I": 6,
-        "O": 7
+        "O": 6
       },
       "combat": {
         "attackPower": 80,
         "defensePower": 65,
         "draftCost": 3
       },
-      "rarityRule": "rara: costo draft 3 secondo bilanciamento v7; rarità precedente: epica",
+      "rarityRule": "rara: deck cost 3 secondo bilanciamento v10 spell/energy retrocompatibile",
       "type": "attack",
       "role": "attack",
       "allowedIntents": [
         "combat",
         "guard"
       ],
-      "guardBonus": 0
+      "guardBonus": 1,
+      "deckCost": 3,
+      "legacyType": "attack",
+      "legacyRole": "attack",
+      "deckType": "spell",
+      "roundIntents": [
+        "attack",
+        "defense",
+        "focus"
+      ],
+      "usablePhase": "spell_selection",
+      "usesValerio": true,
+      "usesCombat": true,
+      "energyCost": null
     },
     {
       "id": "malenia",
       "image": "malenia.png",
       "name": "Malenia, Lama Puntigliosa",
       "subtitle": "Non ha mai perso: ha solo iterato.",
-      "rarity": "mitica",
+      "rarity": "leggendaria",
       "archetype": "duellante letale",
       "theme": "Elden Ring",
       "frame": {
@@ -895,10 +1134,10 @@
         "icon": "winged-helm"
       },
       "active": {
-        "name": "Riserva di Mana",
-        "cost": 6,
+        "name": "Danza della Marcescenza",
+        "cost": 3,
         "timing": "before_fight",
-        "text": "Attiva: guadagni 1 mana.",
+        "text": "Attiva: se vinci l’attacco, infliggi danno extra e recuperi HP.",
         "effect": {
           "type": "mana_bonus",
           "target": "self",
@@ -911,12 +1150,13 @@
             "value": 1
           }
         ],
-        "flavor": "Un colpo, tre revisioni, zero pietà."
+        "flavor": "Un colpo, tre revisioni, zero pietà.",
+        "costResource": "mana"
       },
       "passive": {
-        "name": "Riserva Protetta",
+        "name": "Mai Conosciuta Sconfitta",
         "timing": "always",
-        "text": "Sempre: prepara +2 mana.",
+        "text": "Sempre: la prima volta che subisci un danno decisivo, lo riduci o sopravvivi.",
         "effect": {
           "type": "mana_bonus",
           "target": "self",
@@ -929,7 +1169,7 @@
             "value": 2
           }
         ],
-        "flavor": "Il bug è morto prima del log."
+        "flavor": "Ha solo iterato."
       },
       "quote": "Witness me merge.",
       "tags": [
@@ -938,7 +1178,7 @@
         "precisione"
       ],
       "valerio": {
-        "V": 7,
+        "V": 8,
         "A": 6,
         "L": 6,
         "E": 4,
@@ -947,19 +1187,31 @@
         "O": 3
       },
       "combat": {
-        "attackPower": 100,
-        "defensePower": 95,
-        "draftCost": 6
+        "attackPower": 82,
+        "defensePower": 94,
+        "draftCost": 5
       },
-      "rarityRule": "mitica: costo draft 6 secondo bilanciamento v7; rarità precedente: mitica",
+      "rarityRule": "leggendaria: deck cost 5 secondo bilanciamento v10 spell/energy retrocompatibile",
       "type": "defense",
       "role": "defense",
       "allowedIntents": [
-        "guard",
-        "recover",
-        "utility"
+        "combat",
+        "guard"
       ],
-      "guardBonus": 5
+      "guardBonus": 3,
+      "deckCost": 5,
+      "legacyType": "defense",
+      "legacyRole": "defense",
+      "deckType": "spell",
+      "roundIntents": [
+        "attack",
+        "defense",
+        "focus"
+      ],
+      "usablePhase": "spell_selection",
+      "usesValerio": true,
+      "usesCombat": true,
+      "energyCost": null
     },
     {
       "id": "nazi",
@@ -975,10 +1227,10 @@
         "icon": "folder"
       },
       "active": {
-        "name": "Furto Preparato",
+        "name": "Protocollo di Ferro",
         "cost": 3,
         "timing": "on_reveal",
-        "text": "Trappola: ruba una carta casuale dalla mano nemica se il trigger scatta.",
+        "text": "Trappola: se il trigger scatta, blocchi o tassi una scelta nemica.",
         "effect": {
           "type": "steal_card",
           "target": "enemy",
@@ -991,12 +1243,13 @@
             "selection": "random_hand"
           }
         ],
-        "flavor": "Prima approva, poi chiede chi ha autorizzato."
+        "flavor": "Il processo è il processo, anche quando nessuno sa quale.",
+        "costResource": "energy"
       },
       "passive": {
-        "name": "Esca di Carta",
+        "name": "Archivio del Controllo",
         "timing": "always",
-        "text": "Sempre: prepara scambio carta casuale.",
+        "text": "Sempre: se l’avversario usa Focus o Utility, riduci parte del suo vantaggio.",
         "effect": {
           "type": "swap_card",
           "target": "self",
@@ -1022,6 +1275,44 @@
         "burocrazia"
       ],
       "valerio": {
+        "V": 0,
+        "A": 0,
+        "L": 0,
+        "E": 0,
+        "R": 0,
+        "I": 0,
+        "O": 0
+      },
+      "combat": {
+        "attackPower": 0,
+        "defensePower": 0,
+        "draftCost": 3
+      },
+      "rarityRule": "rara: deck cost 3 secondo bilanciamento v10 spell/energy retrocompatibile",
+      "type": "trap",
+      "role": "trap",
+      "allowedIntents": [
+        "trap"
+      ],
+      "guardBonus": 0,
+      "trigger": {
+        "type": "enemy_controls"
+      },
+      "deckCost": 3,
+      "legacyType": "trap",
+      "legacyRole": "trap",
+      "deckType": "energy",
+      "roundIntents": [
+        "energy"
+      ],
+      "usablePhase": "decision_phase",
+      "usesValerio": false,
+      "usesCombat": false,
+      "energyCost": 3,
+      "maxUsesPerRound": 1,
+      "maxUsesPerMatch": 1,
+      "passiveDisabledInEnergyDeck": true,
+      "legacyValerio": {
         "V": 7,
         "A": 8,
         "L": 6,
@@ -1030,20 +1321,10 @@
         "I": 7,
         "O": 1
       },
-      "combat": {
+      "legacyCombat": {
         "attackPower": 65,
         "defensePower": 80,
         "draftCost": 3
-      },
-      "rarityRule": "rara: costo draft 3 secondo bilanciamento v7; rarità precedente: rara",
-      "type": "trap",
-      "role": "trap",
-      "allowedIntents": [
-        "trap"
-      ],
-      "guardBonus": 3,
-      "trigger": {
-        "type": "enemy_controls"
       }
     },
     {
@@ -1060,10 +1341,10 @@
         "icon": "skull"
       },
       "active": {
-        "name": "Riserva di Mana",
-        "cost": 3,
+        "name": "Arrembaggio",
+        "cost": 2,
         "timing": "before_fight",
-        "text": "Attiva: guadagni 1 mana.",
+        "text": "Attiva: se attacchi e vinci, rubi o neghi una piccola risorsa.",
         "effect": {
           "type": "mana_bonus",
           "target": "self",
@@ -1076,12 +1357,13 @@
             "value": 1
           }
         ],
-        "flavor": "Non colpisce il target, ma spaventa la roadmap."
+        "flavor": "Arrr, chi ha spostato la deadline?",
+        "costResource": "mana"
       },
       "passive": {
-        "name": "Riserva Protetta",
+        "name": "Bottino Nascosto",
         "timing": "always",
-        "text": "Sempre: prepara +2 mana.",
+        "text": "Sempre: dopo un round vinto, migliori la prossima pescata o recuperi risorsa.",
         "effect": {
           "type": "mana_bonus",
           "target": "self",
@@ -1104,7 +1386,7 @@
       ],
       "valerio": {
         "V": 6,
-        "A": 6,
+        "A": 5,
         "L": 3,
         "E": 5,
         "R": 6,
@@ -1112,19 +1394,31 @@
         "O": 6
       },
       "combat": {
-        "attackPower": 80,
-        "defensePower": 65,
+        "attackPower": 65,
+        "defensePower": 80,
         "draftCost": 3
       },
-      "rarityRule": "rara: costo draft 3 secondo bilanciamento v7; rarità precedente: epica",
+      "rarityRule": "rara: deck cost 3 secondo bilanciamento v10 spell/energy retrocompatibile",
       "type": "defense",
       "role": "defense",
       "allowedIntents": [
-        "guard",
-        "recover",
-        "utility"
+        "combat",
+        "guard"
       ],
-      "guardBonus": 3
+      "guardBonus": 3,
+      "deckCost": 3,
+      "legacyType": "defense",
+      "legacyRole": "defense",
+      "deckType": "spell",
+      "roundIntents": [
+        "attack",
+        "defense",
+        "focus"
+      ],
+      "usablePhase": "spell_selection",
+      "usesValerio": true,
+      "usesCombat": true,
+      "energyCost": null
     },
     {
       "id": "reddead",
@@ -1140,10 +1434,10 @@
         "icon": "revolver"
       },
       "active": {
-        "name": "Richiamo dal Mazzo",
+        "name": "Dead Eye",
         "cost": 3,
         "timing": "before_fight",
-        "text": "Attiva: prepara lo swap di una carta dal mazzo.",
+        "text": "Attiva: scegli una stat nemica da indebolire o ignori una difesa.",
         "effect": {
           "type": "swap_card_from_deck",
           "target": "self",
@@ -1156,12 +1450,13 @@
             "selection": "random_deck"
           }
         ],
-        "flavor": "Rallenta il tempo abbastanza da leggere l'email."
+        "flavor": "Rallenta il tempo abbastanza da leggere l’email.",
+        "costResource": "energy"
       },
       "passive": {
-        "name": "Archivio Mobile",
+        "name": "Mano sul Revolver",
         "timing": "always",
-        "text": "Sempre: prepara pesca 1 carta dal mazzo.",
+        "text": "Sempre: se scegli Attack dopo il reveal, ottieni un piccolo bonus di precisione.",
         "effect": {
           "type": "draw_cards",
           "target": "self",
@@ -1176,7 +1471,7 @@
             "source": "deck"
           }
         ],
-        "flavor": "Non sa dov'è, ma è sicuramente coperto."
+        "flavor": "This town ain't big enough for two PM."
       },
       "quote": "This town ain't big enough for two PM.",
       "tags": [
@@ -1185,6 +1480,43 @@
         "deadline"
       ],
       "valerio": {
+        "V": 0,
+        "A": 0,
+        "L": 0,
+        "E": 0,
+        "R": 0,
+        "I": 0,
+        "O": 0
+      },
+      "combat": {
+        "attackPower": 0,
+        "defensePower": 0,
+        "draftCost": 3
+      },
+      "rarityRule": "rara: deck cost 3 secondo bilanciamento v10 spell/energy retrocompatibile",
+      "type": "utility",
+      "role": "utility",
+      "allowedIntents": [
+        "utility",
+        "focus",
+        "recover"
+      ],
+      "guardBonus": 0,
+      "deckCost": 3,
+      "legacyType": "utility",
+      "legacyRole": "utility",
+      "deckType": "energy",
+      "roundIntents": [
+        "energy"
+      ],
+      "usablePhase": "decision_phase",
+      "usesValerio": false,
+      "usesCombat": false,
+      "energyCost": 3,
+      "maxUsesPerRound": 1,
+      "maxUsesPerMatch": 1,
+      "passiveDisabledInEnergyDeck": true,
+      "legacyValerio": {
         "V": 6,
         "A": 6,
         "L": 4,
@@ -1193,21 +1525,11 @@
         "I": 6,
         "O": 6
       },
-      "combat": {
+      "legacyCombat": {
         "attackPower": 80,
         "defensePower": 65,
         "draftCost": 3
-      },
-      "rarityRule": "rara: costo draft 3 secondo bilanciamento v7; rarità precedente: epica",
-      "type": "utility",
-      "role": "utility",
-      "allowedIntents": [
-        "utility",
-        "draw",
-        "focus",
-        "recover"
-      ],
-      "guardBonus": 3
+      }
     },
     {
       "id": "shaman",
@@ -1223,10 +1545,10 @@
         "icon": "totem"
       },
       "active": {
-        "name": "Richiamo dal Mazzo",
+        "name": "Richiamo degli Spiriti",
         "cost": 2,
         "timing": "before_fight",
-        "text": "Attiva: prepara lo swap di una carta dal mazzo.",
+        "text": "Attiva: pesca o scambia una carta dal mazzo.",
         "effect": {
           "type": "swap_card_from_deck",
           "target": "self",
@@ -1239,12 +1561,13 @@
             "selection": "random_deck"
           }
         ],
-        "flavor": "Il segnale è debole, ma la fede è in fibra."
+        "flavor": "Il segnale è debole, ma la fede è in fibra.",
+        "costResource": "energy"
       },
       "passive": {
-        "name": "Rigenerazione",
+        "name": "Totem di Guarigione",
         "timing": "always",
-        "text": "Sempre: prepara cura 2 PV.",
+        "text": "Sempre: quando scegli Focus, prepari cura o recupero di Energy.",
         "effect": {
           "type": "heal",
           "target": "self",
@@ -1257,7 +1580,7 @@
             "value": 2
           }
         ],
-        "flavor": "Prevede il bug prima che venga pushato."
+        "flavor": "Gli antenati consigliano di riavviare."
       },
       "quote": "Ho consultato gli antenati: serve riavviare.",
       "tags": [
@@ -1266,6 +1589,43 @@
         "misticismo"
       ],
       "valerio": {
+        "V": 0,
+        "A": 0,
+        "L": 0,
+        "E": 0,
+        "R": 0,
+        "I": 0,
+        "O": 0
+      },
+      "combat": {
+        "attackPower": 0,
+        "defensePower": 0,
+        "draftCost": 2
+      },
+      "rarityRule": "comune: deck cost 2 secondo bilanciamento v10 spell/energy retrocompatibile",
+      "type": "utility",
+      "role": "utility",
+      "allowedIntents": [
+        "utility",
+        "focus",
+        "recover"
+      ],
+      "guardBonus": 0,
+      "deckCost": 2,
+      "legacyType": "utility",
+      "legacyRole": "utility",
+      "deckType": "energy",
+      "roundIntents": [
+        "energy"
+      ],
+      "usablePhase": "decision_phase",
+      "usesValerio": false,
+      "usesCombat": false,
+      "energyCost": 2,
+      "maxUsesPerRound": 1,
+      "maxUsesPerMatch": 1,
+      "passiveDisabledInEnergyDeck": true,
+      "legacyValerio": {
         "V": 3,
         "A": 5,
         "L": 5,
@@ -1274,21 +1634,11 @@
         "I": 4,
         "O": 7
       },
-      "combat": {
+      "legacyCombat": {
         "attackPower": 55,
         "defensePower": 70,
         "draftCost": 2
-      },
-      "rarityRule": "comune: costo draft 2 secondo bilanciamento v7; rarità precedente: rara",
-      "type": "utility",
-      "role": "utility",
-      "allowedIntents": [
-        "utility",
-        "draw",
-        "focus",
-        "recover"
-      ],
-      "guardBonus": 2
+      }
     },
     {
       "id": "stark",
@@ -1304,10 +1654,10 @@
         "icon": "reactor"
       },
       "active": {
-        "name": "Guardia di Ferro",
-        "cost": 6,
+        "name": "Protocollo Mark",
+        "cost": 3,
         "timing": "before_fight",
-        "text": "Prima del fight: +1 Breccia difensiva se il piano regge.",
+        "text": "Attiva: ottieni difesa o danno difensivo se il piano regge.",
         "effect": {
           "type": "flat-damage",
           "value": 1
@@ -1318,12 +1668,13 @@
             "value": 1
           }
         ],
-        "flavor": "Il prototipo vola. Il budget no."
+        "flavor": "Il prototipo vola. Il budget no.",
+        "costResource": "mana"
       },
       "passive": {
-        "name": "Secondo Respiro",
+        "name": "Reattore Arc",
         "timing": "always",
-        "text": "Sempre: prepara cura 4 PV.",
+        "text": "Sempre: recuperi Mana o riduci il primo danno subito.",
         "effect": {
           "type": "heal",
           "target": "self",
@@ -1347,26 +1698,38 @@
       "valerio": {
         "V": 5,
         "A": 6,
-        "L": 7,
+        "L": 8,
         "E": 6,
         "R": 5,
         "I": 6,
         "O": 5
       },
       "combat": {
-        "attackPower": 80,
-        "defensePower": 100,
-        "draftCost": 6
+        "attackPower": 82,
+        "defensePower": 94,
+        "draftCost": 5
       },
-      "rarityRule": "leggendaria: costo draft 6 secondo bilanciamento v7; rarità precedente: mitica",
+      "rarityRule": "leggendaria: deck cost 5 secondo bilanciamento v10 spell/energy retrocompatibile",
       "type": "defense",
       "role": "defense",
       "allowedIntents": [
-        "guard",
-        "recover",
-        "utility"
+        "combat",
+        "guard"
       ],
-      "guardBonus": 3
+      "guardBonus": 3,
+      "deckCost": 5,
+      "legacyType": "defense",
+      "legacyRole": "defense",
+      "deckType": "spell",
+      "roundIntents": [
+        "attack",
+        "defense",
+        "focus"
+      ],
+      "usablePhase": "spell_selection",
+      "usesValerio": true,
+      "usesCombat": true,
+      "energyCost": null
     },
     {
       "id": "strano",
@@ -1382,10 +1745,10 @@
         "icon": "sigil"
       },
       "active": {
-        "name": "Scambio Forzato",
+        "name": "Portale di Kamar-Taj",
         "cost": 4,
         "timing": "on_reveal",
-        "text": "Trappola: prepara uno scambio carta contro il nemico.",
+        "text": "Trappola: se il trigger scatta, scambi o sposti una scelta nemica.",
         "effect": {
           "type": "swap_card",
           "target": "enemy",
@@ -1402,12 +1765,13 @@
             "selection": "random_hand"
           }
         ],
-        "flavor": "Voleva aprire staging, è finito in produzione."
+        "flavor": "Voleva aprire staging, è finito in produzione.",
+        "costResource": "energy"
       },
       "passive": {
-        "name": "Trappola Archivio",
+        "name": "Occhio di Agamotto",
         "timing": "always",
-        "text": "Sempre: prepara pesca 1 carta dal mazzo.",
+        "text": "Sempre: prepari la prossima pescata o una piccola informazione futura.",
         "effect": {
           "type": "draw_cards",
           "target": "self",
@@ -1431,6 +1795,44 @@
         "controllo"
       ],
       "valerio": {
+        "V": 0,
+        "A": 0,
+        "L": 0,
+        "E": 0,
+        "R": 0,
+        "I": 0,
+        "O": 0
+      },
+      "combat": {
+        "attackPower": 0,
+        "defensePower": 0,
+        "draftCost": 4
+      },
+      "rarityRule": "epica: deck cost 4 secondo bilanciamento v10 spell/energy retrocompatibile",
+      "type": "trap",
+      "role": "trap",
+      "allowedIntents": [
+        "trap"
+      ],
+      "guardBonus": 0,
+      "trigger": {
+        "type": "enemy_uses_utility"
+      },
+      "deckCost": 4,
+      "legacyType": "trap",
+      "legacyRole": "trap",
+      "deckType": "energy",
+      "roundIntents": [
+        "energy"
+      ],
+      "usablePhase": "decision_phase",
+      "usesValerio": false,
+      "usesCombat": false,
+      "energyCost": 4,
+      "maxUsesPerRound": 1,
+      "maxUsesPerMatch": 1,
+      "passiveDisabledInEnergyDeck": true,
+      "legacyValerio": {
         "V": 3,
         "A": 7,
         "L": 7,
@@ -1439,20 +1841,10 @@
         "I": 5,
         "O": 7
       },
-      "combat": {
+      "legacyCombat": {
         "attackPower": 70,
         "defensePower": 90,
         "draftCost": 4
-      },
-      "rarityRule": "epica: costo draft 4 secondo bilanciamento v7; rarità precedente: leggendaria",
-      "type": "trap",
-      "role": "trap",
-      "allowedIntents": [
-        "trap"
-      ],
-      "guardBonus": 4,
-      "trigger": {
-        "type": "enemy_uses_utility"
       }
     },
     {
@@ -1469,10 +1861,10 @@
         "icon": "gear"
       },
       "active": {
-        "name": "Scambio Forzato",
+        "name": "Piano Quinquennale",
         "cost": 2,
         "timing": "on_reveal",
-        "text": "Trappola: prepara uno scambio carta contro il nemico.",
+        "text": "Trappola: se il nemico fa Focus o Utility, riduci il suo vantaggio.",
         "effect": {
           "type": "swap_card",
           "target": "enemy",
@@ -1489,12 +1881,13 @@
             "selection": "random_hand"
           }
         ],
-        "flavor": "Cinque anni compressi in due daily."
+        "flavor": "Cinque anni compressi in due daily.",
+        "costResource": "energy"
       },
       "passive": {
-        "name": "Trappola Archivio",
+        "name": "Forza del Collettivo",
         "timing": "always",
-        "text": "Sempre: prepara pesca 1 carta dal mazzo.",
+        "text": "Sempre: dopo un round perso, ottieni una piccola compensazione.",
         "effect": {
           "type": "draw_cards",
           "target": "self",
@@ -1518,6 +1911,44 @@
         "piano"
       ],
       "valerio": {
+        "V": 0,
+        "A": 0,
+        "L": 0,
+        "E": 0,
+        "R": 0,
+        "I": 0,
+        "O": 0
+      },
+      "combat": {
+        "attackPower": 0,
+        "defensePower": 0,
+        "draftCost": 2
+      },
+      "rarityRule": "comune: deck cost 2 secondo bilanciamento v10 spell/energy retrocompatibile",
+      "type": "trap",
+      "role": "trap",
+      "allowedIntents": [
+        "trap"
+      ],
+      "guardBonus": 0,
+      "trigger": {
+        "type": "enemy_focuses"
+      },
+      "deckCost": 2,
+      "legacyType": "trap",
+      "legacyRole": "trap",
+      "deckType": "energy",
+      "roundIntents": [
+        "energy"
+      ],
+      "usablePhase": "decision_phase",
+      "usesValerio": false,
+      "usesCombat": false,
+      "energyCost": 2,
+      "maxUsesPerRound": 1,
+      "maxUsesPerMatch": 1,
+      "passiveDisabledInEnergyDeck": true,
+      "legacyValerio": {
         "V": 7,
         "A": 4,
         "L": 4,
@@ -1526,20 +1957,10 @@
         "I": 3,
         "O": 3
       },
-      "combat": {
+      "legacyCombat": {
         "attackPower": 55,
         "defensePower": 70,
         "draftCost": 2
-      },
-      "rarityRule": "comune: costo draft 2 secondo bilanciamento v7; rarità precedente: rara",
-      "type": "trap",
-      "role": "trap",
-      "allowedIntents": [
-        "trap"
-      ],
-      "guardBonus": 2,
-      "trigger": {
-        "type": "enemy_focuses"
       }
     },
     {
@@ -1556,10 +1977,10 @@
         "icon": "mask"
       },
       "active": {
-        "name": "Primo Soccorso",
-        "cost": 3,
+        "name": "Vendetta in Maschera",
+        "cost": 2,
         "timing": "before_fight",
-        "text": "Attiva: curati di 4 PV.",
+        "text": "Attiva: se hai subito danno nel round precedente, infliggi danno extra.",
         "effect": {
           "type": "heal",
           "target": "self",
@@ -1572,12 +1993,13 @@
             "value": 4
           }
         ],
-        "flavor": "Finisce il discorso quando finisce il budget."
+        "flavor": "Ricorda, ricorda, la deadline di novembre.",
+        "costResource": "mana"
       },
       "passive": {
-        "name": "Batteria Interna",
+        "name": "Idea Immortale",
         "timing": "always",
-        "text": "Sempre: prepara +3 mana.",
+        "text": "Sempre: una volta per match puoi ridurre un danno o recuperare dopo essere stato colpito.",
         "effect": {
           "type": "mana_bonus",
           "target": "self",
@@ -1590,7 +2012,7 @@
             "value": 3
           }
         ],
-        "flavor": "Vince verbalmente, verticalmente, vagamente."
+        "flavor": "La maschera cade, l’idea resta."
       },
       "quote": "Ricorda, ricorda, la deadline di novembre.",
       "tags": [
@@ -1600,7 +2022,7 @@
       ],
       "valerio": {
         "V": 4,
-        "A": 6,
+        "A": 5,
         "L": 6,
         "E": 6,
         "R": 4,
@@ -1608,20 +2030,31 @@
         "O": 6
       },
       "combat": {
-        "attackPower": 75,
-        "defensePower": 70,
+        "attackPower": 80,
+        "defensePower": 65,
         "draftCost": 3
       },
-      "rarityRule": "rara: costo draft 3 secondo bilanciamento v7; rarità precedente: leggendaria",
-      "type": "utility",
-      "role": "utility",
+      "rarityRule": "rara: deck cost 3 secondo bilanciamento v10 spell/energy retrocompatibile",
+      "type": "attack",
+      "role": "attack",
       "allowedIntents": [
-        "utility",
-        "draw",
-        "focus",
-        "recover"
+        "combat",
+        "guard"
       ],
-      "guardBonus": 2
+      "guardBonus": 1,
+      "deckCost": 3,
+      "legacyType": "utility",
+      "legacyRole": "utility",
+      "deckType": "spell",
+      "roundIntents": [
+        "attack",
+        "defense",
+        "focus"
+      ],
+      "usablePhase": "spell_selection",
+      "usesValerio": true,
+      "usesCombat": true,
+      "energyCost": null
     },
     {
       "id": "valcraft",
@@ -1637,10 +2070,10 @@
         "icon": "pickaxe"
       },
       "active": {
-        "name": "Guardia di Ferro",
-        "cost": 2,
+        "name": "Muro di Ossidiana",
+        "cost": 1,
         "timing": "before_fight",
-        "text": "Prima del fight: +2 Breccia difensiva se il piano regge.",
+        "text": "Attiva: ottieni un forte bonus difensivo o danno difensivo.",
         "effect": {
           "type": "flat-damage",
           "value": 2
@@ -1651,12 +2084,13 @@
             "value": 2
           }
         ],
-        "flavor": "Anche la skill più bassa può minare diamanti."
+        "flavor": "Non è un bug, è un blocco invisibile.",
+        "costResource": "mana"
       },
       "passive": {
-        "name": "Cambio Coperto",
+        "name": "Banco da Lavoro",
         "timing": "always",
-        "text": "Sempre: prepara lo scambio della carta selezionata.",
+        "text": "Sempre: puoi preparare o scambiare una carta scelta.",
         "effect": {
           "type": "swap_selected_card",
           "target": "self",
@@ -1682,7 +2116,7 @@
         "A": 4,
         "L": 5,
         "E": 3,
-        "R": 7,
+        "R": 6,
         "I": 4,
         "O": 6
       },
@@ -1691,15 +2125,27 @@
         "defensePower": 70,
         "draftCost": 2
       },
-      "rarityRule": "comune: costo draft 2 secondo bilanciamento v7; rarità precedente: epica",
+      "rarityRule": "comune: deck cost 2 secondo bilanciamento v10 spell/energy retrocompatibile",
       "type": "defense",
       "role": "defense",
       "allowedIntents": [
-        "guard",
-        "recover",
-        "utility"
+        "combat",
+        "guard"
       ],
-      "guardBonus": 5
+      "guardBonus": 3,
+      "deckCost": 2,
+      "legacyType": "defense",
+      "legacyRole": "defense",
+      "deckType": "spell",
+      "roundIntents": [
+        "attack",
+        "defense",
+        "focus"
+      ],
+      "usablePhase": "spell_selection",
+      "usesValerio": true,
+      "usesCombat": true,
+      "energyCost": null
     },
     {
       "id": "valdemort",
@@ -1715,10 +2161,10 @@
         "icon": "serpent"
       },
       "active": {
-        "name": "Furto Preparato",
+        "name": "Avada al Backlog",
         "cost": 4,
         "timing": "on_reveal",
-        "text": "Trappola: ruba una carta casuale dalla mano nemica se il trigger scatta.",
+        "text": "Trappola: se il trigger scatta, rubi o indebolisci una risorsa nemica.",
         "effect": {
           "type": "steal_card",
           "target": "enemy",
@@ -1731,12 +2177,13 @@
             "selection": "random_hand"
           }
         ],
-        "flavor": "Evoca una soluzione proibita, ma funziona."
+        "flavor": "Evoca una soluzione proibita, ma funziona.",
+        "costResource": "energy"
       },
       "passive": {
-        "name": "Esca di Carta",
+        "name": "Horcrux di Riserva",
         "timing": "always",
-        "text": "Sempre: prepara scambio carta casuale.",
+        "text": "Sempre: quando stai per perdere troppo valore, riduci il danno o recuperi.",
         "effect": {
           "type": "swap_card",
           "target": "self",
@@ -1753,7 +2200,7 @@
             "selection": "random_hand"
           }
         ],
-        "flavor": "Ha diviso l'anima in sette repository."
+        "flavor": "Ha diviso l’anima in sette repository."
       },
       "quote": "Avada Kedavra al ticket duplicato.",
       "tags": [
@@ -1762,6 +2209,44 @@
         "serpente"
       ],
       "valerio": {
+        "V": 0,
+        "A": 0,
+        "L": 0,
+        "E": 0,
+        "R": 0,
+        "I": 0,
+        "O": 0
+      },
+      "combat": {
+        "attackPower": 0,
+        "defensePower": 0,
+        "draftCost": 4
+      },
+      "rarityRule": "epica: deck cost 4 secondo bilanciamento v10 spell/energy retrocompatibile",
+      "type": "trap",
+      "role": "trap",
+      "allowedIntents": [
+        "trap"
+      ],
+      "guardBonus": 0,
+      "trigger": {
+        "type": "enemy_controls"
+      },
+      "deckCost": 4,
+      "legacyType": "trap",
+      "legacyRole": "trap",
+      "deckType": "energy",
+      "roundIntents": [
+        "energy"
+      ],
+      "usablePhase": "decision_phase",
+      "usesValerio": false,
+      "usesCombat": false,
+      "energyCost": 4,
+      "maxUsesPerRound": 1,
+      "maxUsesPerMatch": 1,
+      "passiveDisabledInEnergyDeck": true,
+      "legacyValerio": {
         "V": 4,
         "A": 7,
         "L": 8,
@@ -1770,20 +2255,10 @@
         "I": 5,
         "O": 3
       },
-      "combat": {
+      "legacyCombat": {
         "attackPower": 80,
         "defensePower": 80,
         "draftCost": 4
-      },
-      "rarityRule": "epica: costo draft 4 secondo bilanciamento v7; rarità precedente: leggendaria",
-      "type": "trap",
-      "role": "trap",
-      "allowedIntents": [
-        "trap"
-      ],
-      "guardBonus": 4,
-      "trigger": {
-        "type": "enemy_controls"
       }
     },
     {
@@ -1800,10 +2275,10 @@
         "icon": "compass"
       },
       "active": {
-        "name": "Lettura del Punto Debole",
-        "cost": 5,
+        "name": "Punto Debole",
+        "cost": 1,
         "timing": "before_fight",
-        "text": "Prima del fight: ignora una difesa scelta su E.",
+        "text": "Attiva: ignora una difesa scelta su una stat.",
         "effect": {
           "type": "ignore-defense",
           "stat": "E"
@@ -1814,12 +2289,13 @@
             "stat": "E"
           }
         ],
-        "flavor": "Il destino gli dà sempre un branch pulito."
+        "flavor": "Il destino gli dà sempre un branch pulito.",
+        "costResource": "mana"
       },
       "passive": {
-        "name": "Cambio Ritmico",
+        "name": "Protagonista del Piano",
         "timing": "always",
-        "text": "Sempre: prepara lo swap della carta selezionata.",
+        "text": "Sempre: puoi correggere la mano o scambiare la carta selezionata.",
         "effect": {
           "type": "swap_selected_card",
           "target": "self",
@@ -1832,7 +2308,7 @@
             "selection": "chosen_hand"
           }
         ],
-        "flavor": "Quando serve un critico, sorride alla camera."
+        "flavor": "Semplicemente Valerio."
       },
       "quote": "Semplicemente Valerio.",
       "tags": [
@@ -1841,27 +2317,40 @@
         "protagonista"
       ],
       "valerio": {
-        "V": 6,
+        "V": 5,
         "A": 5,
-        "L": 6,
+        "L": 5,
         "E": 5,
-        "R": 6,
-        "I": 6,
-        "O": 6
+        "R": 5,
+        "I": 5,
+        "O": 5
       },
       "combat": {
-        "attackPower": 95,
-        "defensePower": 90,
-        "draftCost": 6
+        "attackPower": 70,
+        "defensePower": 55,
+        "draftCost": 2
       },
-      "rarityRule": "comune: costo draft 6 secondo bilanciamento v7; rarità precedente: epica",
+      "rarityRule": "comune: deck cost 2 secondo bilanciamento v10 spell/energy retrocompatibile",
       "type": "attack",
       "role": "attack",
       "allowedIntents": [
         "combat",
         "guard"
       ],
-      "guardBonus": 0
+      "guardBonus": 1,
+      "deckCost": 2,
+      "legacyType": "attack",
+      "legacyRole": "attack",
+      "deckType": "spell",
+      "roundIntents": [
+        "attack",
+        "defense",
+        "focus"
+      ],
+      "usablePhase": "spell_selection",
+      "usesValerio": true,
+      "usesCombat": true,
+      "energyCost": null
     },
     {
       "id": "vally",
@@ -1877,10 +2366,10 @@
         "icon": "lightning"
       },
       "active": {
-        "name": "Lettura del Punto Debole",
+        "name": "Colpo Supersonico",
         "cost": 1,
         "timing": "before_fight",
-        "text": "Prima del fight: ignora una difesa scelta su I.",
+        "text": "Attiva: ignora una difesa o cambia una stat dopo il reveal.",
         "effect": {
           "type": "ignore-defense",
           "stat": "I"
@@ -1891,12 +2380,13 @@
             "stat": "I"
           }
         ],
-        "flavor": "Ti corregge così veloce che sembra un complimento."
+        "flavor": "Corro perché la call è già iniziata.",
+        "costResource": "mana"
       },
       "passive": {
-        "name": "Fame di Carte",
+        "name": "Sempre in Anticipo",
         "timing": "always",
-        "text": "Sempre: prepara pesca 1 carta dal mazzo.",
+        "text": "Sempre: dopo un round vinto o rapido, prepari la prossima carta.",
         "effect": {
           "type": "draw_cards",
           "target": "self",
@@ -1911,7 +2401,7 @@
             "source": "deck"
           }
         ],
-        "flavor": "Un'occhiata e il CSS smette di fluttuare."
+        "flavor": "Un’occhiata e il CSS smette di fluttuare."
       },
       "quote": "Corro perché la call è già iniziata.",
       "tags": [
@@ -1926,21 +2416,34 @@
         "E": 6,
         "R": 4,
         "I": 5,
-        "O": 7
+        "O": 6
       },
       "combat": {
         "attackPower": 70,
         "defensePower": 55,
         "draftCost": 2
       },
-      "rarityRule": "comune: costo draft 2 secondo bilanciamento v7; rarità precedente: epica",
+      "rarityRule": "comune: deck cost 2 secondo bilanciamento v10 spell/energy retrocompatibile",
       "type": "attack",
       "role": "attack",
       "allowedIntents": [
         "combat",
         "guard"
       ],
-      "guardBonus": 0
+      "guardBonus": 1,
+      "deckCost": 2,
+      "legacyType": "attack",
+      "legacyRole": "attack",
+      "deckType": "spell",
+      "roundIntents": [
+        "attack",
+        "defense",
+        "focus"
+      ],
+      "usablePhase": "spell_selection",
+      "usesValerio": true,
+      "usesCombat": true,
+      "energyCost": null
     },
     {
       "id": "vratos",
@@ -1956,10 +2459,10 @@
         "icon": "omega"
       },
       "active": {
-        "name": "Cambio di Ritmo",
-        "cost": 5,
+        "name": "Lame del Caos",
+        "cost": 3,
         "timing": "before_fight",
-        "text": "Prima del fight: prepara uno swap della carta selezionata.",
+        "text": "Attiva: ottieni danno extra se hai subito danno o se attacchi.",
         "effect": {
           "type": "swap_selected_card",
           "target": "self",
@@ -1972,12 +2475,13 @@
             "selection": "chosen_hand"
           }
         ],
-        "flavor": "Il tono è basso. Il danno no."
+        "flavor": "Il tono è basso. Il danno no.",
+        "costResource": "mana"
       },
       "passive": {
-        "name": "Fame di Carte",
+        "name": "Ira di Sparta",
         "timing": "always",
-        "text": "Sempre: prepara pesca 1 carta dal mazzo.",
+        "text": "Sempre: più sei ferito, più diventi pericoloso in attacco.",
         "effect": {
           "type": "draw_cards",
           "target": "self",
@@ -1992,7 +2496,7 @@
             "source": "deck"
           }
         ],
-        "flavor": "Può attendere. L'ascia no."
+        "flavor": "Può attendere. L’ascia no."
       },
       "quote": "Non urlare. Prioritizza.",
       "tags": [
@@ -2001,7 +2505,7 @@
         "mitico"
       ],
       "valerio": {
-        "V": 9,
+        "V": 10,
         "A": 5,
         "L": 5,
         "E": 3,
@@ -2010,18 +2514,31 @@
         "O": 4
       },
       "combat": {
-        "attackPower": 100,
-        "defensePower": 80,
-        "draftCost": 6
+        "attackPower": 94,
+        "defensePower": 82,
+        "draftCost": 5
       },
-      "rarityRule": "leggendaria: costo draft 6 secondo bilanciamento v7; rarità precedente: mitica",
+      "rarityRule": "leggendaria: deck cost 5 secondo bilanciamento v10 spell/energy retrocompatibile",
       "type": "attack",
       "role": "attack",
       "allowedIntents": [
         "combat",
         "guard"
       ],
-      "guardBonus": 1
+      "guardBonus": 1,
+      "deckCost": 5,
+      "legacyType": "attack",
+      "legacyRole": "attack",
+      "deckType": "spell",
+      "roundIntents": [
+        "attack",
+        "defense",
+        "focus"
+      ],
+      "usablePhase": "spell_selection",
+      "usesValerio": true,
+      "usesCombat": true,
+      "energyCost": null
     },
     {
       "id": "vatriota",
@@ -2037,10 +2554,10 @@
         "icon": "winged-v"
       },
       "active": {
-        "name": "Assalto Calcolato",
-        "cost": 3,
+        "name": "Raggio Patriottico",
+        "cost": 2,
         "timing": "before_fight",
-        "text": "Prima del fight: +3 danni oltre il cap se vinci.",
+        "text": "Attiva: infliggi danno extra oltre il limite se attacchi.",
         "effect": {
           "type": "damage",
           "value": 3
@@ -2051,12 +2568,13 @@
             "value": 3
           }
         ],
-        "flavor": "Motiva il team anche se nessuno ha capito il perimetro."
+        "flavor": "Per la patria, per il project plan.",
+        "costResource": "mana"
       },
       "passive": {
-        "name": "Cambio Ritmico",
+        "name": "Sorriso da Copertina",
         "timing": "always",
-        "text": "Sempre: prepara lo swap della carta selezionata.",
+        "text": "Sempre: se l’avversario difende, ottieni pressione o vantaggio.",
         "effect": {
           "type": "swap_selected_card",
           "target": "self",
@@ -2081,24 +2599,37 @@
         "V": 6,
         "A": 5,
         "L": 6,
-        "E": 6,
+        "E": 5,
         "R": 6,
         "I": 6,
         "O": 5
       },
       "combat": {
-        "attackPower": 80,
-        "defensePower": 80,
+        "attackPower": 88,
+        "defensePower": 75,
         "draftCost": 4
       },
-      "rarityRule": "epica: costo draft 4 secondo bilanciamento v7; rarità precedente: leggendaria",
+      "rarityRule": "epica: deck cost 4 secondo bilanciamento v10 spell/energy retrocompatibile",
       "type": "attack",
       "role": "attack",
       "allowedIntents": [
         "combat",
         "guard"
       ],
-      "guardBonus": 0
+      "guardBonus": 1,
+      "deckCost": 4,
+      "legacyType": "attack",
+      "legacyRole": "attack",
+      "deckType": "spell",
+      "roundIntents": [
+        "attack",
+        "defense",
+        "focus"
+      ],
+      "usablePhase": "spell_selection",
+      "usesValerio": true,
+      "usesCombat": true,
+      "energyCost": null
     },
     {
       "id": "the_veep",
@@ -2114,10 +2645,10 @@
         "icon": "anchor"
       },
       "active": {
-        "name": "Scambio Carta",
+        "name": "Richiamo dagli Abissi",
         "cost": 2,
         "timing": "before_fight",
-        "text": "Attiva: prepara lo scambio di una carta dalla mano.",
+        "text": "Attiva: pesca, scambia o recupera una risorsa.",
         "effect": {
           "type": "swap_card",
           "target": "self",
@@ -2134,12 +2665,13 @@
             "selection": "chosen_hand"
           }
         ],
-        "flavor": "Più sale la pressione, più sorride alla tempesta."
+        "flavor": "Più sale la pressione, più sorride alla tempesta.",
+        "costResource": "energy"
       },
       "passive": {
-        "name": "Batteria Interna",
+        "name": "Pressione Oceanica",
         "timing": "always",
-        "text": "Sempre: prepara +1 mana.",
+        "text": "Sempre: ottieni un piccolo bonus difensivo o Focus.",
         "effect": {
           "type": "mana_bonus",
           "target": "self",
@@ -2152,7 +2684,7 @@
             "value": 1
           }
         ],
-        "flavor": "Vede arrivare il problema dall'orizzonte."
+        "flavor": "Vede arrivare il problema dall’orizzonte."
       },
       "quote": "Non è mare mosso. È stakeholder alignment.",
       "tags": [
@@ -2161,6 +2693,43 @@
         "controllo"
       ],
       "valerio": {
+        "V": 0,
+        "A": 0,
+        "L": 0,
+        "E": 0,
+        "R": 0,
+        "I": 0,
+        "O": 0
+      },
+      "combat": {
+        "attackPower": 0,
+        "defensePower": 0,
+        "draftCost": 2
+      },
+      "rarityRule": "comune: deck cost 2 secondo bilanciamento v10 spell/energy retrocompatibile",
+      "type": "utility",
+      "role": "utility",
+      "allowedIntents": [
+        "utility",
+        "focus",
+        "recover"
+      ],
+      "guardBonus": 0,
+      "deckCost": 2,
+      "legacyType": "utility",
+      "legacyRole": "utility",
+      "deckType": "energy",
+      "roundIntents": [
+        "energy"
+      ],
+      "usablePhase": "decision_phase",
+      "usesValerio": false,
+      "usesCombat": false,
+      "energyCost": 2,
+      "maxUsesPerRound": 1,
+      "maxUsesPerMatch": 1,
+      "passiveDisabledInEnergyDeck": true,
+      "legacyValerio": {
         "V": 7,
         "A": 6,
         "L": 4,
@@ -2169,21 +2738,11 @@
         "I": 4,
         "O": 4
       },
-      "combat": {
+      "legacyCombat": {
         "attackPower": 55,
         "defensePower": 70,
         "draftCost": 2
-      },
-      "rarityRule": "comune: costo draft 2 secondo bilanciamento v7; rarità precedente: epica",
-      "type": "utility",
-      "role": "utility",
-      "allowedIntents": [
-        "utility",
-        "draw",
-        "focus",
-        "recover"
-      ],
-      "guardBonus": 2
+      }
     },
     {
       "id": "v_train",
@@ -2199,10 +2758,10 @@
         "icon": "v"
       },
       "active": {
-        "name": "Spacco del Limite",
+        "name": "Sprint Letale",
         "cost": 1,
         "timing": "before_fight",
-        "text": "Prima del fight: la Breccia puo superare il cap normale.",
+        "text": "Attiva: se attacchi, puoi superare il limite o infliggere danno extra.",
         "effect": {
           "type": "break-cap"
         },
@@ -2211,12 +2770,13 @@
             "type": "break-cap"
           }
         ],
-        "flavor": "Tre serie da dodici e una retrospettiva."
+        "flavor": "No pain, no sprint.",
+        "costResource": "mana"
       },
       "passive": {
-        "name": "Fame di Carte",
+        "name": "Accelerazione Continua",
         "timing": "always",
-        "text": "Sempre: prepara pesca 1 carta dal mazzo.",
+        "text": "Sempre: se giochi aggressivo più round di fila, ottieni bonus.",
         "effect": {
           "type": "draw_cards",
           "target": "self",
@@ -2242,25 +2802,38 @@
       "valerio": {
         "V": 6,
         "A": 4,
-        "L": 6,
+        "L": 5,
         "E": 5,
         "R": 6,
         "I": 5,
         "O": 4
       },
       "combat": {
-        "attackPower": 60,
-        "defensePower": 65,
+        "attackPower": 70,
+        "defensePower": 55,
         "draftCost": 2
       },
-      "rarityRule": "comune: costo draft 2 secondo bilanciamento v7; rarità precedente: epica",
+      "rarityRule": "comune: deck cost 2 secondo bilanciamento v10 spell/energy retrocompatibile",
       "type": "attack",
       "role": "attack",
       "allowedIntents": [
         "combat",
         "guard"
       ],
-      "guardBonus": 1
+      "guardBonus": 1,
+      "deckCost": 2,
+      "legacyType": "attack",
+      "legacyRole": "attack",
+      "deckType": "spell",
+      "roundIntents": [
+        "attack",
+        "defense",
+        "focus"
+      ],
+      "usablePhase": "spell_selection",
+      "usesValerio": true,
+      "usesCombat": true,
+      "energyCost": null
     },
     {
       "id": "fire_project",
@@ -2276,10 +2849,10 @@
         "icon": "flame"
       },
       "active": {
-        "name": "Tagliola di Mana",
+        "name": "Incendio Controllato",
         "cost": 2,
         "timing": "on_reveal",
-        "text": "Trappola: guadagni 1 mana quando il trigger scatta.",
+        "text": "Trappola: se il trigger scatta, infliggi danno leggero o applichi bruciatura.",
         "effect": {
           "type": "mana_bonus",
           "target": "self",
@@ -2292,12 +2865,13 @@
             "value": 1
           }
         ],
-        "flavor": "Controllato nel senso che lo guarda bruciare con fiducia."
+        "flavor": "Non è in fiamme. È in fase di trasformazione.",
+        "costResource": "energy"
       },
       "passive": {
-        "name": "Mano Lesta",
+        "name": "Brace Residua",
         "timing": "always",
-        "text": "Sempre: prepara furto di una carta casuale dalla mano nemica.",
+        "text": "Sempre: dopo un attacco, lasci un piccolo malus al nemico.",
         "effect": {
           "type": "steal_card",
           "target": "enemy",
@@ -2310,7 +2884,7 @@
             "selection": "random_hand"
           }
         ],
-        "flavor": "Nessuno capisce, ma tutti applaudono."
+        "flavor": "Controllato nel senso che lo guarda bruciare con fiducia."
       },
       "quote": "Non è in fiamme. È in fase di trasformazione.",
       "tags": [
@@ -2319,6 +2893,44 @@
         "crisi"
       ],
       "valerio": {
+        "V": 0,
+        "A": 0,
+        "L": 0,
+        "E": 0,
+        "R": 0,
+        "I": 0,
+        "O": 0
+      },
+      "combat": {
+        "attackPower": 0,
+        "defensePower": 0,
+        "draftCost": 2
+      },
+      "rarityRule": "comune: deck cost 2 secondo bilanciamento v10 spell/energy retrocompatibile",
+      "type": "trap",
+      "role": "trap",
+      "allowedIntents": [
+        "trap"
+      ],
+      "guardBonus": 0,
+      "trigger": {
+        "type": "enemy_controls"
+      },
+      "deckCost": 2,
+      "legacyType": "trap",
+      "legacyRole": "trap",
+      "deckType": "energy",
+      "roundIntents": [
+        "energy"
+      ],
+      "usablePhase": "decision_phase",
+      "usesValerio": false,
+      "usesCombat": false,
+      "energyCost": 2,
+      "maxUsesPerRound": 1,
+      "maxUsesPerMatch": 1,
+      "passiveDisabledInEnergyDeck": true,
+      "legacyValerio": {
         "V": 7,
         "A": 4,
         "L": 3,
@@ -2327,20 +2939,10 @@
         "I": 5,
         "O": 4
       },
-      "combat": {
+      "legacyCombat": {
         "attackPower": 70,
         "defensePower": 55,
         "draftCost": 2
-      },
-      "rarityRule": "comune: costo draft 2 secondo bilanciamento v7; rarità precedente: rara",
-      "type": "trap",
-      "role": "trap",
-      "allowedIntents": [
-        "trap"
-      ],
-      "guardBonus": 2,
-      "trigger": {
-        "type": "enemy_controls"
       }
     },
     {
@@ -2357,10 +2959,10 @@
         "icon": "shield"
       },
       "active": {
-        "name": "Riposizionamento",
-        "cost": 2,
+        "name": "Scudo del Reduce",
+        "cost": 1,
         "timing": "before_fight",
-        "text": "Attiva: prepara lo swap della carta selezionata.",
+        "text": "Attiva: ottieni bonus difensivo o riduci il danno subito.",
         "effect": {
           "type": "swap_selected_card",
           "target": "self",
@@ -2373,12 +2975,13 @@
             "selection": "chosen_hand"
           }
         ],
-        "flavor": "Può bloccare tutto tranne 'piccola modifica'."
+        "flavor": "Project boy, but make it endgame.",
+        "costResource": "mana"
       },
       "passive": {
-        "name": "Riserva Protetta",
+        "name": "Trauma da Guerra",
         "timing": "always",
-        "text": "Sempre: prepara +1 mana.",
+        "text": "Sempre: dopo aver subito danno, il prossimo Attack guadagna valore.",
         "effect": {
           "type": "mana_bonus",
           "target": "self",
@@ -2391,7 +2994,7 @@
             "value": 1
           }
         ],
-        "flavor": "Individua il rischio dietro le rovine."
+        "flavor": "Può bloccare tutto tranne ‘piccola modifica’."
       },
       "quote": "Project boy, but make it endgame.",
       "tags": [
@@ -2401,7 +3004,7 @@
       ],
       "valerio": {
         "V": 5,
-        "A": 7,
+        "A": 6,
         "L": 6,
         "E": 4,
         "R": 7,
@@ -2413,22 +3016,34 @@
         "defensePower": 70,
         "draftCost": 2
       },
-      "rarityRule": "comune: costo draft 2 secondo bilanciamento v7; rarità precedente: rara",
+      "rarityRule": "comune: deck cost 2 secondo bilanciamento v10 spell/energy retrocompatibile",
       "type": "defense",
       "role": "defense",
       "allowedIntents": [
-        "guard",
-        "recover",
-        "utility"
+        "combat",
+        "guard"
       ],
-      "guardBonus": 4
+      "guardBonus": 3,
+      "deckCost": 2,
+      "legacyType": "defense",
+      "legacyRole": "defense",
+      "deckType": "spell",
+      "roundIntents": [
+        "attack",
+        "defense",
+        "focus"
+      ],
+      "usablePhase": "spell_selection",
+      "usesValerio": true,
+      "usesCombat": true,
+      "energyCost": null
     },
     {
       "id": "starproject",
       "image": "starproject.png",
       "name": "Starproject",
       "subtitle": "Splende così tanto che acceca la deadline.",
-      "rarity": "leggendaria",
+      "rarity": "rara",
       "archetype": "campione solare",
       "theme": "The Boys",
       "frame": {
@@ -2437,10 +3052,10 @@
         "icon": "star"
       },
       "active": {
-        "name": "Cambio di Ritmo",
-        "cost": 5,
+        "name": "Lampo Accecante",
+        "cost": 2,
         "timing": "before_fight",
-        "text": "Prima del fight: prepara uno swap della carta selezionata.",
+        "text": "Attiva: riduci una stat nemica o blocchi una Utility.",
         "effect": {
           "type": "swap_selected_card",
           "target": "self",
@@ -2453,12 +3068,13 @@
             "selection": "chosen_hand"
           }
         ],
-        "flavor": "Quando entra, la presentazione diventa HDR."
+        "flavor": "Brilla. Consegnare è opzionale, ma consigliato.",
+        "costResource": "mana"
       },
       "passive": {
-        "name": "Fame di Carte",
+        "name": "Carica Luminosa",
         "timing": "always",
-        "text": "Sempre: prepara pesca 1 carta dal mazzo.",
+        "text": "Sempre: quando scegli Focus, recuperi Mana o Energy.",
         "effect": {
           "type": "draw_cards",
           "target": "self",
@@ -2484,25 +3100,38 @@
       "valerio": {
         "V": 6,
         "A": 5,
-        "L": 6,
-        "E": 6,
+        "L": 5,
+        "E": 5,
         "R": 6,
         "I": 5,
-        "O": 6
+        "O": 5
       },
       "combat": {
-        "attackPower": 90,
-        "defensePower": 90,
-        "draftCost": 6
+        "attackPower": 80,
+        "defensePower": 65,
+        "draftCost": 3
       },
-      "rarityRule": "leggendaria: costo draft 6 secondo bilanciamento v7; rarità precedente: mitica",
+      "rarityRule": "rara: deck cost 3 secondo bilanciamento v10 spell/energy retrocompatibile",
       "type": "attack",
       "role": "attack",
       "allowedIntents": [
         "combat",
         "guard"
       ],
-      "guardBonus": 1
+      "guardBonus": 1,
+      "deckCost": 3,
+      "legacyType": "attack",
+      "legacyRole": "attack",
+      "deckType": "spell",
+      "roundIntents": [
+        "attack",
+        "defense",
+        "focus"
+      ],
+      "usablePhase": "spell_selection",
+      "usesValerio": true,
+      "usesCombat": true,
+      "energyCost": null
     },
     {
       "id": "black_val",
@@ -2518,10 +3147,10 @@
         "icon": "v"
       },
       "active": {
-        "name": "Spacco del Limite",
-        "cost": 3,
+        "name": "Eliminazione Silenziosa",
+        "cost": 2,
         "timing": "before_fight",
-        "text": "Prima del fight: la Breccia puo superare il cap normale.",
+        "text": "Attiva: ottieni break-cap o bonus se il nemico si espone.",
         "effect": {
           "type": "break-cap"
         },
@@ -2530,12 +3159,13 @@
             "type": "break-cap"
           }
         ],
-        "flavor": "La soluzione è classificata. Il danno è pubblico."
+        "flavor": "La soluzione è classificata. Il danno è pubblico.",
+        "costResource": "mana"
       },
       "passive": {
-        "name": "Cambio Ritmico",
+        "name": "Operazione Nera",
         "timing": "always",
-        "text": "Sempre: prepara lo swap della carta selezionata.",
+        "text": "Sempre: prepari uno scambio o un vantaggio nascosto.",
         "effect": {
           "type": "swap_selected_card",
           "target": "self",
@@ -2557,7 +3187,7 @@
         "antihero"
       ],
       "valerio": {
-        "V": 7,
+        "V": 6,
         "A": 6,
         "L": 6,
         "E": 5,
@@ -2566,18 +3196,31 @@
         "O": 4
       },
       "combat": {
-        "attackPower": 90,
-        "defensePower": 70,
+        "attackPower": 88,
+        "defensePower": 75,
         "draftCost": 4
       },
-      "rarityRule": "epica: costo draft 4 secondo bilanciamento v7; rarità precedente: leggendaria",
+      "rarityRule": "epica: deck cost 4 secondo bilanciamento v10 spell/energy retrocompatibile",
       "type": "attack",
       "role": "attack",
       "allowedIntents": [
         "combat",
         "guard"
       ],
-      "guardBonus": 1
+      "guardBonus": 1,
+      "deckCost": 4,
+      "legacyType": "attack",
+      "legacyRole": "attack",
+      "deckType": "spell",
+      "roundIntents": [
+        "attack",
+        "defense",
+        "focus"
+      ],
+      "usablePhase": "spell_selection",
+      "usesValerio": true,
+      "usesCombat": true,
+      "energyCost": null
     },
     {
       "id": "valarot",
@@ -2593,10 +3236,10 @@
         "icon": "dragonball"
       },
       "active": {
-        "name": "Spacco del Limite",
-        "cost": 5,
+        "name": "Kamehameha del Backlog",
+        "cost": 3,
         "timing": "before_fight",
-        "text": "Prima del fight: la Breccia puo superare il cap normale.",
+        "text": "Attiva: se vinci, infliggi grande danno o superi il limite.",
         "effect": {
           "type": "break-cap"
         },
@@ -2605,12 +3248,13 @@
             "type": "break-cap"
           }
         ],
-        "flavor": "Cancella il problema con un'onda di energia e un commento in PR."
+        "flavor": "Il mio livello di priorità è oltre 9000.",
+        "costResource": "mana"
       },
       "passive": {
-        "name": "Sacca di Mana",
+        "name": "Zenkai da Deadline",
         "timing": "always",
-        "text": "Sempre: prepara +2 mana.",
+        "text": "Sempre: dopo aver subito danno, cresci leggermente.",
         "effect": {
           "type": "mana_bonus",
           "target": "self",
@@ -2632,7 +3276,7 @@
         "late-game"
       ],
       "valerio": {
-        "V": 6,
+        "V": 7,
         "A": 5,
         "L": 5,
         "E": 6,
@@ -2641,18 +3285,31 @@
         "O": 6
       },
       "combat": {
-        "attackPower": 100,
-        "defensePower": 80,
-        "draftCost": 6
+        "attackPower": 94,
+        "defensePower": 82,
+        "draftCost": 5
       },
-      "rarityRule": "leggendaria: costo draft 6 secondo bilanciamento v7; rarità precedente: mitica",
+      "rarityRule": "leggendaria: deck cost 5 secondo bilanciamento v10 spell/energy retrocompatibile",
       "type": "attack",
       "role": "attack",
       "allowedIntents": [
         "combat",
         "guard"
       ],
-      "guardBonus": 1
+      "guardBonus": 1,
+      "deckCost": 5,
+      "legacyType": "attack",
+      "legacyRole": "attack",
+      "deckType": "spell",
+      "roundIntents": [
+        "attack",
+        "defense",
+        "focus"
+      ],
+      "usablePhase": "spell_selection",
+      "usesValerio": true,
+      "usesCombat": true,
+      "energyCost": null
     },
     {
       "id": "buulerio",
@@ -2668,10 +3325,10 @@
         "icon": "majin"
       },
       "active": {
-        "name": "Archivio Nascosto",
+        "name": "Assorbimento Rosa",
         "cost": 3,
         "timing": "on_reveal",
-        "text": "Trappola: pesca 1 carta dal mazzo quando il trigger scatta.",
+        "text": "Trappola: se il trigger scatta, copi o rubi una piccola risorsa.",
         "effect": {
           "type": "draw_cards",
           "target": "self",
@@ -2686,12 +3343,13 @@
             "source": "deck"
           }
         ],
-        "flavor": "Il blocker era dolce, quindi l'ha mangiato."
+        "flavor": "Buu vuole approvazione.",
+        "costResource": "energy"
       },
       "passive": {
-        "name": "Falso Fondo",
+        "name": "Rigenerazione Majin",
         "timing": "always",
-        "text": "Sempre: prepara swap di una carta dal mazzo.",
+        "text": "Sempre: dopo Focus o round perso, recuperi leggermente.",
         "effect": {
           "type": "swap_card_from_deck",
           "target": "self",
@@ -2713,6 +3371,44 @@
         "meme"
       ],
       "valerio": {
+        "V": 0,
+        "A": 0,
+        "L": 0,
+        "E": 0,
+        "R": 0,
+        "I": 0,
+        "O": 0
+      },
+      "combat": {
+        "attackPower": 0,
+        "defensePower": 0,
+        "draftCost": 3
+      },
+      "rarityRule": "rara: deck cost 3 secondo bilanciamento v10 spell/energy retrocompatibile",
+      "type": "trap",
+      "role": "trap",
+      "allowedIntents": [
+        "trap"
+      ],
+      "guardBonus": 0,
+      "trigger": {
+        "type": "enemy_focuses"
+      },
+      "deckCost": 3,
+      "legacyType": "trap",
+      "legacyRole": "trap",
+      "deckType": "energy",
+      "roundIntents": [
+        "energy"
+      ],
+      "usablePhase": "decision_phase",
+      "usesValerio": false,
+      "usesCombat": false,
+      "energyCost": 3,
+      "maxUsesPerRound": 1,
+      "maxUsesPerMatch": 1,
+      "passiveDisabledInEnergyDeck": true,
+      "legacyValerio": {
         "V": 7,
         "A": 3,
         "L": 3,
@@ -2721,20 +3417,10 @@
         "I": 4,
         "O": 7
       },
-      "combat": {
+      "legacyCombat": {
         "attackPower": 65,
         "defensePower": 80,
         "draftCost": 3
-      },
-      "rarityRule": "rara: costo draft 3 secondo bilanciamento v7; rarità precedente: leggendaria",
-      "type": "trap",
-      "role": "trap",
-      "allowedIntents": [
-        "trap"
-      ],
-      "guardBonus": 2,
-      "trigger": {
-        "type": "enemy_focuses"
       }
     },
     {
@@ -2751,10 +3437,10 @@
         "icon": "pose"
       },
       "active": {
-        "name": "Spacco del Limite",
-        "cost": 3,
+        "name": "Posa Speciale",
+        "cost": 2,
         "timing": "before_fight",
-        "text": "Prima del fight: la Breccia puo superare il cap normale.",
+        "text": "Attiva: ottieni bonus se giochi in combo o leggi correttamente l’intent.",
         "effect": {
           "type": "break-cap"
         },
@@ -2763,12 +3449,13 @@
             "type": "break-cap"
           }
         ],
-        "flavor": "La posa dura più della pianificazione."
+        "flavor": "La posa dura più della pianificazione.",
+        "costResource": "mana"
       },
       "passive": {
-        "name": "Sacca di Mana",
+        "name": "Cambio Corpo",
         "timing": "always",
-        "text": "Sempre: prepara +2 mana.",
+        "text": "Sempre: puoi preparare uno scambio tattico della carta selezionata.",
         "effect": {
           "type": "mana_bonus",
           "target": "self",
@@ -2793,31 +3480,44 @@
         "V": 6,
         "A": 5,
         "L": 5,
-        "E": 6,
+        "E": 5,
         "R": 6,
         "I": 6,
         "O": 6
       },
       "combat": {
-        "attackPower": 80,
-        "defensePower": 80,
+        "attackPower": 88,
+        "defensePower": 75,
         "draftCost": 4
       },
-      "rarityRule": "epica: costo draft 4 secondo bilanciamento v7; rarità precedente: mitica",
+      "rarityRule": "epica: deck cost 4 secondo bilanciamento v10 spell/energy retrocompatibile",
       "type": "attack",
       "role": "attack",
       "allowedIntents": [
         "combat",
         "guard"
       ],
-      "guardBonus": 1
+      "guardBonus": 1,
+      "deckCost": 4,
+      "legacyType": "attack",
+      "legacyRole": "attack",
+      "deckType": "spell",
+      "roundIntents": [
+        "attack",
+        "defense",
+        "focus"
+      ],
+      "usablePhase": "spell_selection",
+      "usesValerio": true,
+      "usesCombat": true,
+      "energyCost": null
     },
     {
       "id": "cellerio",
       "image": "cellerio.png",
       "name": "Cellerio",
       "subtitle": "Bio‑android del refactoring perfetto.",
-      "rarity": "leggendaria",
+      "rarity": "epica",
       "archetype": "bio‑android",
       "theme": "Dragon Ball",
       "frame": {
@@ -2826,10 +3526,10 @@
         "icon": "bio-core"
       },
       "active": {
-        "name": "Archivio Nascosto",
-        "cost": 6,
+        "name": "Assorbimento Perfetto",
+        "cost": 2,
         "timing": "on_reveal",
-        "text": "Trappola: pesca 1 carta dal mazzo quando il trigger scatta.",
+        "text": "Trappola: se il trigger scatta, peschi o copi un vantaggio nemico.",
         "effect": {
           "type": "draw_cards",
           "target": "self",
@@ -2844,12 +3544,13 @@
             "source": "deck"
           }
         ],
-        "flavor": "Assorbe due feedback e diventa la versione definitiva."
+        "flavor": "Assorbe due feedback e diventa la versione definitiva.",
+        "costResource": "mana"
       },
       "passive": {
-        "name": "Falso Fondo",
+        "name": "Forma Perfetta",
         "timing": "always",
-        "text": "Sempre: prepara swap di una carta dal mazzo.",
+        "text": "Sempre: migliori quando determinate condizioni si ripetono nel match.",
         "effect": {
           "type": "swap_card_from_deck",
           "target": "self",
@@ -2871,7 +3572,7 @@
         "perfection"
       ],
       "valerio": {
-        "V": 7,
+        "V": 6,
         "A": 6,
         "L": 6,
         "E": 5,
@@ -2880,20 +3581,31 @@
         "O": 4
       },
       "combat": {
-        "attackPower": 80,
-        "defensePower": 100,
-        "draftCost": 6
+        "attackPower": 75,
+        "defensePower": 88,
+        "draftCost": 4
       },
-      "rarityRule": "leggendaria: costo draft 6 secondo bilanciamento v7; rarità precedente: mitica",
-      "type": "trap",
-      "role": "trap",
+      "rarityRule": "epica: deck cost 4 secondo bilanciamento v10 spell/energy retrocompatibile",
+      "type": "defense",
+      "role": "defense",
       "allowedIntents": [
-        "trap"
+        "combat",
+        "guard"
       ],
-      "guardBonus": 4,
-      "trigger": {
-        "type": "enemy_uses_utility"
-      }
+      "guardBonus": 3,
+      "deckCost": 4,
+      "legacyType": "trap",
+      "legacyRole": "trap",
+      "deckType": "spell",
+      "roundIntents": [
+        "attack",
+        "defense",
+        "focus"
+      ],
+      "usablePhase": "spell_selection",
+      "usesValerio": true,
+      "usesCombat": true,
+      "energyCost": null
     },
     {
       "id": "vallicolo",
@@ -2909,10 +3621,10 @@
         "icon": "dragon"
       },
       "active": {
-        "name": "Riserva di Mana",
-        "cost": 3,
+        "name": "Addestramento Namecciano",
+        "cost": 2,
         "timing": "before_fight",
-        "text": "Attiva: guadagni 2 mana.",
+        "text": "Attiva: guadagni Mana o prepari difesa.",
         "effect": {
           "type": "mana_bonus",
           "target": "self",
@@ -2925,12 +3637,13 @@
             "value": 2
           }
         ],
-        "flavor": "Resta fermo e il bug si sente in colpa."
+        "flavor": "Resta fermo e il bug si sente in colpa.",
+        "costResource": "mana"
       },
       "passive": {
-        "name": "Secondo Respiro",
+        "name": "Rigenerazione Namecciana",
         "timing": "always",
-        "text": "Sempre: prepara cura 2 PV.",
+        "text": "Sempre: cura leggermente o riduce il danno subito.",
         "effect": {
           "type": "heal",
           "target": "self",
@@ -2943,7 +3656,7 @@
             "value": 2
           }
         ],
-        "flavor": "Si allena portando addosso il peso dello scope."
+        "flavor": "Parlo poco. Reviewo tutto."
       },
       "quote": "Parlo poco. Reviewo tutto.",
       "tags": [
@@ -2956,7 +3669,7 @@
         "A": 6,
         "L": 6,
         "E": 4,
-        "R": 7,
+        "R": 6,
         "I": 6,
         "O": 3
       },
@@ -2965,22 +3678,34 @@
         "defensePower": 80,
         "draftCost": 3
       },
-      "rarityRule": "rara: costo draft 3 secondo bilanciamento v7; rarità precedente: leggendaria",
+      "rarityRule": "rara: deck cost 3 secondo bilanciamento v10 spell/energy retrocompatibile",
       "type": "defense",
       "role": "defense",
       "allowedIntents": [
-        "guard",
-        "recover",
-        "utility"
+        "combat",
+        "guard"
       ],
-      "guardBonus": 3
+      "guardBonus": 3,
+      "deckCost": 3,
+      "legacyType": "defense",
+      "legacyRole": "defense",
+      "deckType": "spell",
+      "roundIntents": [
+        "attack",
+        "defense",
+        "focus"
+      ],
+      "usablePhase": "spell_selection",
+      "usesValerio": true,
+      "usesCombat": true,
+      "energyCost": null
     },
     {
       "id": "gogerio",
       "image": "gogerio.png",
       "name": "Gogerio",
       "subtitle": "Fusione definitiva tra potenza e approvazione.",
-      "rarity": "mitica",
+      "rarity": "leggendaria",
       "archetype": "fusion warrior",
       "theme": "Dragon Ball",
       "frame": {
@@ -2989,10 +3714,10 @@
         "icon": "fusion"
       },
       "active": {
-        "name": "Riposizionamento",
-        "cost": 6,
+        "name": "Fusione Definitiva",
+        "cost": 3,
         "timing": "before_fight",
-        "text": "Attiva: prepara lo swap della carta selezionata.",
+        "text": "Attiva: combini o riposizioni un vantaggio dalla mano.",
         "effect": {
           "type": "swap_selected_card",
           "target": "self",
@@ -3005,12 +3730,13 @@
             "selection": "chosen_hand"
           }
         ],
-        "flavor": "La mano è aperta. La tolleranza allo scope creep no."
+        "flavor": "Non sono due persone. Sono due deadline fuse male.",
+        "costResource": "mana"
       },
       "passive": {
-        "name": "Secondo Respiro",
+        "name": "Aura Fusa",
         "timing": "always",
-        "text": "Sempre: prepara cura 3 PV.",
+        "text": "Sempre: ottieni un bonus stabile quando gestisci bene Mana e intent.",
         "effect": {
           "type": "heal",
           "target": "self",
@@ -3032,7 +3758,7 @@
         "istinto"
       ],
       "valerio": {
-        "V": 6,
+        "V": 7,
         "A": 5,
         "L": 6,
         "E": 6,
@@ -3041,19 +3767,31 @@
         "O": 5
       },
       "combat": {
-        "attackPower": 100,
-        "defensePower": 95,
-        "draftCost": 6
+        "attackPower": 82,
+        "defensePower": 94,
+        "draftCost": 5
       },
-      "rarityRule": "mitica: costo draft 6 secondo bilanciamento v7; rarità precedente: mitica",
+      "rarityRule": "leggendaria: deck cost 5 secondo bilanciamento v10 spell/energy retrocompatibile",
       "type": "defense",
       "role": "defense",
       "allowedIntents": [
-        "guard",
-        "recover",
-        "utility"
+        "combat",
+        "guard"
       ],
-      "guardBonus": 4
+      "guardBonus": 3,
+      "deckCost": 5,
+      "legacyType": "defense",
+      "legacyRole": "defense",
+      "deckType": "spell",
+      "roundIntents": [
+        "attack",
+        "defense",
+        "focus"
+      ],
+      "usablePhase": "spell_selection",
+      "usesValerio": true,
+      "usesCombat": true,
+      "energyCost": null
     },
     {
       "id": "david_king",
@@ -3069,10 +3807,10 @@
         "icon": "pm"
       },
       "active": {
-        "name": "Scambio Carta",
-        "cost": 6,
+        "name": "Ordine del Re",
+        "cost": 3,
         "timing": "before_fight",
-        "text": "Attiva: prepara lo scambio di una carta dalla mano.",
+        "text": "Attiva: scegli, scambia o imposti una priorità sulla mano.",
         "effect": {
           "type": "swap_card",
           "target": "self",
@@ -3089,12 +3827,13 @@
             "selection": "chosen_hand"
           }
         ],
-        "flavor": "La mano è aperta. La tolleranza allo scope creep no."
+        "flavor": "La mano è aperta. La tolleranza allo scope creep no.",
+        "costResource": "mana"
       },
       "passive": {
-        "name": "Batteria Interna",
+        "name": "Corona del PM",
         "timing": "always",
-        "text": "Sempre: prepara +2 mana.",
+        "text": "Sempre: ottieni Mana o riduci il costo della prossima attiva.",
         "effect": {
           "type": "mana_bonus",
           "target": "self",
@@ -3116,48 +3855,59 @@
         "king"
       ],
       "valerio": {
-        "V": 6,
+        "V": 7,
         "A": 5,
         "L": 6,
         "E": 6,
-        "R": 6,
+        "R": 7,
         "I": 6,
         "O": 5
       },
       "combat": {
         "attackPower": 100,
-        "defensePower": 95,
+        "defensePower": 90,
         "draftCost": 6
       },
-      "rarityRule": "mitica: costo draft 6 secondo bilanciamento v7; rarità precedente: mitica",
-      "type": "utility",
-      "role": "utility",
+      "rarityRule": "mitica: deck cost 6 secondo bilanciamento v10 spell/energy retrocompatibile",
+      "type": "attack",
+      "role": "attack",
       "allowedIntents": [
-        "utility",
-        "draw",
-        "focus",
-        "recover"
+        "combat",
+        "guard"
       ],
-      "guardBonus": 1
+      "guardBonus": 1,
+      "deckCost": 6,
+      "legacyType": "utility",
+      "legacyRole": "utility",
+      "deckType": "spell",
+      "roundIntents": [
+        "attack",
+        "defense",
+        "focus"
+      ],
+      "usablePhase": "spell_selection",
+      "usesValerio": true,
+      "usesCombat": true,
+      "energyCost": null
     },
     {
       "id": "val_floyd",
       "image": "val_floyd.png",
       "name": "Val Floyd",
-      "subtitle": "The fent obsessed",
-      "rarity": "mitica",
+      "subtitle": "Sotto pressione",
+      "rarity": "epica",
       "archetype": "fent",
-      "theme": "George Floyd",
+      "theme": "Original",
       "frame": {
         "preset": "fent_floyd_blue",
         "accent": "#000000",
         "icon": "fent"
       },
       "active": {
-        "name": "Assalto Calcolato",
-        "cost": 5,
+        "name": "Respiro Spezzato",
+        "cost": 2,
         "timing": "before_fight",
-        "text": "Prima del fight: +2 danni oltre il cap se vinci.",
+        "text": "Attiva: riduci il danno subito o sopravvivi a un round sotto pressione.",
         "effect": {
           "type": "damage",
           "value": 2
@@ -3168,12 +3918,13 @@
             "value": 2
           }
         ],
-        "flavor": "La mano è aperta. La tolleranza allo scope creep no."
+        "flavor": "Quando il round stringe, resta in piedi.",
+        "costResource": "mana"
       },
       "passive": {
-        "name": "Fame di Carte",
+        "name": "Memoria Pesante",
         "timing": "always",
-        "text": "Sempre: prepara pesca 1 carta dal mazzo.",
+        "text": "Sempre: dopo aver subito danno, ottieni protezione nel round successivo.",
         "effect": {
           "type": "draw_cards",
           "target": "self",
@@ -3188,36 +3939,49 @@
             "source": "deck"
           }
         ],
-        "flavor": "Fent non respira."
+        "flavor": "Ogni colpo lascia un segno, non una resa."
       },
-      "quote": "I cant breath",
+      "quote": "La pressione non decide chi sei.",
       "tags": [
-        "fent",
-        "floyd",
-        "n"
+        "pressione",
+        "resilienza",
+        "difesa"
       ],
       "valerio": {
         "V": 6,
         "A": 5,
         "L": 6,
-        "E": 6,
+        "E": 5,
         "R": 6,
         "I": 6,
         "O": 5
       },
       "combat": {
-        "attackPower": 100,
-        "defensePower": 95,
-        "draftCost": 6
+        "attackPower": 88,
+        "defensePower": 75,
+        "draftCost": 4
       },
-      "rarityRule": "mitica: costo draft 6 secondo bilanciamento v7; rarità precedente: mitica",
+      "rarityRule": "epica: deck cost 4 secondo bilanciamento v10 spell/energy retrocompatibile",
       "type": "attack",
       "role": "attack",
       "allowedIntents": [
         "combat",
         "guard"
       ],
-      "guardBonus": 0
+      "guardBonus": 1,
+      "deckCost": 4,
+      "legacyType": "attack",
+      "legacyRole": "attack",
+      "deckType": "spell",
+      "roundIntents": [
+        "attack",
+        "defense",
+        "focus"
+      ],
+      "usablePhase": "spell_selection",
+      "usesValerio": true,
+      "usesCombat": true,
+      "energyCost": null
     },
     {
       "id": "boss",
@@ -3233,10 +3997,10 @@
         "icon": "gavel"
       },
       "active": {
-        "name": "Primo Soccorso",
+        "name": "Alibi dell’Ultimo Minuto",
         "cost": 3,
         "timing": "before_fight",
-        "text": "Attiva: curati di 4 PV.",
+        "text": "Attiva: cura o riduce danno dopo il reveal.",
         "effect": {
           "type": "heal",
           "target": "self",
@@ -3249,12 +4013,13 @@
             "value": 4
           }
         ],
-        "flavor": "La sentenza arriva prima della retrospettiva."
+        "flavor": "Il caso è chiuso. Il ticket no.",
+        "costResource": "energy"
       },
       "passive": {
-        "name": "Mazzo Fluido",
+        "name": "Prova Nascosta",
         "timing": "always",
-        "text": "Sempre: prepara scambio mazzo.",
+        "text": "Sempre: manipoli la pescata o prepari uno scambio dal mazzo.",
         "effect": {
           "type": "swap_deck",
           "target": "self"
@@ -3274,6 +4039,43 @@
         "boss"
       ],
       "valerio": {
+        "V": 0,
+        "A": 0,
+        "L": 0,
+        "E": 0,
+        "R": 0,
+        "I": 0,
+        "O": 0
+      },
+      "combat": {
+        "attackPower": 0,
+        "defensePower": 0,
+        "draftCost": 3
+      },
+      "rarityRule": "rara: deck cost 3 secondo bilanciamento v10 spell/energy retrocompatibile",
+      "type": "utility",
+      "role": "utility",
+      "allowedIntents": [
+        "utility",
+        "focus",
+        "recover"
+      ],
+      "guardBonus": 0,
+      "deckCost": 3,
+      "legacyType": "utility",
+      "legacyRole": "utility",
+      "deckType": "energy",
+      "roundIntents": [
+        "energy"
+      ],
+      "usablePhase": "decision_phase",
+      "usesValerio": false,
+      "usesCombat": false,
+      "energyCost": 3,
+      "maxUsesPerRound": 1,
+      "maxUsesPerMatch": 1,
+      "passiveDisabledInEnergyDeck": true,
+      "legacyValerio": {
         "V": 5,
         "A": 8,
         "L": 6,
@@ -3282,40 +4084,30 @@
         "I": 4,
         "O": 3
       },
-      "combat": {
+      "legacyCombat": {
         "attackPower": 75,
         "defensePower": 70,
         "draftCost": 3
-      },
-      "rarityRule": "rara: costo draft 3 secondo bilanciamento v7; nuova carta extra",
-      "type": "utility",
-      "role": "utility",
-      "allowedIntents": [
-        "utility",
-        "draw",
-        "focus",
-        "recover"
-      ],
-      "guardBonus": 1
+      }
     },
     {
       "id": "droid",
       "image": "droid.png",
-      "name": "George Droid",
-      "subtitle": "The Niggasoft Project",
+      "name": "Droid Executor",
+      "subtitle": "Protocollo di esecuzione",
       "rarity": "epica",
       "archetype": "cyborg esecutore",
-      "theme": "George Floyd",
+      "theme": "Cyber",
       "frame": {
         "preset": "cyber_war_red",
         "accent": "#991b1b",
         "icon": "cpu"
       },
       "active": {
-        "name": "Assalto Calcolato",
-        "cost": 3,
+        "name": "Direttiva Esecutiva",
+        "cost": 2,
         "timing": "before_fight",
-        "text": "Prima del fight: +3 danni oltre il cap se vinci.",
+        "text": "Attiva: se attacchi, ottieni danno extra.",
         "effect": {
           "type": "damage",
           "value": 3
@@ -3326,12 +4118,13 @@
             "value": 3
           }
         ],
-        "flavor": "La macchina non interpreta: esegue."
+        "flavor": "La macchina non interpreta: esegue.",
+        "costResource": "mana"
       },
       "passive": {
-        "name": "Cambio Ritmico",
+        "name": "Protocollo di Ricalcolo",
         "timing": "always",
-        "text": "Sempre: prepara lo swap della carta selezionata.",
+        "text": "Sempre: dopo un round perso, prepari una carta migliore.",
         "effect": {
           "type": "swap_selected_card",
           "target": "self",
@@ -3346,14 +4139,14 @@
         ],
         "flavor": "Ogni colpo installa una patch più pesante."
       },
-      "quote": "Vivo, morto o deployato: vieni con me.",
+      "quote": "Eseguo. Ricalcolo. Riparto.",
       "tags": [
         "cyber",
         "rigore",
         "metallo"
       ],
       "valerio": {
-        "V": 8,
+        "V": 9,
         "A": 4,
         "L": 5,
         "E": 3,
@@ -3362,37 +4155,50 @@
         "O": 4
       },
       "combat": {
-        "attackPower": 90,
-        "defensePower": 70,
+        "attackPower": 88,
+        "defensePower": 75,
         "draftCost": 4
       },
-      "rarityRule": "epica: costo draft 4 secondo bilanciamento v7; nuova carta extra",
+      "rarityRule": "epica: deck cost 4 secondo bilanciamento v10 spell/energy retrocompatibile",
       "type": "attack",
       "role": "attack",
       "allowedIntents": [
         "combat",
         "guard"
       ],
-      "guardBonus": 0
+      "guardBonus": 1,
+      "deckCost": 4,
+      "legacyType": "attack",
+      "legacyRole": "attack",
+      "deckType": "spell",
+      "roundIntents": [
+        "attack",
+        "defense",
+        "focus"
+      ],
+      "usablePhase": "spell_selection",
+      "usesValerio": true,
+      "usesCombat": true,
+      "energyCost": null
     },
     {
       "id": "turetta",
       "image": "turetta.png",
       "name": "Valerio Turetta",
-      "subtitle": "The Goat",
+      "subtitle": "Regista di campo",
       "rarity": "comune",
       "archetype": "regista di campo",
-      "theme": "Goated",
+      "theme": "Sport",
       "frame": {
         "preset": "stadium_blue_gold",
         "accent": "#1d4ed8",
         "icon": "jersey"
       },
       "active": {
-        "name": "Guardia di Ferro",
-        "cost": 2,
+        "name": "Pressione di Campo",
+        "cost": 1,
         "timing": "before_fight",
-        "text": "Prima del fight: +3 Breccia difensiva se il piano regge.",
+        "text": "Attiva: ottieni bonus difensivo o riduci una stat nemica.",
         "effect": {
           "type": "flat-damage",
           "value": 3
@@ -3403,12 +4209,13 @@
             "value": 3
           }
         ],
-        "flavor": "Parte da lontano e finisce comunque nel backlog."
+        "flavor": "Parte da lontano e finisce comunque nel backlog.",
+        "costResource": "mana"
       },
       "passive": {
-        "name": "Cambio Coperto",
+        "name": "Marcatura Stretta",
         "timing": "always",
-        "text": "Sempre: prepara lo scambio della carta selezionata.",
+        "text": "Sempre: se prevedi l’intent nemico, riduci il suo vantaggio.",
         "effect": {
           "type": "swap_selected_card",
           "target": "self",
@@ -3431,7 +4238,7 @@
       ],
       "valerio": {
         "V": 6,
-        "A": 6,
+        "A": 5,
         "L": 5,
         "E": 4,
         "R": 5,
@@ -3439,19 +4246,31 @@
         "O": 4
       },
       "combat": {
-        "attackPower": 60,
-        "defensePower": 65,
+        "attackPower": 55,
+        "defensePower": 70,
         "draftCost": 2
       },
-      "rarityRule": "comune: costo draft 2 secondo bilanciamento v7; nuova carta extra",
+      "rarityRule": "comune: deck cost 2 secondo bilanciamento v10 spell/energy retrocompatibile",
       "type": "defense",
       "role": "defense",
       "allowedIntents": [
-        "guard",
-        "recover",
-        "utility"
+        "combat",
+        "guard"
       ],
-      "guardBonus": 4
+      "guardBonus": 3,
+      "deckCost": 2,
+      "legacyType": "defense",
+      "legacyRole": "defense",
+      "deckType": "spell",
+      "roundIntents": [
+        "attack",
+        "defense",
+        "focus"
+      ],
+      "usablePhase": "spell_selection",
+      "usesValerio": true,
+      "usesCombat": true,
+      "energyCost": null
     },
     {
       "id": "valemorph",
@@ -3467,10 +4286,10 @@
         "icon": "alien"
       },
       "active": {
-        "name": "Riposizionamento",
-        "cost": 6,
+        "name": "Agguato nel Condotto",
+        "cost": 3,
         "timing": "before_fight",
-        "text": "Attiva: prepara lo swap della carta selezionata.",
+        "text": "Attiva: riposizioni una carta o punisci un nemico vulnerabile.",
         "effect": {
           "type": "swap_selected_card",
           "target": "self",
@@ -3483,12 +4302,13 @@
             "selection": "chosen_hand"
           }
         ],
-        "flavor": "Quando capisci da dove arriva, il pavimento è già sciolto."
+        "flavor": "Nel backlog nessuno può sentirti urlare.",
+        "costResource": "mana"
       },
       "passive": {
-        "name": "Secondo Respiro",
+        "name": "Sangue Acido",
         "timing": "always",
-        "text": "Sempre: prepara cura 2 PV.",
+        "text": "Sempre: quando subisci danno, restituisci danno leggero o applichi un malus.",
         "effect": {
           "type": "heal",
           "target": "self",
@@ -3510,28 +4330,40 @@
         "horror"
       ],
       "valerio": {
-        "V": 8,
+        "V": 9,
         "A": 4,
         "L": 4,
         "E": 3,
         "R": 7,
-        "I": 9,
+        "I": 10,
         "O": 5
       },
       "combat": {
-        "attackPower": 100,
-        "defensePower": 95,
+        "attackPower": 90,
+        "defensePower": 100,
         "draftCost": 6
       },
-      "rarityRule": "mitica: costo draft 6 secondo bilanciamento v7; nuova carta extra",
+      "rarityRule": "mitica: deck cost 6 secondo bilanciamento v10 spell/energy retrocompatibile",
       "type": "defense",
       "role": "defense",
       "allowedIntents": [
-        "guard",
-        "recover",
-        "utility"
+        "combat",
+        "guard"
       ],
-      "guardBonus": 4
+      "guardBonus": 3,
+      "deckCost": 6,
+      "legacyType": "defense",
+      "legacyRole": "defense",
+      "deckType": "spell",
+      "roundIntents": [
+        "attack",
+        "defense",
+        "focus"
+      ],
+      "usablePhase": "spell_selection",
+      "usesValerio": true,
+      "usesCombat": true,
+      "energyCost": null
     },
     {
       "id": "valeryahu",
@@ -3547,10 +4379,10 @@
         "icon": "star"
       },
       "active": {
-        "name": "Guardia di Ferro",
-        "cost": 4,
+        "name": "Scudo di Ferro",
+        "cost": 2,
         "timing": "before_fight",
-        "text": "Prima del fight: +1 Breccia difensiva se il piano regge.",
+        "text": "Attiva: ottieni bonus Defense o riduci il danno subito.",
         "effect": {
           "type": "flat-damage",
           "value": 1
@@ -3561,12 +4393,13 @@
             "value": 1
           }
         ],
-        "flavor": "Convoca tutti, decide prima che entrino."
+        "flavor": "Convoca tutti, decide prima che entrino.",
+        "costResource": "mana"
       },
       "passive": {
-        "name": "Secondo Respiro",
+        "name": "Strategia d’Assedio",
         "timing": "always",
-        "text": "Sempre: prepara cura 3 PV.",
+        "text": "Sempre: se il round termina senza danno, accumuli vantaggio.",
         "effect": {
           "type": "heal",
           "target": "self",
@@ -3589,7 +4422,7 @@
       ],
       "valerio": {
         "V": 5,
-        "A": 8,
+        "A": 7,
         "L": 7,
         "E": 7,
         "R": 6,
@@ -3597,19 +4430,31 @@
         "O": 3
       },
       "combat": {
-        "attackPower": 70,
-        "defensePower": 90,
+        "attackPower": 75,
+        "defensePower": 88,
         "draftCost": 4
       },
-      "rarityRule": "epica: costo draft 4 secondo bilanciamento v7; nuova carta extra",
+      "rarityRule": "epica: deck cost 4 secondo bilanciamento v10 spell/energy retrocompatibile",
       "type": "defense",
       "role": "defense",
       "allowedIntents": [
-        "guard",
-        "recover",
-        "utility"
+        "combat",
+        "guard"
       ],
-      "guardBonus": 4
+      "guardBonus": 3,
+      "deckCost": 4,
+      "legacyType": "defense",
+      "legacyRole": "defense",
+      "deckType": "spell",
+      "roundIntents": [
+        "attack",
+        "defense",
+        "focus"
+      ],
+      "usablePhase": "spell_selection",
+      "usesValerio": true,
+      "usesCombat": true,
+      "energyCost": null
     },
     {
       "id": "vanged",
@@ -3625,10 +4470,10 @@
         "icon": "dagger"
       },
       "active": {
-        "name": "Guardia di Ferro",
-        "cost": 3,
+        "name": "Poison Trail",
+        "cost": 2,
         "timing": "before_fight",
-        "text": "Prima del fight: +1 Breccia difensiva se il piano regge.",
+        "text": "Attiva: se l’avversario attacca, subisce danno leggero o perde valore su una stat.",
         "effect": {
           "type": "flat-damage",
           "value": 1
@@ -3639,12 +4484,13 @@
             "value": 1
           }
         ],
-        "flavor": "Non appare in riunione, ma lascia il danno firmato."
+        "flavor": "Non appare in riunione, ma lascia il veleno firmato.",
+        "costResource": "mana"
       },
       "passive": {
-        "name": "Riserva Protetta",
+        "name": "Noxious Slipstream",
         "timing": "always",
-        "text": "Sempre: prepara +2 mana.",
+        "text": "Sempre: quando scegli Focus o Defense, prepari veleno o controllo.",
         "effect": {
           "type": "mana_bonus",
           "target": "self",
@@ -3671,23 +4517,35 @@
         "L": 5,
         "E": 4,
         "R": 5,
-        "I": 7,
+        "I": 6,
         "O": 6
       },
       "combat": {
-        "attackPower": 80,
-        "defensePower": 65,
+        "attackPower": 65,
+        "defensePower": 80,
         "draftCost": 3
       },
-      "rarityRule": "rara: costo draft 3 secondo bilanciamento v7; nuova carta extra",
+      "rarityRule": "rara: deck cost 3 secondo bilanciamento v10 spell/energy retrocompatibile",
       "type": "defense",
       "role": "defense",
       "allowedIntents": [
-        "guard",
-        "recover",
-        "utility"
+        "combat",
+        "guard"
       ],
-      "guardBonus": 5
+      "guardBonus": 3,
+      "deckCost": 3,
+      "legacyType": "defense",
+      "legacyRole": "defense",
+      "deckType": "spell",
+      "roundIntents": [
+        "attack",
+        "defense",
+        "focus"
+      ],
+      "usablePhase": "spell_selection",
+      "usesValerio": true,
+      "usesCombat": true,
+      "energyCost": null
     },
     {
       "id": "vassin",
@@ -3703,10 +4561,10 @@
         "icon": "fist"
       },
       "active": {
-        "name": "Assalto Calcolato",
+        "name": "Dragon's Rage",
         "cost": 2,
         "timing": "before_fight",
-        "text": "Prima del fight: +4 danni oltre il cap se vinci.",
+        "text": "Attiva: se attacchi, rompi parte della difesa o infliggi danno extra.",
         "effect": {
           "type": "damage",
           "value": 4
@@ -3717,12 +4575,13 @@
             "value": 4
           }
         ],
-        "flavor": "Il target non è visibile, ma il dolore sì."
+        "flavor": "Il target non è visibile, ma il dolore sì.",
+        "costResource": "mana"
       },
       "passive": {
-        "name": "Cambio Ritmico",
+        "name": "Flurry",
         "timing": "always",
-        "text": "Sempre: prepara lo swap della carta selezionata.",
+        "text": "Sempre: recuperi Mana dopo una scelta aggressiva corretta.",
         "effect": {
           "type": "swap_selected_card",
           "target": "self",
@@ -3749,7 +4608,7 @@
         "L": 4,
         "E": 3,
         "R": 6,
-        "I": 8,
+        "I": 7,
         "O": 5
       },
       "combat": {
@@ -3757,14 +4616,27 @@
         "defensePower": 65,
         "draftCost": 3
       },
-      "rarityRule": "rara: costo draft 3 secondo bilanciamento v7; nuova carta extra",
+      "rarityRule": "rara: deck cost 3 secondo bilanciamento v10 spell/energy retrocompatibile",
       "type": "attack",
       "role": "attack",
       "allowedIntents": [
         "combat",
         "guard"
       ],
-      "guardBonus": 0
+      "guardBonus": 1,
+      "deckCost": 3,
+      "legacyType": "attack",
+      "legacyRole": "attack",
+      "deckType": "spell",
+      "roundIntents": [
+        "attack",
+        "defense",
+        "focus"
+      ],
+      "usablePhase": "spell_selection",
+      "usesValerio": true,
+      "usesCombat": true,
+      "energyCost": null
     },
     {
       "id": "vasuo",
@@ -3780,10 +4652,10 @@
         "icon": "wind"
       },
       "active": {
-        "name": "Recupero Coperto",
-        "cost": 3,
+        "name": "Steel Tempest",
+        "cost": 2,
         "timing": "before_fight",
-        "text": "Attiva: curati di 3 PV.",
+        "text": "Attiva: ottieni danno extra o effetto vento se attacchi.",
         "effect": {
           "type": "heal",
           "target": "self",
@@ -3796,12 +4668,13 @@
             "value": 3
           }
         ],
-        "flavor": "Un colpo, tre dash, una build rotta."
+        "flavor": "Un colpo, tre dash, una build rotta.",
+        "costResource": "mana"
       },
       "passive": {
-        "name": "Secondo Respiro",
+        "name": "Way of the Wanderer",
         "timing": "always",
-        "text": "Sempre: prepara cura 2 PV.",
+        "text": "Sempre: riduci danno o blocchi una Utility/Trap leggera.",
         "effect": {
           "type": "heal",
           "target": "self",
@@ -3828,23 +4701,35 @@
         "L": 4,
         "E": 5,
         "R": 4,
-        "I": 8,
+        "I": 7,
         "O": 5
       },
       "combat": {
-        "attackPower": 80,
-        "defensePower": 65,
+        "attackPower": 65,
+        "defensePower": 80,
         "draftCost": 3
       },
-      "rarityRule": "rara: costo draft 3 secondo bilanciamento v7; nuova carta extra",
+      "rarityRule": "rara: deck cost 3 secondo bilanciamento v10 spell/energy retrocompatibile",
       "type": "defense",
       "role": "defense",
       "allowedIntents": [
-        "guard",
-        "recover",
-        "utility"
+        "combat",
+        "guard"
       ],
-      "guardBonus": 3
+      "guardBonus": 3,
+      "deckCost": 3,
+      "legacyType": "defense",
+      "legacyRole": "defense",
+      "deckType": "spell",
+      "roundIntents": [
+        "attack",
+        "defense",
+        "focus"
+      ],
+      "usablePhase": "spell_selection",
+      "usesValerio": true,
+      "usesCombat": true,
+      "energyCost": null
     },
     {
       "id": "vhaco",
@@ -3860,10 +4745,10 @@
         "icon": "mask"
       },
       "active": {
-        "name": "Primo Soccorso",
-        "cost": 4,
+        "name": "Jack In The Box",
+        "cost": 2,
         "timing": "before_fight",
-        "text": "Attiva: curati di 4 PV.",
+        "text": "Attiva: trap che punisce Attack o Focus.",
         "effect": {
           "type": "heal",
           "target": "self",
@@ -3876,12 +4761,13 @@
             "value": 4
           }
         ],
-        "flavor": "Apri il task e trovi solo una risata."
+        "flavor": "Apri il task e trovi solo una risata.",
+        "costResource": "mana"
       },
       "passive": {
-        "name": "Mazzo Fluido",
+        "name": "Backstab",
         "timing": "always",
-        "text": "Sempre: prepara scambio mazzo.",
+        "text": "Sempre: se l’avversario sbaglia lettura, peschi o scambi carta.",
         "effect": {
           "type": "swap_deck",
           "target": "self"
@@ -3902,7 +4788,7 @@
       ],
       "valerio": {
         "V": 4,
-        "A": 8,
+        "A": 7,
         "L": 4,
         "E": 6,
         "R": 3,
@@ -3910,20 +4796,31 @@
         "O": 8
       },
       "combat": {
-        "attackPower": 90,
-        "defensePower": 70,
+        "attackPower": 88,
+        "defensePower": 75,
         "draftCost": 4
       },
-      "rarityRule": "epica: costo draft 4 secondo bilanciamento v7; nuova carta extra",
-      "type": "utility",
-      "role": "utility",
+      "rarityRule": "epica: deck cost 4 secondo bilanciamento v10 spell/energy retrocompatibile",
+      "type": "attack",
+      "role": "attack",
       "allowedIntents": [
-        "utility",
-        "draw",
-        "focus",
-        "recover"
+        "combat",
+        "guard"
       ],
-      "guardBonus": 2
+      "guardBonus": 1,
+      "deckCost": 4,
+      "legacyType": "utility",
+      "legacyRole": "utility",
+      "deckType": "spell",
+      "roundIntents": [
+        "attack",
+        "defense",
+        "focus"
+      ],
+      "usablePhase": "spell_selection",
+      "usesValerio": true,
+      "usesCombat": true,
+      "energyCost": null
     },
     {
       "id": "vhalface",
@@ -3939,10 +4836,10 @@
         "icon": "knife"
       },
       "active": {
-        "name": "Lettura del Punto Debole",
-        "cost": 3,
+        "name": "Telefonata Mortale",
+        "cost": 2,
         "timing": "before_fight",
-        "text": "Prima del fight: ignora una difesa scelta su V.",
+        "text": "Attiva: marca un punto debole o ignora una difesa su stat.",
         "effect": {
           "type": "ignore-defense",
           "stat": "V"
@@ -3953,12 +4850,13 @@
             "stat": "V"
           }
         ],
-        "flavor": "Rispondi e scopri che la call era già iniziata."
+        "flavor": "Qual è il tuo deliverable preferito?",
+        "costResource": "mana"
       },
       "passive": {
-        "name": "Cambio Ritmico",
+        "name": "Dietro la Maschera",
         "timing": "always",
-        "text": "Sempre: prepara lo swap della carta selezionata.",
+        "text": "Sempre: ottieni bonus se l’avversario non attacca o fa Focus.",
         "effect": {
           "type": "swap_selected_card",
           "target": "self",
@@ -3983,31 +4881,44 @@
         "V": 5,
         "A": 6,
         "L": 4,
-        "E": 8,
+        "E": 7,
         "R": 4,
         "I": 7,
         "O": 6
       },
       "combat": {
-        "attackPower": 80,
-        "defensePower": 80,
+        "attackPower": 88,
+        "defensePower": 75,
         "draftCost": 4
       },
-      "rarityRule": "epica: costo draft 4 secondo bilanciamento v7; nuova carta extra",
+      "rarityRule": "epica: deck cost 4 secondo bilanciamento v10 spell/energy retrocompatibile",
       "type": "attack",
       "role": "attack",
       "allowedIntents": [
         "combat",
         "guard"
       ],
-      "guardBonus": 0
+      "guardBonus": 1,
+      "deckCost": 4,
+      "legacyType": "attack",
+      "legacyRole": "attack",
+      "deckType": "spell",
+      "roundIntents": [
+        "attack",
+        "defense",
+        "focus"
+      ],
+      "usablePhase": "spell_selection",
+      "usesValerio": true,
+      "usesCombat": true,
+      "energyCost": null
     },
     {
       "id": "vone",
       "image": "Vone.png",
       "name": "Vone",
       "subtitle": "Due lame, un solo silenzio giudicante.",
-      "rarity": "leggendaria",
+      "rarity": "epica",
       "archetype": "duellante spirituale",
       "theme": "League of Legends",
       "frame": {
@@ -4016,10 +4927,10 @@
         "icon": "dual-blade"
       },
       "active": {
-        "name": "Lettura del Punto Debole",
-        "cost": 5,
+        "name": "Soul Unbound",
+        "cost": 2,
         "timing": "before_fight",
-        "text": "Prima del fight: ignora una difesa scelta su A.",
+        "text": "Attiva: ignora parte della difesa o applica un marchio.",
         "effect": {
           "type": "ignore-defense",
           "stat": "A"
@@ -4030,12 +4941,13 @@
             "stat": "A"
           }
         ],
-        "flavor": "Traccia una linea e il team ci cade dentro."
+        "flavor": "La maschera nasconde il volto, non la review.",
+        "costResource": "mana"
       },
       "passive": {
-        "name": "Fame di Carte",
+        "name": "Way of the Hunter",
         "timing": "always",
-        "text": "Sempre: prepara pesca 1 carta dal mazzo.",
+        "text": "Sempre: dopo Attack, recuperi o stabilizzi con un piccolo bonus.",
         "effect": {
           "type": "draw_cards",
           "target": "self",
@@ -4064,29 +4976,42 @@
         "L": 7,
         "E": 4,
         "R": 6,
-        "I": 7,
+        "I": 6,
         "O": 3
       },
       "combat": {
-        "attackPower": 100,
-        "defensePower": 80,
-        "draftCost": 6
+        "attackPower": 88,
+        "defensePower": 75,
+        "draftCost": 4
       },
-      "rarityRule": "leggendaria: costo draft 6 secondo bilanciamento v7; nuova carta extra",
+      "rarityRule": "epica: deck cost 4 secondo bilanciamento v10 spell/energy retrocompatibile",
       "type": "attack",
       "role": "attack",
       "allowedIntents": [
         "combat",
         "guard"
       ],
-      "guardBonus": 0
+      "guardBonus": 1,
+      "deckCost": 4,
+      "legacyType": "attack",
+      "legacyRole": "attack",
+      "deckType": "spell",
+      "roundIntents": [
+        "attack",
+        "defense",
+        "focus"
+      ],
+      "usablePhase": "spell_selection",
+      "usesValerio": true,
+      "usesCombat": true,
+      "energyCost": null
     },
     {
       "id": "vrand",
       "image": "vrand.png",
       "name": "Vrand",
       "subtitle": "Brucia il problema e poi chiede se era urgente.",
-      "rarity": "epica",
+      "rarity": "rara",
       "archetype": "mago incendiario",
       "theme": "League of Legends",
       "frame": {
@@ -4095,10 +5020,10 @@
         "icon": "flame"
       },
       "active": {
-        "name": "Cambio di Ritmo",
-        "cost": 3,
+        "name": "Pillar of Flame",
+        "cost": 2,
         "timing": "before_fight",
-        "text": "Prima del fight: prepara uno swap della carta selezionata.",
+        "text": "Attiva: se vinci, infliggi danno extra o bruciatura.",
         "effect": {
           "type": "swap_selected_card",
           "target": "self",
@@ -4111,12 +5036,13 @@
             "selection": "chosen_hand"
           }
         ],
-        "flavor": "La soluzione è calda, instabile e approvata."
+        "flavor": "Non ho acceso il fuoco. Ho ottimizzato l’ambiente.",
+        "costResource": "mana"
       },
       "passive": {
-        "name": "Sacca di Mana",
+        "name": "Blaze",
         "timing": "always",
-        "text": "Sempre: prepara +2 mana.",
+        "text": "Sempre: se il nemico è già stato colpito, subisce pressione aggiuntiva.",
         "effect": {
           "type": "mana_bonus",
           "target": "self",
@@ -4138,27 +5064,40 @@
         "mago"
       ],
       "valerio": {
-        "V": 7,
+        "V": 6,
         "A": 5,
         "L": 5,
-        "E": 6,
+        "E": 5,
         "R": 6,
-        "I": 6,
+        "I": 5,
         "O": 5
       },
       "combat": {
-        "attackPower": 90,
-        "defensePower": 70,
-        "draftCost": 4
+        "attackPower": 80,
+        "defensePower": 65,
+        "draftCost": 3
       },
-      "rarityRule": "epica: costo draft 4 secondo bilanciamento v7; nuova carta extra",
+      "rarityRule": "rara: deck cost 3 secondo bilanciamento v10 spell/energy retrocompatibile",
       "type": "attack",
       "role": "attack",
       "allowedIntents": [
         "combat",
         "guard"
       ],
-      "guardBonus": 1
+      "guardBonus": 1,
+      "deckCost": 3,
+      "legacyType": "attack",
+      "legacyRole": "attack",
+      "deckType": "spell",
+      "roundIntents": [
+        "attack",
+        "defense",
+        "focus"
+      ],
+      "usablePhase": "spell_selection",
+      "usesValerio": true,
+      "usesCombat": true,
+      "energyCost": null
     },
     {
       "id": "vresh",
@@ -4174,10 +5113,10 @@
         "icon": "lantern"
       },
       "active": {
-        "name": "Richiamo dal Mazzo",
-        "cost": 6,
+        "name": "Dark Passage",
+        "cost": 5,
         "timing": "before_fight",
-        "text": "Attiva: prepara lo swap di una carta dal mazzo.",
+        "text": "Attiva: richiami, salvi o prepari una carta dal mazzo.",
         "effect": {
           "type": "swap_card_from_deck",
           "target": "self",
@@ -4190,12 +5129,13 @@
             "selection": "random_deck"
           }
         ],
-        "flavor": "Tira dentro il problema anche se era fuori perimetro."
+        "flavor": "Vieni, ti salvo. Forse.",
+        "costResource": "energy"
       },
       "passive": {
-        "name": "Rigenerazione",
+        "name": "Damnation",
         "timing": "always",
-        "text": "Sempre: prepara cura 3 PV.",
+        "text": "Sempre: quando il nemico perde risorsa, accumuli piccolo vantaggio.",
         "effect": {
           "type": "heal",
           "target": "self",
@@ -4217,6 +5157,43 @@
         "catene"
       ],
       "valerio": {
+        "V": 0,
+        "A": 0,
+        "L": 0,
+        "E": 0,
+        "R": 0,
+        "I": 0,
+        "O": 0
+      },
+      "combat": {
+        "attackPower": 0,
+        "defensePower": 0,
+        "draftCost": 5
+      },
+      "rarityRule": "leggendaria: deck cost 5 secondo bilanciamento v10 spell/energy retrocompatibile",
+      "type": "utility",
+      "role": "utility",
+      "allowedIntents": [
+        "utility",
+        "focus",
+        "recover"
+      ],
+      "guardBonus": 0,
+      "deckCost": 5,
+      "legacyType": "utility",
+      "legacyRole": "utility",
+      "deckType": "energy",
+      "roundIntents": [
+        "energy"
+      ],
+      "usablePhase": "decision_phase",
+      "usesValerio": false,
+      "usesCombat": false,
+      "energyCost": 5,
+      "maxUsesPerRound": 1,
+      "maxUsesPerMatch": 1,
+      "passiveDisabledInEnergyDeck": true,
+      "legacyValerio": {
         "V": 6,
         "A": 7,
         "L": 6,
@@ -4225,21 +5202,11 @@
         "I": 4,
         "O": 4
       },
-      "combat": {
+      "legacyCombat": {
         "attackPower": 80,
         "defensePower": 100,
         "draftCost": 6
-      },
-      "rarityRule": "leggendaria: costo draft 6 secondo bilanciamento v7; nuova carta extra",
-      "type": "utility",
-      "role": "utility",
-      "allowedIntents": [
-        "utility",
-        "draw",
-        "focus",
-        "recover"
-      ],
-      "guardBonus": 3
+      }
     },
     {
       "id": "vrump",
@@ -4255,10 +5222,10 @@
         "icon": "megaphone"
       },
       "active": {
-        "name": "Primo Soccorso",
-        "cost": 3,
+        "name": "Rally Mediatico",
+        "cost": 2,
         "timing": "before_fight",
-        "text": "Attiva: curati di 5 PV.",
+        "text": "Attiva: recuperi risorsa o aumenti la pressione del round.",
         "effect": {
           "type": "heal",
           "target": "self",
@@ -4271,12 +5238,13 @@
             "value": 5
           }
         ],
-        "flavor": "Firma il piano prima di leggerlo."
+        "flavor": "Questo sarà il miglior sprint. Forse il migliore di sempre.",
+        "costResource": "mana"
       },
       "passive": {
-        "name": "Batteria Interna",
+        "name": "Muro Narrativo",
         "timing": "always",
-        "text": "Sempre: prepara +3 mana.",
+        "text": "Sempre: riduci un danno o blocchi una scelta una volta.",
         "effect": {
           "type": "mana_bonus",
           "target": "self",
@@ -4301,33 +5269,44 @@
         "V": 5,
         "A": 6,
         "L": 4,
-        "E": 9,
+        "E": 8,
         "R": 3,
         "I": 5,
         "O": 6
       },
       "combat": {
-        "attackPower": 75,
-        "defensePower": 70,
+        "attackPower": 80,
+        "defensePower": 65,
         "draftCost": 3
       },
-      "rarityRule": "rara: costo draft 3 secondo bilanciamento v7; nuova carta extra",
-      "type": "utility",
-      "role": "utility",
+      "rarityRule": "rara: deck cost 3 secondo bilanciamento v10 spell/energy retrocompatibile",
+      "type": "attack",
+      "role": "attack",
       "allowedIntents": [
-        "utility",
-        "draw",
-        "focus",
-        "recover"
+        "combat",
+        "guard"
       ],
-      "guardBonus": 1
+      "guardBonus": 1,
+      "deckCost": 3,
+      "legacyType": "utility",
+      "legacyRole": "utility",
+      "deckType": "spell",
+      "roundIntents": [
+        "attack",
+        "defense",
+        "focus"
+      ],
+      "usablePhase": "spell_selection",
+      "usesValerio": true,
+      "usesCombat": true,
+      "energyCost": null
     },
     {
       "id": "vyke",
       "image": "vyke.png",
       "name": "Vyke",
       "subtitle": "Dagli abissi arriva solo per chiudere il conto.",
-      "rarity": "epica",
+      "rarity": "rara",
       "archetype": "assassino degli abissi",
       "theme": "League of Legends",
       "frame": {
@@ -4336,10 +5315,10 @@
         "icon": "harpoon"
       },
       "active": {
-        "name": "Spacco del Limite",
-        "cost": 3,
+        "name": "Death From Below",
+        "cost": 2,
         "timing": "before_fight",
-        "text": "Prima del fight: la Breccia puo superare il cap normale.",
+        "text": "Attiva: infliggi danno extra se il nemico è sotto soglia HP.",
         "effect": {
           "type": "break-cap"
         },
@@ -4348,12 +5327,13 @@
             "type": "break-cap"
           }
         ],
-        "flavor": "Non prende appunti. Prende nomi."
+        "flavor": "Annegato nello scope, risorto per la vendetta.",
+        "costResource": "mana"
       },
       "passive": {
-        "name": "Sacca di Mana",
+        "name": "Gift of the Drowned Ones",
         "timing": "always",
-        "text": "Sempre: prepara +2 mana.",
+        "text": "Sempre: dopo aver subito danno, prepari un contrattacco.",
         "effect": {
           "type": "mana_bonus",
           "target": "self",
@@ -4376,33 +5356,46 @@
       ],
       "valerio": {
         "V": 6,
-        "A": 6,
+        "A": 5,
         "L": 4,
         "E": 5,
         "R": 5,
-        "I": 7,
-        "O": 7
+        "I": 6,
+        "O": 6
       },
       "combat": {
-        "attackPower": 90,
-        "defensePower": 70,
-        "draftCost": 4
+        "attackPower": 80,
+        "defensePower": 65,
+        "draftCost": 3
       },
-      "rarityRule": "epica: costo draft 4 secondo bilanciamento v7; nuova carta extra",
+      "rarityRule": "rara: deck cost 3 secondo bilanciamento v10 spell/energy retrocompatibile",
       "type": "attack",
       "role": "attack",
       "allowedIntents": [
         "combat",
         "guard"
       ],
-      "guardBonus": 1
+      "guardBonus": 1,
+      "deckCost": 3,
+      "legacyType": "attack",
+      "legacyRole": "attack",
+      "deckType": "spell",
+      "roundIntents": [
+        "attack",
+        "defense",
+        "focus"
+      ],
+      "usablePhase": "spell_selection",
+      "usesValerio": true,
+      "usesCombat": true,
+      "energyCost": null
     },
     {
       "id": "squalerio",
       "image": "squalerio.png",
       "name": "Squalerio",
       "subtitle": "The great white Valerio",
-      "rarity": "leggendaria",
+      "rarity": "rara",
       "archetype": "shark",
       "theme": "Movies",
       "frame": {
@@ -4411,10 +5404,10 @@
         "icon": "shark"
       },
       "active": {
-        "name": "Archivio Nascosto",
-        "cost": 4,
+        "name": "Morso dal Profondo",
+        "cost": 2,
         "timing": "on_reveal",
-        "text": "Trappola: pesca 1 carta dal mazzo quando il trigger scatta.",
+        "text": "Trappola: punisci Focus o un nemico vulnerabile.",
         "effect": {
           "type": "draw_cards",
           "target": "self",
@@ -4429,12 +5422,13 @@
             "source": "deck"
           }
         ],
-        "flavor": "The great white Valerio is back."
+        "flavor": "The great white Valerio is back.",
+        "costResource": "mana"
       },
       "passive": {
-        "name": "Falso Fondo",
+        "name": "Sangue nell’Acqua",
         "timing": "always",
-        "text": "Sempre: prepara swap di una carta dal mazzo.",
+        "text": "Sempre: se il nemico è sotto metà HP, ottieni pressione offensiva.",
         "effect": {
           "type": "swap_card_from_deck",
           "target": "self",
@@ -4447,7 +5441,7 @@
             "selection": "random_deck"
           }
         ],
-        "flavor": "The great white Valerio is back."
+        "flavor": "Quando sente paura, sale a galla."
       },
       "quote": "The great white Valerio is back.",
       "tags": [
@@ -4457,35 +5451,46 @@
       ],
       "valerio": {
         "V": 6,
-        "A": 6,
+        "A": 5,
         "L": 4,
         "E": 5,
         "R": 5,
-        "I": 7,
-        "O": 7
+        "I": 6,
+        "O": 6
       },
       "combat": {
-        "attackPower": 90,
-        "defensePower": 70,
-        "draftCost": 4
+        "attackPower": 80,
+        "defensePower": 65,
+        "draftCost": 3
       },
-      "rarityRule": "epica: costo draft 4 secondo bilanciamento v7; nuova carta extra",
-      "type": "trap",
-      "role": "trap",
+      "rarityRule": "rara: deck cost 3 secondo bilanciamento v10 spell/energy retrocompatibile",
+      "type": "attack",
+      "role": "attack",
       "allowedIntents": [
-        "trap"
+        "combat",
+        "guard"
       ],
-      "guardBonus": 2,
-      "trigger": {
-        "type": "enemy_focuses"
-      }
+      "guardBonus": 1,
+      "deckCost": 3,
+      "legacyType": "trap",
+      "legacyRole": "trap",
+      "deckType": "spell",
+      "roundIntents": [
+        "attack",
+        "defense",
+        "focus"
+      ],
+      "usablePhase": "spell_selection",
+      "usesValerio": true,
+      "usesCombat": true,
+      "energyCost": null
     },
     {
       "id": "vavitar",
       "image": "vavitar.png",
       "name": "Vavitar",
       "subtitle": "The God of Speed",
-      "rarity": "Mitica",
+      "rarity": "mitica",
       "archetype": "speedster",
       "theme": "DC Comics",
       "frame": {
@@ -4494,10 +5499,10 @@
         "icon": "lightning"
       },
       "active": {
-        "name": "Primo Soccorso",
-        "cost": 4,
+        "name": "Dio della Velocità",
+        "cost": 3,
         "timing": "before_fight",
-        "text": "Attiva: curati di 7 PV.",
+        "text": "Attiva: dopo il reveal puoi cambiare una stat o anticipare una scelta.",
         "effect": {
           "type": "heal",
           "target": "self",
@@ -4510,12 +5515,13 @@
             "value": 7
           }
         ],
-        "flavor": "The God of Speed is back."
+        "flavor": "The God of Speed is back.",
+        "costResource": "mana"
       },
       "passive": {
-        "name": "Mazzo Fluido",
+        "name": "Presente nel Futuro",
         "timing": "always",
-        "text": "Sempre: prepara scambio mazzo.",
+        "text": "Sempre: una volta per match ottieni una piccola informazione prima della scelta.",
         "effect": {
           "type": "swap_deck",
           "target": "self"
@@ -4526,7 +5532,7 @@
             "target": "self"
           }
         ],
-        "flavor": "The God of Speed is back."
+        "flavor": "È già arrivato nel round dopo."
       },
       "quote": "The God of Speed is back.",
       "tags": [
@@ -4540,31 +5546,42 @@
         "L": 4,
         "E": 5,
         "R": 5,
-        "I": 7,
-        "O": 7
+        "I": 8,
+        "O": 8
       },
       "combat": {
-        "attackPower": 90,
-        "defensePower": 70,
-        "draftCost": 4
+        "attackPower": 100,
+        "defensePower": 90,
+        "draftCost": 6
       },
-      "rarityRule": "epica: costo draft 4 secondo bilanciamento v7; nuova carta extra",
-      "type": "utility",
-      "role": "utility",
+      "rarityRule": "mitica: deck cost 6 secondo bilanciamento v10 spell/energy retrocompatibile",
+      "type": "attack",
+      "role": "attack",
       "allowedIntents": [
-        "utility",
-        "draw",
-        "focus",
-        "recover"
+        "combat",
+        "guard"
       ],
-      "guardBonus": 2
+      "guardBonus": 1,
+      "deckCost": 6,
+      "legacyType": "utility",
+      "legacyRole": "utility",
+      "deckType": "spell",
+      "roundIntents": [
+        "attack",
+        "defense",
+        "focus"
+      ],
+      "usablePhase": "spell_selection",
+      "usesValerio": true,
+      "usesCombat": true,
+      "energyCost": null
     },
     {
       "id": "reverse_vally",
       "image": "reverse_vally.png",
       "name": "Reverse Vally",
       "subtitle": "The hateful Vally",
-      "rarity": "mitica",
+      "rarity": "epica",
       "archetype": "speedster",
       "theme": "DC Comics",
       "frame": {
@@ -4573,10 +5590,10 @@
         "icon": "lightning"
       },
       "active": {
-        "name": "Archivio Nascosto",
-        "cost": 4,
+        "name": "Sabotaggio Temporale",
+        "cost": 2,
         "timing": "on_reveal",
-        "text": "Trappola: pesca 1 carta dal mazzo quando il trigger scatta.",
+        "text": "Trappola: se il nemico attacca, riduci o ribalti un suo bonus.",
         "effect": {
           "type": "draw_cards",
           "target": "self",
@@ -4591,12 +5608,13 @@
             "source": "deck"
           }
         ],
-        "flavor": "The great white Valerio is back."
+        "flavor": "Corre all’indietro solo per rovinarti prima.",
+        "costResource": "mana"
       },
       "passive": {
-        "name": "Falso Fondo",
+        "name": "Odio che Corre",
         "timing": "always",
-        "text": "Sempre: prepara swap di una carta dal mazzo.",
+        "text": "Sempre: se l’avversario ripete strategia, ottieni vantaggio.",
         "effect": {
           "type": "swap_card_from_deck",
           "target": "self",
@@ -4609,7 +5627,7 @@
             "selection": "random_deck"
           }
         ],
-        "flavor": "The great white Valerio is back."
+        "flavor": "Il rancore non ha cooldown."
       },
       "quote": "The great white Valerio is back.",
       "tags": [
@@ -4623,31 +5641,42 @@
         "L": 4,
         "E": 5,
         "R": 5,
-        "I": 7,
+        "I": 6,
         "O": 7
       },
       "combat": {
-        "attackPower": 90,
-        "defensePower": 70,
+        "attackPower": 88,
+        "defensePower": 75,
         "draftCost": 4
       },
-      "rarityRule": "epica: costo draft 4 secondo bilanciamento v7; nuova carta extra",
-      "type": "trap",
-      "role": "trap",
+      "rarityRule": "epica: deck cost 4 secondo bilanciamento v10 spell/energy retrocompatibile",
+      "type": "attack",
+      "role": "attack",
       "allowedIntents": [
-        "trap"
+        "combat",
+        "guard"
       ],
-      "guardBonus": 3,
-      "trigger": {
-        "type": "enemy_attacks"
-      }
+      "guardBonus": 1,
+      "deckCost": 4,
+      "legacyType": "trap",
+      "legacyRole": "trap",
+      "deckType": "spell",
+      "roundIntents": [
+        "attack",
+        "defense",
+        "focus"
+      ],
+      "usablePhase": "spell_selection",
+      "usesValerio": true,
+      "usesCombat": true,
+      "energyCost": null
     },
     {
       "id": "voom",
       "image": "voom.png",
       "name": "Voom",
       "subtitle": "The death runner",
-      "rarity": "leggendaria",
+      "rarity": "rara",
       "archetype": "speedster",
       "theme": "DC Comics",
       "frame": {
@@ -4656,10 +5685,10 @@
         "icon": "lightning"
       },
       "active": {
-        "name": "Archivio Nascosto",
-        "cost": 4,
+        "name": "Terrore alla Velocità",
+        "cost": 2,
         "timing": "on_reveal",
-        "text": "Trappola: pesca 1 carta dal mazzo quando il trigger scatta.",
+        "text": "Trappola: se il nemico attacca o fa Focus, gli applichi un malus.",
         "effect": {
           "type": "draw_cards",
           "target": "self",
@@ -4674,12 +5703,13 @@
             "source": "deck"
           }
         ],
-        "flavor": "The great white Valerio is back."
+        "flavor": "Non corre per vincere. Corre per farti paura.",
+        "costResource": "mana"
       },
       "passive": {
-        "name": "Falso Fondo",
+        "name": "Caccia nel Tempo",
         "timing": "always",
-        "text": "Sempre: prepara swap di una carta dal mazzo.",
+        "text": "Sempre: dopo un Attack vinto, il nemico parte svantaggiato nel round dopo.",
         "effect": {
           "type": "swap_card_from_deck",
           "target": "self",
@@ -4692,7 +5722,7 @@
             "selection": "random_deck"
           }
         ],
-        "flavor": "The great white Valerio is back."
+        "flavor": "Il prossimo passo era già una trappola."
       },
       "quote": "The great white Valerio is back.",
       "tags": [
@@ -4702,35 +5732,46 @@
       ],
       "valerio": {
         "V": 6,
-        "A": 6,
+        "A": 5,
         "L": 4,
         "E": 5,
         "R": 5,
-        "I": 7,
-        "O": 7
+        "I": 6,
+        "O": 6
       },
       "combat": {
-        "attackPower": 90,
-        "defensePower": 70,
-        "draftCost": 4
+        "attackPower": 80,
+        "defensePower": 65,
+        "draftCost": 3
       },
-      "rarityRule": "epica: costo draft 4 secondo bilanciamento v7; nuova carta extra",
-      "type": "trap",
-      "role": "trap",
+      "rarityRule": "rara: deck cost 3 secondo bilanciamento v10 spell/energy retrocompatibile",
+      "type": "attack",
+      "role": "attack",
       "allowedIntents": [
-        "trap"
+        "combat",
+        "guard"
       ],
-      "guardBonus": 3,
-      "trigger": {
-        "type": "enemy_attacks"
-      }
+      "guardBonus": 1,
+      "deckCost": 3,
+      "legacyType": "trap",
+      "legacyRole": "trap",
+      "deckType": "spell",
+      "roundIntents": [
+        "attack",
+        "defense",
+        "focus"
+      ],
+      "usablePhase": "spell_selection",
+      "usesValerio": true,
+      "usesCombat": true,
+      "energyCost": null
     },
     {
       "id": "bach",
       "image": "bach.png",
       "name": "Johan Valastian Qoundabach",
       "subtitle": "The Bach",
-      "rarity": "leggendaria",
+      "rarity": "comune",
       "archetype": "piano",
       "theme": "Musician",
       "frame": {
@@ -4739,10 +5780,10 @@
         "icon": "piano"
       },
       "active": {
-        "name": "Lettura del Punto Debole",
-        "cost": 3,
+        "name": "Fuga in Re Minore",
+        "cost": 1,
         "timing": "before_fight",
-        "text": "Prima del fight: ignora una difesa scelta su I.",
+        "text": "Attiva: crei una seconda linea di danno o ignori una piccola difesa.",
         "effect": {
           "type": "ignore-defense",
           "stat": "I"
@@ -4753,12 +5794,13 @@
             "stat": "I"
           }
         ],
-        "flavor": "The great white Valerio is back."
+        "flavor": "Ogni nota era già una condizione di vittoria.",
+        "costResource": "mana"
       },
       "passive": {
-        "name": "Cambio Ritmico",
+        "name": "Contrappunto Perfetto",
         "timing": "always",
-        "text": "Sempre: prepara lo swap della carta selezionata.",
+        "text": "Sempre: se scegli stat armoniche tra loro, ottieni bonus.",
         "effect": {
           "type": "swap_selected_card",
           "target": "self",
@@ -4771,7 +5813,7 @@
             "selection": "chosen_hand"
           }
         ],
-        "flavor": "The great white Valerio is back."
+        "flavor": "La build suona meglio quando nessuno la capisce."
       },
       "quote": "The great white Valerio is back.",
       "tags": [
@@ -4780,34 +5822,47 @@
         "valerio"
       ],
       "valerio": {
-        "V": 6,
-        "A": 6,
+        "V": 5,
+        "A": 5,
         "L": 4,
-        "E": 5,
+        "E": 4,
         "R": 5,
-        "I": 7,
-        "O": 7
+        "I": 6,
+        "O": 6
       },
       "combat": {
-        "attackPower": 90,
-        "defensePower": 70,
-        "draftCost": 4
+        "attackPower": 70,
+        "defensePower": 55,
+        "draftCost": 2
       },
-      "rarityRule": "epica: costo draft 4 secondo bilanciamento v7; nuova carta extra",
+      "rarityRule": "comune: deck cost 2 secondo bilanciamento v10 spell/energy retrocompatibile",
       "type": "attack",
       "role": "attack",
       "allowedIntents": [
         "combat",
         "guard"
       ],
-      "guardBonus": 0
+      "guardBonus": 1,
+      "deckCost": 2,
+      "legacyType": "attack",
+      "legacyRole": "attack",
+      "deckType": "spell",
+      "roundIntents": [
+        "attack",
+        "defense",
+        "focus"
+      ],
+      "usablePhase": "spell_selection",
+      "usesValerio": true,
+      "usesCombat": true,
+      "energyCost": null
     },
     {
       "id": "beeth",
       "image": "beeth.png",
       "name": "Ludval van Quondethoven",
       "subtitle": "The deaf PM",
-      "rarity": "leggendaria",
+      "rarity": "comune",
       "archetype": "piano",
       "theme": "Musician",
       "frame": {
@@ -4816,10 +5871,10 @@
         "icon": "piano"
       },
       "active": {
-        "name": "Lettura del Punto Debole",
-        "cost": 3,
+        "name": "Quinta Sinfonia",
+        "cost": 1,
         "timing": "before_fight",
-        "text": "Prima del fight: ignora una difesa scelta su R.",
+        "text": "Attiva: colpo potente dopo preparazione o difesa ignorata.",
         "effect": {
           "type": "ignore-defense",
           "stat": "R"
@@ -4830,12 +5885,13 @@
             "stat": "R"
           }
         ],
-        "flavor": "The great white Valerio is back."
+        "flavor": "Il destino bussa anche alla retrospettiva.",
+        "costResource": "mana"
       },
       "passive": {
-        "name": "Fame di Carte",
+        "name": "Crescendo Inesorabile",
         "timing": "always",
-        "text": "Sempre: prepara pesca 1 carta dal mazzo.",
+        "text": "Sempre: ogni round senza vincere aumenta il prossimo attacco.",
         "effect": {
           "type": "draw_cards",
           "target": "self",
@@ -4850,7 +5906,7 @@
             "source": "deck"
           }
         ],
-        "flavor": "The great white Valerio is back."
+        "flavor": "Non sente le critiche, solo il finale."
       },
       "quote": "The great white Valerio is back.",
       "tags": [
@@ -4859,34 +5915,47 @@
         "valerio"
       ],
       "valerio": {
-        "V": 6,
-        "A": 6,
+        "V": 5,
+        "A": 5,
         "L": 4,
-        "E": 5,
+        "E": 4,
         "R": 5,
-        "I": 7,
-        "O": 7
+        "I": 6,
+        "O": 6
       },
       "combat": {
-        "attackPower": 90,
-        "defensePower": 70,
-        "draftCost": 4
+        "attackPower": 70,
+        "defensePower": 55,
+        "draftCost": 2
       },
-      "rarityRule": "epica: costo draft 4 secondo bilanciamento v7; nuova carta extra",
+      "rarityRule": "comune: deck cost 2 secondo bilanciamento v10 spell/energy retrocompatibile",
       "type": "attack",
       "role": "attack",
       "allowedIntents": [
         "combat",
         "guard"
       ],
-      "guardBonus": 0
+      "guardBonus": 1,
+      "deckCost": 2,
+      "legacyType": "attack",
+      "legacyRole": "attack",
+      "deckType": "spell",
+      "roundIntents": [
+        "attack",
+        "defense",
+        "focus"
+      ],
+      "usablePhase": "spell_selection",
+      "usesValerio": true,
+      "usesCombat": true,
+      "energyCost": null
     },
     {
       "id": "mozart",
       "image": "mozart.png",
       "name": "Wolfgang Valadeus Mozart",
       "subtitle": "The great composer",
-      "rarity": "leggendaria",
+      "rarity": "rara",
       "archetype": "piano",
       "theme": "Musician",
       "frame": {
@@ -4895,10 +5964,10 @@
         "icon": "piano"
       },
       "active": {
-        "name": "Carica di Mana",
-        "cost": 4,
+        "name": "Composizione Geniale",
+        "cost": 2,
         "timing": "before_fight",
-        "text": "Attiva: guadagni 4 mana.",
+        "text": "Attiva: guadagni Mana o prepari una carta.",
         "effect": {
           "type": "mana_bonus",
           "target": "self",
@@ -4911,12 +5980,13 @@
             "value": 4
           }
         ],
-        "flavor": "The great white Valerio is back."
+        "flavor": "Troppo facile per sembrare lavoro.",
+        "costResource": "mana"
       },
       "passive": {
-        "name": "Archivio Mobile",
+        "name": "Orecchio Assoluto",
         "timing": "always",
-        "text": "Sempre: prepara pesca 1 carta dal mazzo.",
+        "text": "Sempre: filtri il mazzo o correggi una pescata.",
         "effect": {
           "type": "draw_cards",
           "target": "self",
@@ -4931,7 +6001,7 @@
             "source": "deck"
           }
         ],
-        "flavor": "The great white Valerio is back."
+        "flavor": "Ogni errore suona fuori tempo."
       },
       "quote": "The great white Valerio is back.",
       "tags": [
@@ -4941,35 +6011,46 @@
       ],
       "valerio": {
         "V": 6,
-        "A": 6,
+        "A": 5,
         "L": 4,
         "E": 5,
         "R": 5,
-        "I": 7,
-        "O": 7
+        "I": 6,
+        "O": 6
       },
       "combat": {
-        "attackPower": 90,
-        "defensePower": 70,
-        "draftCost": 4
+        "attackPower": 80,
+        "defensePower": 65,
+        "draftCost": 3
       },
-      "rarityRule": "epica: costo draft 4 secondo bilanciamento v7; nuova carta extra",
-      "type": "utility",
-      "role": "utility",
+      "rarityRule": "rara: deck cost 3 secondo bilanciamento v10 spell/energy retrocompatibile",
+      "type": "attack",
+      "role": "attack",
       "allowedIntents": [
-        "utility",
-        "draw",
-        "focus",
-        "recover"
+        "combat",
+        "guard"
       ],
-      "guardBonus": 2
+      "guardBonus": 1,
+      "deckCost": 3,
+      "legacyType": "utility",
+      "legacyRole": "utility",
+      "deckType": "spell",
+      "roundIntents": [
+        "attack",
+        "defense",
+        "focus"
+      ],
+      "usablePhase": "spell_selection",
+      "usesValerio": true,
+      "usesCombat": true,
+      "energyCost": null
     },
     {
       "id": "myers",
       "image": "myers.png",
       "name": "Valerio Myers",
       "subtitle": "The Shape",
-      "rarity": "leggendaria",
+      "rarity": "comune",
       "archetype": "killer",
       "theme": "Movies",
       "frame": {
@@ -4978,10 +6059,10 @@
         "icon": "killer"
       },
       "active": {
-        "name": "Scambio Carta",
-        "cost": 4,
+        "name": "Passo Silenzioso",
+        "cost": 1,
         "timing": "before_fight",
-        "text": "Attiva: prepara lo scambio di una carta dalla mano.",
+        "text": "Attiva: prepari una carta o attacchi ignorando una piccola difesa.",
         "effect": {
           "type": "swap_card",
           "target": "self",
@@ -4998,12 +6079,13 @@
             "selection": "chosen_hand"
           }
         ],
-        "flavor": "The great white Valerio is back."
+        "flavor": "Non corre mai. Arriva comunque.",
+        "costResource": "mana"
       },
       "passive": {
-        "name": "Batteria Interna",
+        "name": "The Shape",
         "timing": "always",
-        "text": "Sempre: prepara +2 mana.",
+        "text": "Sempre: più il round resta lento, più cresce la minaccia.",
         "effect": {
           "type": "mana_bonus",
           "target": "self",
@@ -5016,7 +6098,7 @@
             "value": 2
           }
         ],
-        "flavor": "The great white Valerio is back."
+        "flavor": "Il silenzio è parte della build."
       },
       "quote": "The great white Valerio is back.",
       "tags": [
@@ -5025,36 +6107,47 @@
         "valerio"
       ],
       "valerio": {
-        "V": 6,
-        "A": 6,
+        "V": 5,
+        "A": 5,
         "L": 4,
-        "E": 5,
+        "E": 4,
         "R": 5,
-        "I": 7,
-        "O": 7
+        "I": 6,
+        "O": 6
       },
       "combat": {
-        "attackPower": 90,
-        "defensePower": 70,
-        "draftCost": 4
+        "attackPower": 70,
+        "defensePower": 55,
+        "draftCost": 2
       },
-      "rarityRule": "epica: costo draft 4 secondo bilanciamento v7; nuova carta extra",
-      "type": "utility",
-      "role": "utility",
+      "rarityRule": "comune: deck cost 2 secondo bilanciamento v10 spell/energy retrocompatibile",
+      "type": "attack",
+      "role": "attack",
       "allowedIntents": [
-        "utility",
-        "draw",
-        "focus",
-        "recover"
+        "combat",
+        "guard"
       ],
-      "guardBonus": 2
+      "guardBonus": 1,
+      "deckCost": 2,
+      "legacyType": "utility",
+      "legacyRole": "utility",
+      "deckType": "spell",
+      "roundIntents": [
+        "attack",
+        "defense",
+        "focus"
+      ],
+      "usablePhase": "spell_selection",
+      "usesValerio": true,
+      "usesCombat": true,
+      "energyCost": null
     },
     {
       "id": "quondaheimer",
       "image": "quondaheimer.png",
       "name": "Robert Quondaheimer",
       "subtitle": "The destroyer of worlds",
-      "rarity": "leggendaria",
+      "rarity": "rara",
       "archetype": "bomb",
       "theme": "scientist",
       "frame": {
@@ -5063,10 +6156,10 @@
         "icon": "bomb"
       },
       "active": {
-        "name": "Tagliola di Mana",
-        "cost": 4,
+        "name": "Reazione a Catena",
+        "cost": 2,
         "timing": "on_reveal",
-        "text": "Trappola: guadagni 2 mana quando il trigger scatta.",
+        "text": "Trappola: effetto ritardato ad alto costo con grande punizione.",
         "effect": {
           "type": "mana_bonus",
           "target": "self",
@@ -5079,12 +6172,13 @@
             "value": 2
           }
         ],
-        "flavor": "The great white Valerio is back."
+        "flavor": "Ora sono diventato il destroyer delle deadline.",
+        "costResource": "mana"
       },
       "passive": {
-        "name": "Mano Lesta",
+        "name": "Massa Critica",
         "timing": "always",
-        "text": "Sempre: prepara furto di una carta casuale dalla mano nemica.",
+        "text": "Sempre: accumuli cariche; raggiunta la soglia, esplodi in vantaggio.",
         "effect": {
           "type": "steal_card",
           "target": "enemy",
@@ -5097,7 +6191,7 @@
             "selection": "random_hand"
           }
         ],
-        "flavor": "The great white Valerio is back."
+        "flavor": "Il calcolo era teorico. Il danno no."
       },
       "quote": "The great white Valerio is back.",
       "tags": [
@@ -5107,35 +6201,46 @@
       ],
       "valerio": {
         "V": 6,
-        "A": 6,
+        "A": 5,
         "L": 4,
         "E": 5,
         "R": 5,
-        "I": 7,
-        "O": 7
+        "I": 6,
+        "O": 6
       },
       "combat": {
-        "attackPower": 90,
-        "defensePower": 70,
-        "draftCost": 4
+        "attackPower": 80,
+        "defensePower": 65,
+        "draftCost": 3
       },
-      "rarityRule": "epica: costo draft 4 secondo bilanciamento v7; nuova carta extra",
-      "type": "trap",
-      "role": "trap",
+      "rarityRule": "rara: deck cost 3 secondo bilanciamento v10 spell/energy retrocompatibile",
+      "type": "attack",
+      "role": "attack",
       "allowedIntents": [
-        "trap"
+        "combat",
+        "guard"
       ],
-      "guardBonus": 4,
-      "trigger": {
-        "type": "enemy_draws"
-      }
+      "guardBonus": 1,
+      "deckCost": 3,
+      "legacyType": "trap",
+      "legacyRole": "trap",
+      "deckType": "spell",
+      "roundIntents": [
+        "attack",
+        "defense",
+        "focus"
+      ],
+      "usablePhase": "spell_selection",
+      "usesValerio": true,
+      "usesCombat": true,
+      "energyCost": null
     },
     {
       "id": "sole",
       "image": "sole.png",
       "name": "Valerio Sole",
       "subtitle": "Versailles",
-      "rarity": "leggendaria",
+      "rarity": "comune",
       "archetype": "bomb",
       "theme": "political",
       "frame": {
@@ -5144,10 +6249,10 @@
         "icon": "bomb"
       },
       "active": {
-        "name": "Spacco del Limite",
-        "cost": 3,
+        "name": "Decreto di Versailles",
+        "cost": 1,
         "timing": "before_fight",
-        "text": "Prima del fight: la Breccia puo superare il cap normale.",
+        "text": "Attiva: superi il limite o imponi centralità alla tua scelta.",
         "effect": {
           "type": "break-cap"
         },
@@ -5156,12 +6261,13 @@
             "type": "break-cap"
           }
         ],
-        "flavor": "The great white Valerio is back."
+        "flavor": "L’état, c’est le project.",
+        "costResource": "mana"
       },
       "passive": {
-        "name": "Sacca di Mana",
+        "name": "Corte del Sole",
         "timing": "always",
-        "text": "Sempre: prepara +2 mana.",
+        "text": "Sempre: se hai più risorse del nemico, ottieni bonus.",
         "effect": {
           "type": "mana_bonus",
           "target": "self",
@@ -5174,7 +6280,7 @@
             "value": 2
           }
         ],
-        "flavor": "The great white Valerio is back."
+        "flavor": "Tutto ruota attorno a lui, anche il backlog."
       },
       "quote": "The great white Valerio is back.",
       "tags": [
@@ -5183,34 +6289,47 @@
         "valerio"
       ],
       "valerio": {
-        "V": 6,
-        "A": 6,
+        "V": 5,
+        "A": 5,
         "L": 4,
-        "E": 5,
+        "E": 4,
         "R": 5,
-        "I": 7,
-        "O": 7
+        "I": 6,
+        "O": 6
       },
       "combat": {
-        "attackPower": 90,
-        "defensePower": 70,
-        "draftCost": 4
+        "attackPower": 70,
+        "defensePower": 55,
+        "draftCost": 2
       },
-      "rarityRule": "epica: costo draft 4 secondo bilanciamento v7; nuova carta extra",
+      "rarityRule": "comune: deck cost 2 secondo bilanciamento v10 spell/energy retrocompatibile",
       "type": "attack",
       "role": "attack",
       "allowedIntents": [
         "combat",
         "guard"
       ],
-      "guardBonus": 1
+      "guardBonus": 1,
+      "deckCost": 2,
+      "legacyType": "attack",
+      "legacyRole": "attack",
+      "deckType": "spell",
+      "roundIntents": [
+        "attack",
+        "defense",
+        "focus"
+      ],
+      "usablePhase": "spell_selection",
+      "usesValerio": true,
+      "usesCombat": true,
+      "energyCost": null
     },
     {
       "id": "valerdi",
       "image": "valerdi.png",
       "name": "Antonio Valerdi",
-      "subtitle": "The violin master",
-      "rarity": "leggendaria",
+      "subtitle": "Le Quattro Sprint",
+      "rarity": "comune",
       "archetype": "violin",
       "theme": "Musician",
       "frame": {
@@ -5219,10 +6338,10 @@
         "icon": "violin"
       },
       "active": {
-        "name": "Riserva di Mana",
-        "cost": 4,
+        "name": "Le Quattro Stagioni",
+        "cost": 1,
         "timing": "before_fight",
-        "text": "Attiva: guadagni 1 mana.",
+        "text": "Attiva: scegli un mini-effetto tra danno, cura, pesca o difesa.",
         "effect": {
           "type": "mana_bonus",
           "target": "self",
@@ -5235,12 +6354,13 @@
             "value": 1
           }
         ],
-        "flavor": "The great white Valerio is back."
+        "flavor": "Ogni stagione ha il suo rilascio.",
+        "costResource": "mana"
       },
       "passive": {
-        "name": "Cambio Coperto",
+        "name": "Ritornello Perfetto",
         "timing": "always",
-        "text": "Sempre: prepara lo scambio della carta selezionata.",
+        "text": "Sempre: se ripeti stat o intent in modo coerente, ottieni bonus.",
         "effect": {
           "type": "swap_selected_card",
           "target": "self",
@@ -5253,7 +6373,7 @@
             "selection": "chosen_hand"
           }
         ],
-        "flavor": "The great white Valerio is back."
+        "flavor": "Il tema ritorna sempre, ma con più pressione."
       },
       "quote": "The great white Valerio is back.",
       "tags": [
@@ -5262,35 +6382,47 @@
         "valerio"
       ],
       "valerio": {
-        "V": 6,
-        "A": 6,
+        "V": 5,
+        "A": 5,
         "L": 4,
-        "E": 5,
+        "E": 4,
         "R": 5,
-        "I": 7,
-        "O": 7
+        "I": 6,
+        "O": 6
       },
       "combat": {
-        "attackPower": 90,
+        "attackPower": 55,
         "defensePower": 70,
-        "draftCost": 4
+        "draftCost": 2
       },
-      "rarityRule": "epica: costo draft 4 secondo bilanciamento v7; nuova carta extra",
+      "rarityRule": "comune: deck cost 2 secondo bilanciamento v10 spell/energy retrocompatibile",
       "type": "defense",
       "role": "defense",
       "allowedIntents": [
-        "guard",
-        "recover",
-        "utility"
+        "combat",
+        "guard"
       ],
-      "guardBonus": 4
+      "guardBonus": 3,
+      "deckCost": 2,
+      "legacyType": "defense",
+      "legacyRole": "defense",
+      "deckType": "spell",
+      "roundIntents": [
+        "attack",
+        "defense",
+        "focus"
+      ],
+      "usablePhase": "spell_selection",
+      "usesValerio": true,
+      "usesCombat": true,
+      "energyCost": null
     },
     {
       "id": "valerierre",
       "image": "valerierre.png",
       "name": "Jean-Pierre Valerierre",
       "subtitle": "The right",
-      "rarity": "leggendaria",
+      "rarity": "comune",
       "archetype": "diplomatico",
       "theme": "political",
       "frame": {
@@ -5299,10 +6431,10 @@
         "icon": "violin"
       },
       "active": {
-        "name": "Scambio Forzato",
-        "cost": 4,
+        "name": "Emendamento d’Urgenza",
+        "cost": 1,
         "timing": "on_reveal",
-        "text": "Trappola: prepara uno scambio carta contro il nemico.",
+        "text": "Trappola: se il trigger scatta, forzi uno scambio o una correzione nemica.",
         "effect": {
           "type": "swap_card",
           "target": "enemy",
@@ -5319,12 +6451,13 @@
             "selection": "random_hand"
           }
         ],
-        "flavor": "The great white Valerio is back."
+        "flavor": "La mozione passa perché nessuno ha letto il testo.",
+        "costResource": "mana"
       },
       "passive": {
-        "name": "Trappola Archivio",
+        "name": "Campagna Permanente",
         "timing": "always",
-        "text": "Sempre: prepara pesca 1 carta dal mazzo.",
+        "text": "Sempre: se l’avversario fa Focus, riduci il recupero o guadagni risorsa.",
         "effect": {
           "type": "draw_cards",
           "target": "self",
@@ -5339,7 +6472,7 @@
             "source": "deck"
           }
         ],
-        "flavor": "The great white Valerio is back."
+        "flavor": "La call elettorale non finisce mai."
       },
       "quote": "The great white Valerio is back.",
       "tags": [
@@ -5348,36 +6481,47 @@
         "valerio"
       ],
       "valerio": {
-        "V": 6,
-        "A": 6,
+        "V": 5,
+        "A": 5,
         "L": 4,
-        "E": 5,
+        "E": 4,
         "R": 5,
-        "I": 7,
-        "O": 7
+        "I": 6,
+        "O": 6
       },
       "combat": {
-        "attackPower": 90,
-        "defensePower": 70,
-        "draftCost": 4
+        "attackPower": 70,
+        "defensePower": 55,
+        "draftCost": 2
       },
-      "rarityRule": "epica: costo draft 4 secondo bilanciamento v7; nuova carta extra",
-      "type": "trap",
-      "role": "trap",
+      "rarityRule": "comune: deck cost 2 secondo bilanciamento v10 spell/energy retrocompatibile",
+      "type": "attack",
+      "role": "attack",
       "allowedIntents": [
-        "trap"
+        "combat",
+        "guard"
       ],
-      "guardBonus": 2,
-      "trigger": {
-        "type": "enemy_focuses"
-      }
+      "guardBonus": 1,
+      "deckCost": 2,
+      "legacyType": "trap",
+      "legacyRole": "trap",
+      "deckType": "spell",
+      "roundIntents": [
+        "attack",
+        "defense",
+        "focus"
+      ],
+      "usablePhase": "spell_selection",
+      "usesValerio": true,
+      "usesCombat": true,
+      "energyCost": null
     },
     {
       "id": "valerione",
       "image": "valerione.png",
       "name": "Valerione",
       "subtitle": "The great commander",
-      "rarity": "leggendaria",
+      "rarity": "comune",
       "archetype": "diplomatico",
       "theme": "political",
       "frame": {
@@ -5386,10 +6530,10 @@
         "icon": "violin"
       },
       "active": {
-        "name": "Cambio di Ritmo",
-        "cost": 3,
+        "name": "Manovra Imperiale",
+        "cost": 1,
         "timing": "before_fight",
-        "text": "Prima del fight: prepara uno swap della carta selezionata.",
+        "text": "Attiva: ottimizzi la carta selezionata o guadagni vantaggio tattico.",
         "effect": {
           "type": "swap_selected_card",
           "target": "self",
@@ -5402,12 +6546,13 @@
             "selection": "chosen_hand"
           }
         ],
-        "flavor": "The great white Valerio is back."
+        "flavor": "La campagna era persa solo per chi guardava la mappa.",
+        "costResource": "mana"
       },
       "passive": {
-        "name": "Sacca di Mana",
+        "name": "Grande Armée",
         "timing": "always",
-        "text": "Sempre: prepara +2 mana.",
+        "text": "Sempre: più carte hai giocato o scartato, più cresce il controllo.",
         "effect": {
           "type": "mana_bonus",
           "target": "self",
@@ -5420,7 +6565,7 @@
             "value": 2
           }
         ],
-        "flavor": "The great white Valerio is back."
+        "flavor": "Un esercito di task, una sola volontà."
       },
       "quote": "The great white Valerio is back.",
       "tags": [
@@ -5429,34 +6574,47 @@
         "valerio"
       ],
       "valerio": {
-        "V": 6,
-        "A": 6,
+        "V": 5,
+        "A": 5,
         "L": 4,
-        "E": 5,
+        "E": 4,
         "R": 5,
-        "I": 7,
-        "O": 7
+        "I": 6,
+        "O": 6
       },
       "combat": {
-        "attackPower": 90,
-        "defensePower": 70,
-        "draftCost": 4
+        "attackPower": 70,
+        "defensePower": 55,
+        "draftCost": 2
       },
-      "rarityRule": "epica: costo draft 4 secondo bilanciamento v7; nuova carta extra",
+      "rarityRule": "comune: deck cost 2 secondo bilanciamento v10 spell/energy retrocompatibile",
       "type": "attack",
       "role": "attack",
       "allowedIntents": [
         "combat",
         "guard"
       ],
-      "guardBonus": 1
+      "guardBonus": 1,
+      "deckCost": 2,
+      "legacyType": "attack",
+      "legacyRole": "attack",
+      "deckType": "spell",
+      "roundIntents": [
+        "attack",
+        "defense",
+        "focus"
+      ],
+      "usablePhase": "spell_selection",
+      "usesValerio": true,
+      "usesCombat": true,
+      "energyCost": null
     },
     {
       "id": "valhawking",
       "image": "valhawking.png",
       "name": "Stephen Hawking",
       "subtitle": "The great commander",
-      "rarity": "leggendaria",
+      "rarity": "comune",
       "archetype": "diplomatico",
       "theme": "scientist",
       "frame": {
@@ -5465,10 +6623,10 @@
         "icon": "scientist"
       },
       "active": {
-        "name": "Riposizionamento",
-        "cost": 4,
+        "name": "Curvatura dello Spazio",
+        "cost": 1,
         "timing": "before_fight",
-        "text": "Attiva: prepara lo swap della carta selezionata.",
+        "text": "Attiva: riposizioni o scambi una carta selezionata.",
         "effect": {
           "type": "swap_selected_card",
           "target": "self",
@@ -5481,12 +6639,13 @@
             "selection": "chosen_hand"
           }
         ],
-        "flavor": "The great white Valerio is back."
+        "flavor": "La gravità del problema era sottostimata.",
+        "costResource": "mana"
       },
       "passive": {
-        "name": "Cambio Coperto",
+        "name": "Radiazione di Hawking",
         "timing": "always",
-        "text": "Sempre: prepara lo scambio della carta selezionata.",
+        "text": "Sempre: generi un vantaggio lento nel tempo.",
         "effect": {
           "type": "swap_selected_card",
           "target": "self",
@@ -5499,7 +6658,7 @@
             "selection": "chosen_hand"
           }
         ],
-        "flavor": "The great white Valerio is back."
+        "flavor": "Anche il buco nero rilascia qualcosa."
       },
       "quote": "The great white Valerio is back.",
       "tags": [
@@ -5508,35 +6667,47 @@
         "valerio"
       ],
       "valerio": {
-        "V": 6,
-        "A": 6,
+        "V": 5,
+        "A": 5,
         "L": 4,
-        "E": 5,
+        "E": 4,
         "R": 5,
-        "I": 7,
-        "O": 7
+        "I": 6,
+        "O": 6
       },
       "combat": {
-        "attackPower": 90,
+        "attackPower": 55,
         "defensePower": 70,
-        "draftCost": 4
+        "draftCost": 2
       },
-      "rarityRule": "epica: costo draft 4 secondo bilanciamento v7; nuova carta extra",
+      "rarityRule": "comune: deck cost 2 secondo bilanciamento v10 spell/energy retrocompatibile",
       "type": "defense",
       "role": "defense",
       "allowedIntents": [
-        "guard",
-        "recover",
-        "utility"
+        "combat",
+        "guard"
       ],
-      "guardBonus": 3
+      "guardBonus": 3,
+      "deckCost": 2,
+      "legacyType": "defense",
+      "legacyRole": "defense",
+      "deckType": "spell",
+      "roundIntents": [
+        "attack",
+        "defense",
+        "focus"
+      ],
+      "usablePhase": "spell_selection",
+      "usesValerio": true,
+      "usesCombat": true,
+      "energyCost": null
     },
     {
       "id": "valenstein",
       "image": "valenstein.png",
-      "name": "Stephen Hawking",
-      "subtitle": "The great commander",
-      "rarity": "leggendaria",
+      "name": "Albert Valenstein",
+      "subtitle": "Relatività del Project",
+      "rarity": "comune",
       "archetype": "diplomatico",
       "theme": "scientist",
       "frame": {
@@ -5545,10 +6716,10 @@
         "icon": "scientist"
       },
       "active": {
-        "name": "Spacco del Limite",
-        "cost": 3,
+        "name": "Relatività del Turno",
+        "cost": 1,
         "timing": "before_fight",
-        "text": "Prima del fight: la Breccia puo superare il cap normale.",
+        "text": "Attiva: cambia timing, stat o priorità dopo il reveal.",
         "effect": {
           "type": "break-cap"
         },
@@ -5557,12 +6728,13 @@
             "type": "break-cap"
           }
         ],
-        "flavor": "The great white Valerio is back."
+        "flavor": "Il tempo è relativo. La deadline no.",
+        "costResource": "mana"
       },
       "passive": {
-        "name": "Cambio Ritmico",
+        "name": "Equazione Impossibile",
         "timing": "always",
-        "text": "Sempre: prepara lo swap della carta selezionata.",
+        "text": "Sempre: se usi due stat non ovvie, ottieni bonus.",
         "effect": {
           "type": "swap_selected_card",
           "target": "self",
@@ -5575,7 +6747,7 @@
             "selection": "chosen_hand"
           }
         ],
-        "flavor": "The great white Valerio is back."
+        "flavor": "La soluzione era elegante finché non è entrata in produzione."
       },
       "quote": "The great white Valerio is back.",
       "tags": [
@@ -5584,27 +6756,40 @@
         "valerio"
       ],
       "valerio": {
-        "V": 6,
-        "A": 6,
+        "V": 5,
+        "A": 5,
         "L": 4,
-        "E": 5,
+        "E": 4,
         "R": 5,
-        "I": 7,
-        "O": 7
+        "I": 6,
+        "O": 6
       },
       "combat": {
-        "attackPower": 90,
-        "defensePower": 70,
-        "draftCost": 4
+        "attackPower": 70,
+        "defensePower": 55,
+        "draftCost": 2
       },
-      "rarityRule": "epica: costo draft 4 secondo bilanciamento v7; nuova carta extra",
+      "rarityRule": "comune: deck cost 2 secondo bilanciamento v10 spell/energy retrocompatibile",
       "type": "attack",
       "role": "attack",
       "allowedIntents": [
         "combat",
         "guard"
       ],
-      "guardBonus": 1
+      "guardBonus": 1,
+      "deckCost": 2,
+      "legacyType": "attack",
+      "legacyRole": "attack",
+      "deckType": "spell",
+      "roundIntents": [
+        "attack",
+        "defense",
+        "focus"
+      ],
+      "usablePhase": "spell_selection",
+      "usesValerio": true,
+      "usesCombat": true,
+      "energyCost": null
     }
   ]
 }

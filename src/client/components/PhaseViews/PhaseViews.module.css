@@ -2328,6 +2328,320 @@
   }
 }
 
+.selectedDeckNotice {
+  display: grid;
+  gap: 3px;
+  border: 1px solid var(--color-border-soft);
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.selectedDeckNotice strong {
+  color: var(--color-text);
+  font-size: 0.84rem;
+}
+
+.selectedDeckNotice span {
+  color: var(--color-muted);
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+
+.selectedDeckNotice[data-valid="true"] {
+  border-color: color-mix(in srgb, var(--color-utility), transparent 42%);
+}
+
+.valeverceDeckManager {
+  display: grid;
+  gap: 16px;
+}
+
+.deckBuilderGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.65fr);
+  gap: 16px;
+}
+
+.deckSlotsPanel,
+.savedDeckPanel {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  border: 1px solid var(--color-border-soft);
+  border-radius: 8px;
+  padding: 14px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent),
+    rgba(7, 8, 7, 0.46);
+}
+
+.validMeta {
+  color: var(--color-utility);
+}
+
+.deckSlotSection {
+  display: grid;
+  gap: 10px;
+}
+
+.deckSlotGrid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.energySlotGrid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  max-width: 520px;
+}
+
+.deckSlot {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 132px;
+  overflow: hidden;
+  border: 1px dashed var(--color-border-soft);
+  border-radius: 8px;
+  padding: 8px;
+  color: var(--color-muted);
+  background: rgba(255, 255, 255, 0.032);
+  cursor: pointer;
+}
+
+.deckSlot b {
+  color: var(--color-gold);
+  font-size: 2rem;
+}
+
+.filledDeckSlot {
+  align-content: end;
+  border-style: solid;
+  color: var(--color-text);
+}
+
+.filledDeckSlot img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.74;
+}
+
+.filledDeckSlot strong {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  border-radius: 6px;
+  padding: 5px;
+  background: rgba(7, 8, 7, 0.72);
+  font-size: 0.68rem;
+  line-height: 1.12;
+}
+
+.filledDeckSlot span {
+  position: absolute;
+  z-index: 2;
+  top: 6px;
+  right: 6px;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  color: var(--color-text);
+  background: rgba(0, 0, 0, 0.78);
+  font-size: 0.74rem;
+  font-weight: 950;
+}
+
+.deckBuilderActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.savedDeckList {
+  display: grid;
+  gap: 10px;
+}
+
+.savedDeckRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--color-border-soft);
+  border-radius: 8px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.032);
+}
+
+.savedDeckActive {
+  border-color: color-mix(in srgb, var(--color-utility), transparent 36%);
+}
+
+.savedDeckRow div:first-child {
+  display: grid;
+  gap: 4px;
+}
+
+.savedDeckRow strong {
+  color: var(--color-text);
+}
+
+.savedDeckRow span,
+.savedDeckRow small {
+  color: var(--color-muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.cardSelectorOverlay {
+  position: fixed;
+  z-index: 80;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(0, 0, 0, 0.68);
+}
+
+.cardSelector {
+  display: grid;
+  gap: 12px;
+  width: min(980px, 100%);
+  max-height: min(760px, 92vh);
+  overflow: auto;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 14px;
+  background: var(--color-panel);
+}
+
+.selectorCardGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+}
+
+.selectorCard {
+  display: grid;
+  gap: 6px;
+  overflow: hidden;
+  border: 1px solid var(--color-border-soft);
+  border-radius: 8px;
+  padding: 8px;
+  color: var(--color-text);
+  background: rgba(255, 255, 255, 0.036);
+  text-align: left;
+}
+
+.selectorCard img {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+.selectorCard strong {
+  font-size: 0.76rem;
+  line-height: 1.12;
+}
+
+.selectorCard span {
+  color: var(--color-muted);
+  font-size: 0.68rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.selectorCardUsed {
+  opacity: 0.42;
+}
+
+.decisionControls {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.35fr) minmax(0, 0.65fr);
+  gap: 12px;
+}
+
+.intentPanel,
+.energyDecisionPanel {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  border: 1px solid var(--color-border-soft);
+  border-radius: 8px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.032);
+}
+
+.intentButtons {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.intentButton {
+  border: 1px solid var(--color-border-soft);
+  border-radius: 8px;
+  padding: 10px 8px;
+  color: var(--color-text);
+  background: rgba(255, 255, 255, 0.035);
+  font-size: 0.75rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.intentButtonActive {
+  border-color: var(--color-gold);
+  background: color-mix(in srgb, var(--color-gold), transparent 84%);
+}
+
+.energyDecisionCards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.energyDecisionCard {
+  display: grid;
+  gap: 5px;
+  border: 1px solid var(--color-border-soft);
+  border-radius: 8px;
+  padding: 7px;
+  color: var(--color-text);
+  background: rgba(255, 255, 255, 0.035);
+  text-align: left;
+}
+
+.energyDecisionCard img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+.energyDecisionCard strong {
+  font-size: 0.7rem;
+  line-height: 1.12;
+}
+
+.energyDecisionCard span {
+  color: var(--color-gold);
+  font-size: 0.66rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.energyDecisionCardActive {
+  border-color: var(--color-gold);
+  background: color-mix(in srgb, var(--color-gold), transparent 84%);
+}
+
 .rarityCommon { --rarity-color: var(--rarity-common); }
 .rarityRare { --rarity-color: var(--rarity-rare); }
 .rarityEpic { --rarity-color: var(--rarity-epic); }
@@ -2352,7 +2666,9 @@
   .scoreboard,
   .effectLogGrid,
   .effectTimeline,
-  .utilityBoard {
+  .utilityBoard,
+  .deckBuilderGrid,
+  .decisionControls {
     grid-template-columns: 1fr;
   }
 
@@ -2367,7 +2683,8 @@
 
   .homeAccess,
   .homeRules,
-  .utilityDeckManager {
+  .utilityDeckManager,
+  .deckBuilderGrid {
     grid-column: auto;
   }
 }
@@ -2384,7 +2701,12 @@
   .utilityZoneGrid,
   .utilityOverlayGrid,
   .publicLobbyTableHead,
-  .publicLobbyRow {
+  .publicLobbyRow,
+  .savedDeckRow,
+  .deckSlotGrid,
+  .energySlotGrid,
+  .intentButtons,
+  .energyDecisionCards {
     grid-template-columns: 1fr;
   }
 

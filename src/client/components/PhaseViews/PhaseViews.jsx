@@ -53,6 +53,8 @@ const rarityClasses = {
 };
 
 const MAX_UTILITY_DECK_SIZE = 8;
+const SPELL_DECK_SIZE = 10;
+const ENERGY_DECK_SIZE = 3;
 const AUTH_PASSWORD_MIN_LENGTH = 6;
 const UTILITY_CARD_TYPES = Object.freeze(["utility", "defense", "trap"]);
 const TARGET_EFFECT_TYPES = Object.freeze(["damage", "swap_card", "steal_card", "swap_deck"]);
@@ -63,7 +65,7 @@ const AUTH_MODES = Object.freeze({
 const HOME_PAGES = Object.freeze([
   { id: "play", label: "Gioca" },
   { id: "profile", label: "Profilo" },
-  { id: "decks", label: "Deck Utility" },
+  { id: "decks", label: "Deck" },
   { id: "cards", label: "Carte" }
 ]);
 
@@ -342,7 +344,14 @@ export function HomeView({
   pingMs,
   utilityCards = [],
   utilityDecks = [],
-  onUtilityDecksChange
+  onUtilityDecksChange,
+  spellCards = [],
+  energyCards = [],
+  valeverceDecks = [],
+  selectedMatchDeckId = "",
+  onValeverceDeckSave,
+  onValeverceDeckDelete,
+  onSelectedMatchDeckChange
 }) {
   const lobbies = snapshot?.lobbies ?? [];
   const publicLobbies = sortPublicLobbies(lobbies);
@@ -403,6 +412,7 @@ export function HomeView({
             emit={emit}
             connectionState={connectionState}
             publicLobbies={publicLobbies}
+            selectedDeck={valeverceDecks.find((deck) => deck.id === selectedMatchDeckId) ?? null}
           />
         ) : null}
 
@@ -411,10 +421,17 @@ export function HomeView({
         ) : null}
 
         {currentPage === "decks" ? (
-          <UtilityDeckManager
-            utilityCards={utilityCards}
-            utilityDecks={utilityDecks}
-            onUtilityDecksChange={onUtilityDecksChange}
+          <ValeverceDeckManager
+            spellCards={spellCards}
+            energyCards={energyCards}
+            decks={valeverceDecks}
+            selectedDeckId={selectedMatchDeckId}
+            onSave={onValeverceDeckSave}
+            onDelete={onValeverceDeckDelete}
+            onPlay={(deck) => {
+              onSelectedMatchDeckChange?.(deck.id);
+              onActivePageChange?.("play");
+            }}
           />
         ) : null}
 
@@ -424,7 +441,7 @@ export function HomeView({
   );
 }
 
-function HomePlayPage({ name, onNameChange, emit, connectionState, publicLobbies }) {
+function HomePlayPage({ name, onNameChange, emit, connectionState, publicLobbies, selectedDeck }) {
   return (
     <div className={styles.homePlayGrid}>
       <section className={styles.homeAccess}>
@@ -447,10 +464,19 @@ function HomePlayPage({ name, onNameChange, emit, connectionState, publicLobbies
         </label>
 
         <div className={styles.homeActions}>
-          <button type="button" className={styles.homePrimaryButton} onClick={() => emit(CLIENT_EVENTS.CREATE_LOBBY)}>
+          <button
+            type="button"
+            className={styles.homePrimaryButton}
+            disabled={!selectedDeck}
+            onClick={() => emit(CLIENT_EVENTS.CREATE_LOBBY)}
+          >
             Crea lobby
           </button>
           <JoinLobby emit={emit} />
+        </div>
+        <div className={styles.selectedDeckNotice} data-valid={Boolean(selectedDeck)}>
+          <strong>{selectedDeck ? selectedDeck.name : "Nessun deck selezionato"}</strong>
+          <span>{selectedDeck ? "Spell Deck + Energy Deck pronti" : "Crea o scegli un deck nella pagina Deck"}</span>
         </div>
         <a className={styles.homeCatalogButton} href="/cards">
           Vedi tutte le carte
@@ -686,6 +712,275 @@ function CardsHomePage({ utilityCards }) {
       </div>
     </section>
   );
+}
+
+function ValeverceDeckManager({ spellCards, energyCards, decks, selectedDeckId, onSave, onDelete, onPlay }) {
+  const [editingId, setEditingId] = React.useState("");
+  const [deckName, setDeckName] = React.useState("Valeverce Deck");
+  const [spellDeck, setSpellDeck] = React.useState([]);
+  const [energyDeck, setEnergyDeck] = React.useState([]);
+  const [selector, setSelector] = React.useState(null);
+  const [query, setQuery] = React.useState("");
+  const allCards = React.useMemo(() => [...spellCards, ...energyCards], [energyCards, spellCards]);
+  const cardMap = React.useMemo(() => new Map(allCards.map((card) => [card.id, card])), [allCards]);
+  const isValid = validateValeverceDeck(spellDeck, energyDeck, cardMap).ok;
+
+  function editDeck(deck) {
+    setEditingId(deck.id);
+    setDeckName(deck.name);
+    setSpellDeck(deck.spellDeck);
+    setEnergyDeck(deck.energyDeck);
+  }
+
+  function clearBuilder() {
+    setEditingId("");
+    setDeckName("Valeverce Deck");
+    setSpellDeck([]);
+    setEnergyDeck([]);
+    setSelector(null);
+    setQuery("");
+  }
+
+  function setSlot(kind, index, cardId) {
+    const setter = kind === "spell" ? setSpellDeck : setEnergyDeck;
+    setter((current) => {
+      const size = kind === "spell" ? SPELL_DECK_SIZE : ENERGY_DECK_SIZE;
+      const nextDeck = Array.from({ length: size }, (_, slotIndex) => current[slotIndex] ?? "");
+      nextDeck[index] = cardId;
+      return nextDeck.filter((id) => id || nextDeck.indexOf(id) < size);
+    });
+    setSelector(null);
+    setQuery("");
+  }
+
+  function removeSlot(kind, index) {
+    const setter = kind === "spell" ? setSpellDeck : setEnergyDeck;
+    setter((current) => current.filter((_, slotIndex) => slotIndex !== index));
+  }
+
+  function saveDeck() {
+    if (!isValid) {
+      return;
+    }
+
+    onSave?.({
+      id: editingId,
+      name: deckName.trim() || "Valeverce Deck",
+      spellDeck,
+      energyDeck
+    });
+    clearBuilder();
+  }
+
+  return (
+    <section className={styles.valeverceDeckManager}>
+      <div className={styles.homePanelHeader}>
+        <div className={styles.homePanelTitleGroup}>
+          <p className={styles.homePanelEyebrow}>deck builder</p>
+          <h2 className={styles.homePanelTitle}>Spell Deck / Energy Deck</h2>
+        </div>
+        <span className={classNames(styles.homePanelMeta, isValid && styles.validMeta)}>
+          {isValid ? "Valid" : "Not Valid"}
+        </span>
+      </div>
+
+      <div className={styles.deckBuilderGrid}>
+        <section className={styles.deckSlotsPanel}>
+          <label className={styles.homeField}>
+            <span className={styles.homeFieldLabel}>Nome deck</span>
+            <input
+              className={styles.homeInput}
+              value={deckName}
+              onChange={(event) => setDeckName(event.target.value)}
+              placeholder="Nome deck"
+            />
+          </label>
+
+          <DeckSlotSection
+            title="Spell Deck"
+            count={spellDeck.length}
+            size={SPELL_DECK_SIZE}
+            cards={spellDeck}
+            cardMap={cardMap}
+            onOpen={(index) => setSelector({ kind: "spell", index })}
+            onRemove={(index) => removeSlot("spell", index)}
+          />
+
+          <DeckSlotSection
+            title="Energy Deck"
+            count={energyDeck.length}
+            size={ENERGY_DECK_SIZE}
+            cards={energyDeck}
+            cardMap={cardMap}
+            onOpen={(index) => setSelector({ kind: "energy", index })}
+            onRemove={(index) => removeSlot("energy", index)}
+          />
+
+          <div className={styles.deckBuilderActions}>
+            <button type="button" className={styles.homePrimaryButton} disabled={!isValid} onClick={saveDeck}>
+              {editingId ? "Aggiorna deck" : "Salva deck"}
+            </button>
+            <button type="button" className={styles.joinButton} onClick={clearBuilder}>
+              Reset
+            </button>
+          </div>
+        </section>
+
+        <section className={styles.savedDeckPanel}>
+          <div className={styles.sectionTitle}>
+            <strong>Deck salvati</strong>
+            <span>{decks.length}</span>
+          </div>
+          {decks.length ? (
+            <div className={styles.savedDeckList}>
+              {decks.map((deck) => (
+                <article key={deck.id} className={classNames(styles.savedDeckRow, deck.id === selectedDeckId && styles.savedDeckActive)}>
+                  <div>
+                    <strong>{deck.name}</strong>
+                    <span>
+                      Spell {deck.spellDeck.length}/{SPELL_DECK_SIZE} · Energy {deck.energyDeck.length}/{ENERGY_DECK_SIZE}
+                    </span>
+                    <small>{previewDeckNames(deck, cardMap)}</small>
+                  </div>
+                  <div className={styles.utilityDeckActions}>
+                    <button type="button" disabled={!validateValeverceDeck(deck.spellDeck, deck.energyDeck, cardMap).ok} onClick={() => onPlay?.(deck)}>
+                      Play
+                    </button>
+                    <button type="button" onClick={() => editDeck(deck)}>
+                      Edit
+                    </button>
+                    <button type="button" onClick={() => onDelete?.(deck.id)}>
+                      Delete
+                    </button>
+                  </div>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <p className={styles.notice}>Nessun deck salvato.</p>
+          )}
+        </section>
+      </div>
+
+      {selector ? (
+        <CardSelectorDialog
+          kind={selector.kind}
+          query={query}
+          onQueryChange={setQuery}
+          cards={selector.kind === "spell" ? spellCards : energyCards}
+          selectedIds={selector.kind === "spell" ? spellDeck : energyDeck}
+          onSelect={(cardId) => setSlot(selector.kind, selector.index, cardId)}
+          onClose={() => setSelector(null)}
+        />
+      ) : null}
+    </section>
+  );
+}
+
+function DeckSlotSection({ title, count, size, cards, cardMap, onOpen, onRemove }) {
+  return (
+    <section className={styles.deckSlotSection}>
+      <div className={styles.sectionTitle}>
+        <strong>{title}</strong>
+        <span>{count}/{size}</span>
+      </div>
+      <div className={classNames(styles.deckSlotGrid, size === ENERGY_DECK_SIZE && styles.energySlotGrid)}>
+        {Array.from({ length: size }, (_, index) => {
+          const card = cardMap.get(cards[index]);
+          return (
+            <button
+              key={`${title}-${index}`}
+              type="button"
+              className={classNames(styles.deckSlot, card && styles.filledDeckSlot)}
+              onClick={() => onOpen(index)}
+            >
+              {card ? (
+                <>
+                  <img src={cardImageSrc(card)} alt={card.name} />
+                  <strong>{card.name}</strong>
+                  <span onClick={(event) => {
+                    event.stopPropagation();
+                    onRemove(index);
+                  }}>
+                    x
+                  </span>
+                </>
+              ) : (
+                <b>+</b>
+              )}
+            </button>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+function CardSelectorDialog({ kind, query, onQueryChange, cards, selectedIds, onSelect, onClose }) {
+  const normalizedQuery = query.trim().toLowerCase();
+  const availableCards = cards.filter((card) => {
+    const haystack = `${card.name ?? ""} ${card.id ?? ""} ${card.type ?? ""}`.toLowerCase();
+    return !normalizedQuery || haystack.includes(normalizedQuery);
+  });
+
+  return (
+    <div className={styles.cardSelectorOverlay}>
+      <section className={styles.cardSelector}>
+        <div className={styles.homePanelHeader}>
+          <div className={styles.homePanelTitleGroup}>
+            <p className={styles.homePanelEyebrow}>{kind === "spell" ? "Spell Deck" : "Energy Deck"}</p>
+            <h2 className={styles.homePanelTitle}>Scegli carta</h2>
+          </div>
+          <button type="button" className={styles.joinButton} onClick={onClose}>
+            Chiudi
+          </button>
+        </div>
+        <input
+          className={styles.homeInput}
+          value={query}
+          placeholder="Cerca carta"
+          onChange={(event) => onQueryChange(event.target.value)}
+        />
+        <div className={styles.selectorCardGrid}>
+          {availableCards.map((card) => (
+            <button
+              key={card.id}
+              type="button"
+              className={classNames(styles.selectorCard, selectedIds.includes(card.id) && styles.selectorCardUsed)}
+              disabled={selectedIds.includes(card.id)}
+              onClick={() => onSelect(card.id)}
+            >
+              <img src={cardImageSrc(card)} alt={card.name} />
+              <strong>{card.name}</strong>
+              <span>{card.type}</span>
+            </button>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function validateValeverceDeck(spellDeck, energyDeck, cardMap) {
+  if (spellDeck.length !== SPELL_DECK_SIZE || energyDeck.length !== ENERGY_DECK_SIZE) {
+    return { ok: false };
+  }
+
+  if (new Set(spellDeck).size !== spellDeck.length || new Set(energyDeck).size !== energyDeck.length) {
+    return { ok: false };
+  }
+
+  const spellValid = spellDeck.every((cardId) => cardMap.get(cardId)?.deckType === "spell");
+  const energyValid = energyDeck.every((cardId) => cardMap.get(cardId)?.deckType === "energy");
+  return { ok: spellValid && energyValid };
+}
+
+function previewDeckNames(deck, cardMap) {
+  return [...deck.spellDeck, ...deck.energyDeck]
+    .map((cardId) => cardMap.get(cardId)?.name)
+    .filter(Boolean)
+    .slice(0, 5)
+    .join(" · ");
 }
 
 function UtilityDeckManager({ utilityCards, utilityDecks, onUtilityDecksChange, compact = false, onSelectDeck = undefined }) {
@@ -1320,11 +1615,12 @@ function UtilityDeckGate({ utilityCards, utilityDecks, onUtilityDecksChange, onS
   );
 }
 
-export function PlanFightView({ lobby, plan, onPlanValue, onPreviewLines }) {
+export function PlanFightView({ lobby, plan, onPlanValue, onPlanPatch, onPreviewLines }) {
   const selfCard = lobby.self?.selected?.selectedCard;
   const opponent = currentOpponent(lobby);
   const opponentCard = opponent?.selectedCard;
   const validation = selfCard ? validatePlanDraft(plan, selfCard) : null;
+  const energyCards = lobby.self?.utilityHand ?? lobby.self?.utilityDeck ?? [];
 
   React.useEffect(() => {
     if (!selfCard || !opponentCard) {
@@ -1366,6 +1662,54 @@ export function PlanFightView({ lobby, plan, onPlanValue, onPreviewLines }) {
         <div className={styles.fightCards}>
           <PlanCardPanel title="La tua carta" card={selfCard} statsTone="attack" highlighted={selectedAttackStats} />
           <PlanCardPanel title="Carta avversaria" card={opponentCard} statsTone="defense" highlighted={selectedDefenseStats} />
+        </div>
+
+        <div className={styles.decisionControls}>
+          <section className={styles.intentPanel}>
+            <div className={styles.sectionTitle}>
+              <strong>Intent</strong>
+              <span>{plan.intent ?? "attack"}</span>
+            </div>
+            <div className={styles.intentButtons}>
+              {["attack", "defense", "focus"].map((intent) => (
+                <button
+                  key={intent}
+                  type="button"
+                  className={classNames(styles.intentButton, plan.intent === intent && styles.intentButtonActive)}
+                  onClick={() => onPlanPatch?.({ intent })}
+                >
+                  {intentLabel(intent)}
+                </button>
+              ))}
+            </div>
+          </section>
+
+          <section className={styles.energyDecisionPanel}>
+            <div className={styles.sectionTitle}>
+              <strong>Energy Deck</strong>
+              <span>Energy {lobby.self?.energy ?? 0}/{lobby.self?.maxEnergy ?? 5}</span>
+            </div>
+            <div className={styles.energyDecisionCards}>
+              {energyCards.map((card) => {
+                const cost = Number(card.energyCost ?? card.active?.cost ?? 0);
+                const disabled = cost > Number(lobby.self?.energy ?? 0);
+                return (
+                  <button
+                    key={card.id}
+                    type="button"
+                    className={classNames(styles.energyDecisionCard, plan.energyCardId === card.id && styles.energyDecisionCardActive)}
+                    disabled={disabled}
+                    onClick={() => onPlanPatch?.({ energyCardId: plan.energyCardId === card.id ? null : card.id })}
+                  >
+                    <img src={cardImageSrc(card)} alt={card.name} />
+                    <strong>{card.name}</strong>
+                    <span>{cost} Energy</span>
+                  </button>
+                );
+              })}
+              {energyCards.length === 0 ? <p className={styles.notice}>Energy Deck vuoto.</p> : null}
+            </div>
+          </section>
         </div>
 
         <div className={styles.fightSteps}>
@@ -1945,6 +2289,14 @@ function cardTypeLabel(type) {
   }
 
   return String(type);
+}
+
+function intentLabel(intent) {
+  return {
+    attack: "Attack",
+    defense: "Defense",
+    focus: "Focus"
+  }[intent] ?? "Attack";
 }
 
 function RevealPlayerReport({ play, profile, isSelf, isWinner }) {

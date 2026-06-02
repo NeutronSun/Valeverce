@@ -260,6 +260,10 @@
     --bar-color: var(--color-mana);
   }
 
+  &.energy {
+    --bar-color: var(--color-gold);
+  }
+
   &.compact {
     min-height: 22px;
 

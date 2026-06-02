@@ -51,10 +51,39 @@ export function createSubmitPlanAction({
       return;
     }
 
+    if (plan.energyCardId) {
+      const energyCard = cardsById.get(plan.energyCardId);
+      const energyCost = Number(energyCard?.energyCost ?? energyCard?.active?.cost ?? 0);
+      if (!energyCard || !player.utilityHand?.includes(plan.energyCardId) || !isEnergyDeckCard(energyCard)) {
+        sendError(client, "Carta Energy Deck non valida");
+        return;
+      }
+
+      if (player.energyUsedThisRound) {
+        sendError(client, "Hai gia usato una carta Energy Deck in questo round");
+        return;
+      }
+
+      if (energyCost > Number(player.energy ?? 0)) {
+        sendError(client, "Energy insufficiente");
+        return;
+      }
+    }
+
     player.selected.attacks = plan.attacks;
     player.selected.defenses = plan.defenses;
     player.selected.useActive = plan.useActive;
+    player.selected.intent = plan.intent;
+    player.selected.energyCardId = plan.energyCardId;
     advanceRoundIfReady(lobby);
     broadcastLobbyState(lobby);
   };
+}
+
+function isEnergyDeckCard(card) {
+  if (card?.deckType) {
+    return card.deckType === "energy";
+  }
+
+  return ["utility", "trap"].includes(card?.type) && Number.isInteger(card?.energyCost);
 }

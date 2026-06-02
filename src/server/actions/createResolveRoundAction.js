@@ -21,7 +21,8 @@ export function createResolveRoundAction({
         player.id,
         {
           health: player.health,
-          mana: player.mana
+          mana: player.mana,
+          energy: player.energy
         }
       ])
     );
@@ -42,30 +43,51 @@ export function createResolveRoundAction({
         mana: player.mana
       });
 
-      return { player, opponent, card, opponentCard, detail };
+      return {
+        player,
+        opponent,
+        card,
+        opponentCard,
+        detail,
+        intent: player.selected.intent ?? "attack"
+      };
     });
 
-    const highestBreach = Math.max(...scores.map((score) => score.detail.breach));
-    const contenders = scores.filter((score) => score.detail.breach === highestBreach);
-    const isTie = contenders.length > 1;
-    const winner = isTie ? null : contenders[0];
     const damageTaken = new Map(duelists.map((player) => [player.id, 0]));
+    const dealtDamage = new Map(duelists.map((player) => [player.id, 0]));
+    const publicLog = [];
+    const privateLog = new Map();
 
     for (const score of scores) {
       score.player.mana = Math.max(0, score.player.mana - score.detail.manaCost);
       score.player.cooldowns[score.card.id] = SETTINGS.cardCooldownRounds + 1;
+      resolveEnergyCard(score, lobby, cardsById, trapSystem, effectWindowSystem, publicLog, privateLog);
     }
 
-    if (winner) {
-      const loser = winner.opponent;
-      const damage = winner.detail.finalDamage;
-      loser.health = Math.max(0, loser.health - damage);
-      damageTaken.set(loser.id, damage);
+    for (const score of scores) {
+      const opponentScore = scores.find((item) => item.player.id === score.opponent.id);
+      const damage = getIntentDamage(score, opponentScore);
+      if (damage <= 0) {
+        continue;
+      }
+
+      score.opponent.health = Math.max(0, score.opponent.health - damage);
+      damageTaken.set(score.opponent.id, (damageTaken.get(score.opponent.id) ?? 0) + damage);
+      dealtDamage.set(score.player.id, (dealtDamage.get(score.player.id) ?? 0) + damage);
     }
 
     for (const player of duelists) {
-      player.mana = Math.min(SETTINGS.maxMana, player.mana + SETTINGS.roundManaGain);
+      if (player.selected?.intent === "focus") {
+        const gain = (damageTaken.get(player.id) ?? 0) > 0 ? 1 : 2;
+        player.energy = Math.min(player.maxEnergy ?? 5, Number(player.energy ?? 0) + gain);
+      }
+      player.alive = player.health > 0;
     }
+
+    const highestDamage = Math.max(...scores.map((score) => dealtDamage.get(score.player.id) ?? 0));
+    const contenders = scores.filter((score) => (dealtDamage.get(score.player.id) ?? 0) === highestDamage);
+    const isTie = highestDamage <= 0 || contenders.length > 1;
+    const winner = isTie ? null : contenders[0];
 
     lobby.lastResult = {
       round: lobby.round,
@@ -74,9 +96,8 @@ export function createResolveRoundAction({
       isTie,
       summary: makeRoundSummary(scores, winner, isTie, damageTaken),
       plays: scores.map((score) => {
-        const healthBefore = before.get(score.player.id).health;
-        const manaBefore = before.get(score.player.id).mana;
-        const actualFinalDamage = winner?.player.id === score.player.id ? score.detail.finalDamage : 0;
+        const snapshot = before.get(score.player.id);
+        const actualFinalDamage = dealtDamage.get(score.player.id) ?? 0;
 
         return {
           playerId: score.player.id,
@@ -87,6 +108,8 @@ export function createResolveRoundAction({
 
           attacks: score.player.selected.attacks,
           defenses: score.player.selected.defenses,
+          intent: score.intent,
+          energyCardId: score.player.selected.energyCardId ?? null,
 
           attackPool: score.detail.attackPool,
           defensePool: score.detail.defensePool,
@@ -111,22 +134,34 @@ export function createResolveRoundAction({
 
           attackLines: score.detail.attackLines,
 
-          healthBefore,
+          healthBefore: snapshot.health,
           healthAfter: score.player.health,
-          manaBefore,
+          manaBefore: snapshot.mana,
           manaAfter: score.player.mana,
-          manaGain: SETTINGS.roundManaGain,
+          energyBefore: snapshot.energy,
+          energyAfter: score.player.energy,
+          manaGain: 0,
           cooldown: score.player.cooldowns[score.card.id] ?? 0,
 
           outcome: winner ? (score.player.id === winner.player.id ? "win" : "lose") : "tie"
         };
-      })
+      }),
+      effectLog: publicLog
     };
 
-    const publicLog = [];
-    const privateLog = new Map();
     trapSystem.triggerArmedTraps(lobby, duelists, publicLog, privateLog);
-    effectWindowSystem.open(lobby, duelists, publicLog, privateLog);
+    syncLastResultResources(lobby);
+    if (duelists.every((player) => player.spellDeckReady)) {
+      lobby.effectWindow = null;
+      for (const [playerId, entries] of privateLog.entries()) {
+        const player = lobby.players.get(playerId);
+        if (player) {
+          player.privateEffectLog = [...(player.privateEffectLog ?? []), ...entries].slice(-20);
+        }
+      }
+    } else {
+      effectWindowSystem.open(lobby, duelists, publicLog, privateLog);
+    }
 
     lobby.phase = "reveal";
     lobby.winnerId = null;
@@ -134,8 +169,104 @@ export function createResolveRoundAction({
     pushChat(lobby, {
       kind: "system",
       text: winner
-        ? `${winner.player.name} vince il duello ${lobby.round} e infligge ${damageTaken.get(winner.opponent.id)} PV`
+        ? `${winner.player.name} vince il duello ${lobby.round} e infligge ${dealtDamage.get(winner.player.id)} PV`
         : `Duello ${lobby.round} in pareggio: nessun danno PV`
     });
   };
+}
+
+function getIntentDamage(score, opponentScore) {
+  const opponentIntent = opponentScore?.intent ?? "attack";
+  if (score.intent !== "attack") {
+    return 0;
+  }
+
+  if (opponentIntent === "focus") {
+    return Math.max(1, score.detail.finalDamage);
+  }
+
+  return score.detail.finalDamage;
+}
+
+function resolveEnergyCard(score, lobby, cardsById, trapSystem, effectWindowSystem, publicLog, privateLog) {
+  const cardId = score.player.selected.energyCardId;
+  if (!cardId) {
+    return;
+  }
+
+  const card = cardsById.get(cardId);
+  const energyCost = Number(card?.energyCost ?? card?.active?.cost ?? 0);
+  if (!card || !score.player.utilityHand?.includes(cardId) || energyCost > Number(score.player.energy ?? 0)) {
+    return;
+  }
+
+  if (!effectWindowSystem.effectApplicator.cardMoves.removeFromHand(score.player, cardId)) {
+    return;
+  }
+  score.player.energy = Math.max(0, Number(score.player.energy ?? 0) - energyCost);
+  score.player.energyUsedThisRound = true;
+
+  if (card.type === "trap") {
+    resolveDecisionTrap(score, lobby, card, trapSystem, effectWindowSystem, publicLog, privateLog);
+    score.player.utilityDiscard.push(cardId);
+    return;
+  }
+
+  effectWindowSystem.effectApplicator.applyCard({
+    lobby,
+    sourcePlayer: score.player,
+    targetPlayer: score.opponent,
+    card,
+    publicLog,
+    privateLog,
+    source: "energy"
+  });
+  score.player.utilityDiscard.push(cardId);
+}
+
+function syncLastResultResources(lobby) {
+  if (!Array.isArray(lobby.lastResult?.plays)) {
+    return;
+  }
+
+  for (const play of lobby.lastResult.plays) {
+    const player = lobby.players.get(play.playerId);
+    if (!player) {
+      continue;
+    }
+
+    play.healthAfter = player.health;
+    play.manaAfter = player.mana;
+    play.energyAfter = player.energy;
+  }
+}
+
+function resolveDecisionTrap(score, lobby, card, trapSystem, effectWindowSystem, publicLog, privateLog) {
+  const trap = {
+    id: `decision_${lobby.round}_${score.player.id}`,
+    ownerId: score.player.id,
+    cardId: card.id,
+    armedRound: lobby.round - 1,
+    trigger: card.trigger ?? { type: "enemy_attacks" }
+  };
+
+  if (!trapSystem.shouldTriggerTrap(trap, score.opponent, { type: "combat" })) {
+    effectWindowSystem.effectApplicator.addPublicLog(
+      publicLog,
+      lobby,
+      `${score.player.name} rivela ${card.name}, ma il trigger non scatta.`
+    );
+    return;
+  }
+
+  effectWindowSystem.effectApplicator.addPublicLog(publicLog, lobby, `${score.player.name} rivela ${card.name}.`);
+  effectWindowSystem.effectApplicator.applyCard({
+    lobby,
+    sourcePlayer: score.player,
+    targetPlayer: score.opponent,
+    card,
+    publicLog,
+    privateLog,
+    source: "energy"
+  });
 }

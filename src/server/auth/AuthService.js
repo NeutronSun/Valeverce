@@ -134,6 +134,52 @@ export class AuthService {
     };
   }
 
+  static async listValeverceDecksForToken(token) {
+    const auth = await AuthService.getAuthSnapshotFromToken(token);
+    if (!auth) {
+      throw new AuthError("Sessione non valida", 401);
+    }
+
+    return AuthService.decks.listValeverceDecks(auth.account.id);
+  }
+
+  static async createValeverceDeckForToken(token, payload) {
+    const auth = await AuthService.getAuthSnapshotFromToken(token);
+    if (!auth) {
+      throw new AuthError("Sessione non valida", 401);
+    }
+
+    return AuthService.decks.createValeverceDeck(auth.account.id, payload);
+  }
+
+  static async updateValeverceDeckForToken(token, deckId, payload) {
+    const auth = await AuthService.getAuthSnapshotFromToken(token);
+    if (!auth) {
+      throw new AuthError("Sessione non valida", 401);
+    }
+
+    const deck = await AuthService.decks.updateValeverceDeck(auth.account.id, deckId, payload);
+    if (!deck) {
+      throw new AuthError("Deck non trovato", 404);
+    }
+
+    return deck;
+  }
+
+  static async deleteValeverceDeckForToken(token, deckId) {
+    const auth = await AuthService.getAuthSnapshotFromToken(token);
+    if (!auth) {
+      throw new AuthError("Sessione non valida", 401);
+    }
+
+    const deleted = await AuthService.decks.deleteValeverceDeck(auth.account.id, deckId);
+    if (!deleted) {
+      throw new AuthError("Deck non trovato", 404);
+    }
+
+    return { id: String(deckId ?? "") };
+  }
+
   static async recordGameFinishedForAccount(accountId, result) {
     if (!accountId) {
       return;

@@ -49,7 +49,9 @@ export function createSelectCardAction({
       cardId,
       attacks: null,
       defenses: null,
-      useActive: null
+      useActive: null,
+      intent: null,
+      energyCardId: null
     };
     advanceRoundIfReady(lobby);
     broadcastLobbyState(lobby);

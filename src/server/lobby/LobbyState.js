@@ -8,7 +8,9 @@ export class LobbyState {
     this.round = 0;
     this.settings = {
       pickTimerEnabled: true,
-      pickTimerSeconds: SETTINGS.actionSeconds
+      pickTimerSeconds: SETTINGS.actionSeconds,
+      draftSize: SETTINGS.draftSize,
+      draftBudget: SETTINGS.draftBudget
     };
     this.playerOrder = [hostId];
     this.activePair = [];
@@ -21,5 +23,6 @@ export class LobbyState {
     this.lastResult = null;
     this.winnerId = null;
     this.effectWindow = null;
+    this.progressRecorded = false;
   }
 }

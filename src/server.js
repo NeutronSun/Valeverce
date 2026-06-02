@@ -32,13 +32,15 @@ import { LobbySerializer } from "./server/lobby/LobbySerializer.js";
 import { LobbyState } from "./server/lobby/LobbyState.js";
 import { ClientSession } from "./server/socket/ClientSession.js";
 import { TimerController } from "./server/timer/TimerController.js";
+import { AuthService } from "./server/auth/AuthService.js";
+import { CardCatalogRepository } from "./server/repositories/CardCatalogRepository.js";
 import { CLIENT_EVENT_NAMES, CLIENT_EVENTS, SERVER_EVENTS } from "./shared/events.js";
 import { PlayerProfile } from "./shared/profile/PlayerProfile.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, "..");
 const publicDir = path.join(rootDir, "public");
-const port = Number(process.env.PORT ?? 3000);
+const port = Number(process.env.PORT ?? 3001);
 const isDev = process.env.NODE_ENV !== "production";
 
 const cardData = JSON.parse(await readFile(path.join(publicDir, "data", "cards.json"), "utf8"));
@@ -49,6 +51,7 @@ const clients = new Map();
 const clientsBySocketId = new Map();
 const lobbies = new Map();
 const profilesByClientId = new Map();
+const cardCatalogRepository = new CardCatalogRepository();
 let timerController;
 let lobbyManager;
 let lobbySerializer;
@@ -76,8 +79,17 @@ const io = new SocketIOServer(server, {
 });
 
 io.on("connection", (socket) => {
-  const client = new ClientSession(socket, `Player ${clients.size + 1}`, makeId);
-  client.profile = PlayerProfile.from(null, client.name).toJSON();
+  void handleConnection(socket);
+});
+
+void syncCardCatalog();
+
+async function handleConnection(socket) {
+  const auth = await resolveSocketAuth(socket);
+  const client = new ClientSession(socket, auth?.profile?.username ?? `Player ${clients.size + 1}`, makeId);
+  client.accountId = auth?.account?.id ?? null;
+  client.profile = PlayerProfile.from(auth?.profile ?? null, client.name).toJSON();
+  client.name = client.profile.username;
   clients.set(client.id, client);
   clientsBySocketId.set(socket.id, client);
   profilesByClientId.set(client.id, client.profile);
@@ -100,7 +112,7 @@ io.on("connection", (socket) => {
   }
 
   socket.on("disconnect", () => disconnectClient(client));
-});
+}
 
 server.listen(port, "0.0.0.0", () => {
   console.log("valeverce");
@@ -207,6 +219,23 @@ function readCards(data) {
   }
 
   return normalizeCards(cardsList);
+}
+
+async function syncCardCatalog() {
+  try {
+    await cardCatalogRepository.syncCards(cards);
+  } catch (error) {
+    console.error("Mongo cardCatalog non sincronizzato", error?.message ?? error);
+  }
+}
+
+async function resolveSocketAuth(socket) {
+  try {
+    return await AuthService.getAuthSnapshotFromCookieHeader(socket.handshake.headers.cookie);
+  } catch (error) {
+    console.error("Sessione socket non letta", error?.message ?? error);
+    return null;
+  }
 }
 
 function handleMessage(client, message) {
@@ -333,13 +362,36 @@ function updateLobbySettings(client, payload) {
     return;
   }
 
-  const pickTimerEnabled =
+  const currentTimerSeconds = Number(lobby.settings.pickTimerSeconds ?? SETTINGS.actionSeconds);
+  const requestedTimerSeconds = Number(payload.pickTimerSeconds);
+  let pickTimerEnabled =
     typeof payload.pickTimerEnabled === "boolean" ? payload.pickTimerEnabled : Boolean(lobby.settings.pickTimerEnabled);
-  const pickTimerSeconds = clampInteger(payload.pickTimerSeconds, 10, 60, lobby.settings.pickTimerSeconds);
+  let pickTimerSeconds = clampInteger(payload.pickTimerSeconds, 0, 60, currentTimerSeconds);
+  const draftSize = clampInteger(payload.draftSize, 3, 10, lobby.settings.draftSize ?? SETTINGS.draftSize);
+  const draftBudget = clampInteger(
+    payload.draftBudget,
+    draftSize * 2,
+    draftSize * 6,
+    lobby.settings.draftBudget ?? SETTINGS.draftBudget
+  );
+
+  if (Number.isFinite(requestedTimerSeconds) && requestedTimerSeconds <= 0 && typeof payload.pickTimerEnabled !== "boolean") {
+    pickTimerEnabled = false;
+  }
+
+  if (pickTimerEnabled && pickTimerSeconds <= 0) {
+    pickTimerSeconds = SETTINGS.actionSeconds;
+  }
+
+  if (!pickTimerEnabled) {
+    pickTimerSeconds = 0;
+  }
 
   lobby.settings = {
     pickTimerEnabled,
-    pickTimerSeconds
+    pickTimerSeconds,
+    draftSize,
+    draftBudget
   };
 
   broadcastLobbyState(lobby);
@@ -365,6 +417,7 @@ function startGame(client) {
   lobby.winnerId = null;
   lobby.lastResult = null;
   lobby.effectWindow = null;
+  lobby.progressRecorded = false;
   lobby.activePair = [];
   lobby.pairCursor = 0;
   lobby.playerOrder = lobby.playerOrder.filter((playerId) => lobby.players.has(playerId));
@@ -373,14 +426,14 @@ function startGame(client) {
     taken: [],
     pickIndex: 0,
     order: [...lobby.playerOrder],
-    target: SETTINGS.draftSize,
-    budget: SETTINGS.draftBudget
+    target: getLobbyDraftSize(lobby),
+    budget: getLobbyDraftBudget(lobby)
   };
   lobby.phase = "draft";
   scheduleActionTimer(lobby, "draft");
   pushChat(lobby, {
     kind: "system",
-    text: `Draft iniziato: ${SETTINGS.draftSize} carte max, budget ${SETTINGS.draftBudget}`
+    text: `Draft iniziato: ${lobby.draft.target} carte max, budget ${lobby.draft.budget}`
   });
   broadcastLobbyState(lobby);
 }
@@ -421,6 +474,7 @@ function startNextRound(client) {
   if (lobby.effectWindow?.status === "waiting") {
     effectWindowSystem.forcePassPending(lobby);
     if (lobby.phase === "ended") {
+      persistLobbyProgress(lobby);
       broadcastLobbyState(lobby);
       return;
     }
@@ -445,6 +499,7 @@ function restartLobby(client) {
   lobby.lastResult = null;
   lobby.winnerId = null;
   lobby.effectWindow = null;
+  lobby.progressRecorded = false;
 
   for (const player of lobby.players.values()) {
     resetPlayerForGame(player);
@@ -456,9 +511,7 @@ function restartLobby(client) {
 function startRound(lobby) {
   const alivePlayers = getAlivePlayers(lobby);
   if (alivePlayers.length < SETTINGS.minPlayers) {
-    lobby.phase = "ended";
-    lobby.winnerId = alivePlayers[0]?.id ?? null;
-    clearActionTimer(lobby);
+    finishLobby(lobby, alivePlayers[0]?.id ?? null);
     broadcastLobbyState(lobby);
     return;
   }
@@ -467,9 +520,7 @@ function startRound(lobby) {
 
   const activePair = pickActivePair(lobby);
   if (activePair.length < SETTINGS.minPlayers) {
-    lobby.phase = "ended";
-    lobby.winnerId = alivePlayers[0]?.id ?? null;
-    clearActionTimer(lobby);
+    finishLobby(lobby, alivePlayers[0]?.id ?? null);
     broadcastLobbyState(lobby);
     return;
   }
@@ -556,9 +607,7 @@ function leaveLobby(client, options = { broadcast: true }) {
         finishOrAdvanceDraft(lobby);
       }
     } else if (["select", "plan", "reveal"].includes(lobby.phase) && stillAlive.length <= 1) {
-      lobby.phase = "ended";
-      lobby.winnerId = stillAlive[0]?.id ?? null;
-      clearActionTimer(lobby);
+      finishLobby(lobby, stillAlive[0]?.id ?? null);
     } else {
       advanceRoundIfReady(lobby);
     }
@@ -596,6 +645,7 @@ function upsertClientProfile(client, profileInput) {
   client.name = profile.username;
   profilesByClientId.set(client.id, profile);
   updatePlayerProfile(client);
+  persistClientProfile(client, profile);
 }
 
 function updatePlayerProfile(client) {
@@ -622,6 +672,7 @@ function getClientProfile(client) {
 function makePlayer(client) {
   return {
     id: client.id,
+    accountId: client.accountId,
     name: client.name,
     profile: getClientProfile(client),
     health: SETTINGS.startingHealth,
@@ -641,6 +692,22 @@ function makePlayer(client) {
   };
 }
 
+function persistClientProfile(client, profile) {
+  if (!client.accountId) {
+    return;
+  }
+
+  void persistClientProfileAsync(client, profile);
+}
+
+async function persistClientProfileAsync(client, profile) {
+  try {
+    await AuthService.saveProfileForAccountId(client.accountId, profile, client.name);
+  } catch (error) {
+    console.error("Profilo account non salvato", error?.message ?? error);
+  }
+}
+
 function resetPlayerForGame(player) {
   player.health = SETTINGS.startingHealth;
   player.mana = SETTINGS.startingMana;
@@ -656,6 +723,38 @@ function resetPlayerForGame(player) {
   player.utilityDiscard = [];
   player.armedTraps = [];
   player.privateEffectLog = [];
+}
+
+function finishLobby(lobby, winnerId) {
+  lobby.phase = "ended";
+  lobby.winnerId = winnerId;
+  clearActionTimer(lobby);
+  persistLobbyProgress(lobby);
+}
+
+function persistLobbyProgress(lobby) {
+  if (lobby.progressRecorded) {
+    return;
+  }
+
+  lobby.progressRecorded = true;
+  void persistLobbyProgressAsync(lobby);
+}
+
+async function persistLobbyProgressAsync(lobby) {
+  try {
+    const isTie = !lobby.winnerId;
+    for (const player of lobby.players.values()) {
+      if (player.accountId) {
+        await AuthService.recordGameFinishedForAccount(player.accountId, {
+          won: Boolean(lobby.winnerId && player.id === lobby.winnerId),
+          tied: isTie
+        });
+      }
+    }
+  } catch (error) {
+    console.error("Progressi lobby non salvati", error?.message ?? error);
+  }
 }
 
 function getClientLobby(client) {
@@ -745,7 +844,7 @@ function isPlayerDraftDone(lobby, player) {
   return (
     !player ||
     player.deck.length >= lobby.draft.target ||
-    player.draftSpent >= SETTINGS.draftBudget ||
+    player.draftSpent >= getLobbyDraftBudget(lobby) ||
     !findAffordableDraftCard(lobby, player)
   );
 }
@@ -760,7 +859,7 @@ function canPlayerDraftCard(lobby, player, card) {
   }
 
   const cost = getDraftCost(card);
-  if (player.draftSpent + cost > SETTINGS.draftBudget) {
+  if (player.draftSpent + cost > getLobbyDraftBudget(lobby)) {
     return { ok: false, error: `Budget insufficiente (${cost} richiesti)` };
   }
 
@@ -780,7 +879,12 @@ function scheduleActionTimer(lobby, phase) {
     return;
   }
 
-  timerController.schedule(lobby, phase, SETTINGS.actionSeconds * 1000, (deadlineAt) => {
+  const actionSeconds = getLobbyActionSeconds(lobby);
+  if (!actionSeconds) {
+    return;
+  }
+
+  timerController.schedule(lobby, phase, actionSeconds * 1000, (deadlineAt) => {
     handleActionTimeout(lobby.id, phase, deadlineAt);
   });
 }
@@ -871,6 +975,22 @@ function assignFallbackUtilityDeck(player) {
 
 function findSelectableCardId(player) {
   return player.deck.find((cardId) => Number(player.cooldowns[cardId] ?? 0) <= 0 && cardsById.has(cardId));
+}
+
+function getLobbyActionSeconds(lobby) {
+  if (!lobby.settings?.pickTimerEnabled) {
+    return 0;
+  }
+
+  return Math.max(0, Number(lobby.settings.pickTimerSeconds ?? SETTINGS.actionSeconds));
+}
+
+function getLobbyDraftSize(lobby) {
+  return Math.max(1, Number(lobby.settings?.draftSize ?? SETTINGS.draftSize));
+}
+
+function getLobbyDraftBudget(lobby) {
+  return Math.max(0, Number(lobby.draft?.budget ?? lobby.settings?.draftBudget ?? SETTINGS.draftBudget));
 }
 
 function tickCooldowns(lobby) {
@@ -1000,11 +1120,9 @@ function sanitizeChatText(text) {
 
 function clampInteger(value, min, max, fallback) {
   const number = Number(value);
-  if (!Number.isFinite(number)) {
-    return fallback;
-  }
-
-  return Math.max(min, Math.min(max, Math.round(number)));
+  const nextValue = Number.isFinite(number) ? number : Number(fallback);
+  const safeValue = Number.isFinite(nextValue) ? nextValue : min;
+  return Math.max(min, Math.min(max, Math.round(safeValue)));
 }
 
 function makeLobbyId() {

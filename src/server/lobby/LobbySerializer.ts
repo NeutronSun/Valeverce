@@ -17,6 +17,7 @@ export type LobbySerializerSettings = {
   readonly maxHealth: number;
   readonly maxPlayers: number;
   readonly draftBudget: number;
+  readonly draftSize: number;
 };
 
 export type ClientState = {
@@ -27,6 +28,7 @@ export type ClientState = {
 
 export type DraftState = {
   readonly target: number;
+  readonly budget?: number;
   readonly taken: string[];
   readonly pool: string[];
 };

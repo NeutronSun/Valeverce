@@ -53,8 +53,13 @@ const rarityClasses = {
 };
 
 const MAX_UTILITY_DECK_SIZE = 8;
+const AUTH_PASSWORD_MIN_LENGTH = 6;
 const UTILITY_CARD_TYPES = Object.freeze(["utility", "defense", "trap"]);
 const TARGET_EFFECT_TYPES = Object.freeze(["damage", "swap_card", "steal_card", "swap_deck"]);
+const AUTH_MODES = Object.freeze({
+  LOGIN: "login",
+  REGISTER: "register"
+});
 const HOME_PAGES = Object.freeze([
   { id: "play", label: "Gioca" },
   { id: "profile", label: "Profilo" },
@@ -106,6 +111,145 @@ function sortPublicLobbies(lobbies) {
 
     return String(a.id ?? "").localeCompare(String(b.id ?? ""));
   });
+}
+
+export function AuthGate({ initialName = "", connectionState, pingMs }) {
+  const [mode, setMode] = React.useState(/** @type {string} */ (AUTH_MODES.LOGIN));
+  const [nick, setNick] = React.useState(initialName || "");
+  const [password, setPassword] = React.useState("");
+  const [iconId, setIconId] = React.useState(PlayerProfile.iconForName(initialName || PlayerProfile.DEFAULT_USERNAME));
+  const [error, setError] = React.useState("");
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const cleanNick = PlayerProfile.normalizeUsername(nick);
+  const isRegister = mode === AUTH_MODES.REGISTER;
+  const canSubmit = cleanNick.length > 0 && password.length >= AUTH_PASSWORD_MIN_LENGTH && !isSubmitting;
+  const profilePreview = PlayerProfile.from({
+    username: cleanNick,
+    avatar: {
+      kind: "image",
+      iconId,
+      initials: PlayerProfile.makeInitials(cleanNick),
+      colorId: PlayerProfile.colorForName(cleanNick)
+    }
+  }).toJSON();
+
+  async function submit(event) {
+    event.preventDefault();
+    if (!canSubmit) {
+      return;
+    }
+
+    setError("");
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch(isRegister ? "/api/auth/register" : "/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          nick: cleanNick,
+          password,
+          profile: isRegister ? profilePreview : undefined
+        })
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        setError(data.error ?? "Accesso non riuscito");
+        return;
+      }
+
+      window.location.reload();
+    } catch {
+      setError("Server account non raggiungibile");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  return (
+    <main className={styles.profileGate}>
+      <section className={styles.profileGatePanel}>
+        <div className={styles.profileGateBrand}>
+          <span className={styles.homeMark}>V</span>
+          <div>
+            <p className={styles.homeEyebrow}>account server</p>
+            <h1 className={styles.homeTitle}>VALEVERCE</h1>
+            <p className={styles.homeSubtitle}>Entra con il tuo nick o crea un account.</p>
+          </div>
+        </div>
+
+        <div className={styles.authTabs} role="tablist" aria-label="Accesso account">
+          <button
+            type="button"
+            className={classNames(styles.authTab, mode === AUTH_MODES.LOGIN && styles.authTabActive)}
+            aria-selected={mode === AUTH_MODES.LOGIN}
+            onClick={() => setMode(AUTH_MODES.LOGIN)}
+          >
+            Login
+          </button>
+          <button
+            type="button"
+            className={classNames(styles.authTab, mode === AUTH_MODES.REGISTER && styles.authTabActive)}
+            aria-selected={mode === AUTH_MODES.REGISTER}
+            onClick={() => setMode(AUTH_MODES.REGISTER)}
+          >
+            Crea account
+          </button>
+        </div>
+
+        <form className={styles.profileForm} onSubmit={submit}>
+          {isRegister ? (
+            <div className={styles.profilePreview}>
+              <ProfileAvatar profile={profilePreview} size="xl" />
+              <div>
+                <strong>{profilePreview.username}</strong>
+                <span>Nick unico</span>
+              </div>
+            </div>
+          ) : null}
+
+          <label className={styles.homeField}>
+            <span className={styles.homeFieldLabel}>Nick</span>
+            <input
+              className={styles.homeInput}
+              value={nick}
+              maxLength={PlayerProfile.MAX_USERNAME_LENGTH}
+              autoComplete="username"
+              placeholder="Scrivi nick"
+              onChange={(event) => setNick(event.target.value)}
+            />
+          </label>
+
+          <label className={styles.homeField}>
+            <span className={styles.homeFieldLabel}>Password</span>
+            <input
+              className={styles.homeInput}
+              value={password}
+              minLength={AUTH_PASSWORD_MIN_LENGTH}
+              autoComplete={isRegister ? "new-password" : "current-password"}
+              placeholder="Password"
+              type="password"
+              onChange={(event) => setPassword(event.target.value)}
+            />
+          </label>
+
+          {isRegister ? <AvatarIconPicker username={cleanNick} iconId={iconId} onIconIdChange={setIconId} /> : null}
+
+          {error ? <p className={styles.authError}>{error}</p> : null}
+
+          <button type="submit" className={styles.homePrimaryButton} disabled={!canSubmit}>
+            {isSubmitting ? "Attendi" : isRegister ? "Crea account" : "Login"}
+          </button>
+        </form>
+
+        <div className={styles.profileGateStatus}>
+          <ConnectionSignal connectionState={connectionState} pingMs={pingMs} />
+        </div>
+      </section>
+    </main>
+  );
 }
 
 export function CreateProfileGate({ initialName = "", connectionState, pingMs, onProfileCreate }) {
@@ -184,11 +328,13 @@ export function CreateProfileGate({ initialName = "", connectionState, pingMs, o
 }
 
 export function HomeView({
+  auth,
   snapshot,
   name,
   onNameChange,
   profile,
   onProfileChange,
+  onLogout,
   activePage = "play",
   onActivePageChange,
   emit,
@@ -218,6 +364,11 @@ export function HomeView({
 
         <div className={styles.homeStats}>
           <ProfileAvatar profile={profile} name={name} size="sm" label />
+          {auth ? (
+            <button type="button" className={styles.homeLogoutButton} onClick={onLogout}>
+              Logout
+            </button>
+          ) : null}
           <ConnectionSignal connectionState={connectionState} pingMs={pingMs} />
           <span className={styles.homeStat}>
             <span className={styles.homeStatLabel}>online</span>
@@ -255,7 +406,9 @@ export function HomeView({
           />
         ) : null}
 
-        {currentPage === "profile" ? <ProfileHomePage profile={profile} onProfileChange={onProfileChange} /> : null}
+        {currentPage === "profile" ? (
+          <ProfileHomePage auth={auth} profile={profile} onProfileChange={onProfileChange} onLogout={onLogout} />
+        ) : null}
 
         {currentPage === "decks" ? (
           <UtilityDeckManager
@@ -378,7 +531,7 @@ function HomePlayPage({ name, onNameChange, emit, connectionState, publicLobbies
   );
 }
 
-function ProfileHomePage({ profile, onProfileChange }) {
+function ProfileHomePage({ auth, profile, onProfileChange, onLogout }) {
   const normalizedProfile = PlayerProfile.from(profile ?? {}).toJSON();
   const [username, setUsername] = React.useState(normalizedProfile.username);
 
@@ -415,10 +568,10 @@ function ProfileHomePage({ profile, onProfileChange }) {
     <section className={styles.profilePage}>
       <div className={styles.homePanelHeader}>
         <div className={styles.homePanelTitleGroup}>
-          <p className={styles.homePanelEyebrow}>profilo locale</p>
+          <p className={styles.homePanelEyebrow}>profilo server</p>
           <h2 className={styles.homePanelTitle}>Modifica profilo</h2>
         </div>
-        <span className={styles.homePanelMeta}>local + RAM</span>
+        <span className={styles.homePanelMeta}>{auth?.account?.nick ?? "account"}</span>
       </div>
 
       <div className={styles.profileEditorGrid}>
@@ -429,6 +582,14 @@ function ProfileHomePage({ profile, onProfileChange }) {
         </div>
 
         <div className={styles.profileForm}>
+          <div className={styles.accountSummary}>
+            <span>Nick login</span>
+            <strong>{auth?.account?.nick ?? normalizedProfile.username}</strong>
+            <button type="button" className={styles.joinButton} onClick={onLogout}>
+              Logout
+            </button>
+          </div>
+
           <label className={styles.homeField}>
             <span className={styles.homeFieldLabel}>Username</span>
             <input
@@ -680,7 +841,8 @@ export function LobbyView({ lobby, emit }) {
   const isHost = lobby.self?.id === lobby.hostId;
   const lobbySettings = lobby.settings ?? {};
   const pickTimerEnabled = Boolean(lobbySettings.pickTimerEnabled);
-  const pickTimerSeconds = Number(lobbySettings.pickTimerSeconds ?? SETTINGS.actionSeconds);
+  const pickTimerSeconds = pickTimerEnabled ? Math.max(10, Number(lobbySettings.pickTimerSeconds ?? SETTINGS.actionSeconds)) : 0;
+  const timerSliderSeconds = pickTimerSeconds > 0 ? pickTimerSeconds : SETTINGS.actionSeconds;
   const draftSize = Number(lobbySettings.draftSize ?? SETTINGS.draftSize);
   const minDraftBudget = draftSize * 2;
   const maxDraftBudget = draftSize * 6;
@@ -692,7 +854,7 @@ export function LobbyView({ lobby, emit }) {
   function updateLobbySettings(nextSettings) {
     emit?.(CLIENT_EVENTS.UPDATE_LOBBY_SETTINGS, {
       pickTimerEnabled,
-      pickTimerSeconds,
+      pickTimerSeconds: timerSliderSeconds,
       draftSize,
       draftBudget,
       ...nextSettings
@@ -751,7 +913,7 @@ export function LobbyView({ lobby, emit }) {
                 onChange={(event) =>
                   updateLobbySettings({
                     pickTimerEnabled: event.target.checked,
-                    pickTimerSeconds,
+                    pickTimerSeconds: event.target.checked ? timerSliderSeconds : 0,
                     draftSize,
                     draftBudget
                   })
@@ -759,8 +921,8 @@ export function LobbyView({ lobby, emit }) {
               />
               <span className={styles.settingSwitch} />
               <span className={styles.settingCopy}>
-                <strong className={styles.settingTitle}>Timer pick draft</strong>
-                <small className={styles.settingDescription}>Se attivo, il player di turno autopicka quando scade.</small>
+                <strong className={styles.settingTitle}>Timer draft e scelta</strong>
+                <small className={styles.settingDescription}>Se attivo, autopick e autoselezione partono allo scadere.</small>
               </span>
             </label>
           </div>
@@ -768,7 +930,7 @@ export function LobbyView({ lobby, emit }) {
           <div className={classNames(styles.settingRow, !pickTimerEnabled && styles.disabled)}>
             <div className={styles.settingHeader}>
               <span className={styles.settingName}>Durata pick</span>
-              <b className={styles.settingValue}>{pickTimerSeconds}s</b>
+              <b className={styles.settingValue}>{pickTimerEnabled ? `${timerSliderSeconds}s` : "Off"}</b>
             </div>
             <input
               className={styles.settingSlider}
@@ -776,7 +938,7 @@ export function LobbyView({ lobby, emit }) {
               min="10"
               max="60"
               step="5"
-              value={pickTimerSeconds}
+              value={timerSliderSeconds}
               disabled={!isHost || !pickTimerEnabled}
               onChange={(event) =>
                 updateLobbySettings({

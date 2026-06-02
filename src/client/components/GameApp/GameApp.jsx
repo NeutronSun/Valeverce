@@ -10,7 +10,7 @@ import { PlayerRail } from "../PlayerRail/PlayerRail.jsx";
 import { ProfileAvatar } from "../ProfileAvatar/ProfileAvatar.jsx";
 import { RightPanel } from "../RightPanel/RightPanel.jsx";
 import {
-  CreateProfileGate,
+  AuthGate,
   DraftView,
   HomeView,
   LobbyView,
@@ -36,11 +36,14 @@ import styles from "./GameApp.module.css";
 const UTILITY_DECK_STORAGE_KEY = "valeverce.utilityDecks.v1";
 const MAX_STORED_UTILITY_DECKS = 12;
 
-export function GameApp({ initialLobbyId = "" }) {
-  const { snapshot, connectionState, pingMs, lastError, clearError, emit, setName, upsertProfile } = useGameSocket();
+export function GameApp({ initialAuth = null, initialLobbyId = "" }) {
+  const { snapshot, connectionState, pingMs, lastError, clearError, emit, setName, upsertProfile } = useGameSocket({
+    initialProfile: initialAuth?.profile ?? null
+  });
   const lobby = snapshot?.lobby ?? null;
-  const [name, setNameState] = useState("");
-  const [profile, setProfile] = useState(null);
+  const [auth, setAuth] = useState(initialAuth);
+  const [name, setNameState] = useState(initialAuth?.profile?.username ?? "");
+  const [profile, setProfile] = useState(initialAuth?.profile ?? null);
   const [activeHomePage, setActiveHomePage] = useState("play");
   const [selectedCardId, setSelectedCardId] = useState("");
   const [previewCard, setPreviewCard] = useState(null);
@@ -49,7 +52,7 @@ export function GameApp({ initialLobbyId = "" }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [draftGroupMode, setDraftGroupMode] = useState("rarity");
   const [cardCatalog, setCardCatalog] = useState([]);
-  const [utilityDecks, setUtilityDecks] = useState([]);
+  const [utilityDecks, setUtilityDecks] = useState(initialAuth?.decks ?? []);
   const [height, setHeight] = useState(0);
   const shellRef = useRef(null);
   const menuDialogRef = useRef(null);
@@ -70,12 +73,23 @@ export function GameApp({ initialLobbyId = "" }) {
   }, []);
 
   useEffect(() => {
+    if (initialAuth?.profile) {
+      const initialDecks = Array.isArray(initialAuth.decks) ? initialAuth.decks : [];
+      setAuth(initialAuth);
+      setProfile(initialAuth.profile);
+      setNameState(initialAuth.profile.username);
+      setUtilityDecks(initialDecks);
+      ProfileStore.save(initialAuth.profile);
+      window.localStorage.setItem(UTILITY_DECK_STORAGE_KEY, JSON.stringify(initialDecks));
+      return;
+    }
+
     const savedProfile = ProfileStore.read();
     const savedName = window.localStorage.getItem("valeverce.playerName") ?? "";
     setProfile(savedProfile);
     setNameState(savedProfile?.username ?? savedName);
     setUtilityDecks(readUtilityDecks());
-  }, []);
+  }, [initialAuth]);
 
   useEffect(() => {
     let isMounted = true;
@@ -198,6 +212,24 @@ export function GameApp({ initialLobbyId = "" }) {
     [cardCatalog]
   );
 
+  const persistProfile = useCallback(async (nextProfile) => {
+    try {
+      const response = await fetch("/api/player/profile", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ profile: nextProfile })
+      });
+      const data = await response.json();
+      if (response.ok && data.auth) {
+        setAuth(data.auth);
+      }
+    } catch {
+      return;
+    }
+  }, []);
+
   const updateName = useCallback(
     (value) => {
       setNameState(value);
@@ -211,11 +243,14 @@ export function GameApp({ initialLobbyId = "" }) {
         });
         setProfile(nextProfile);
         upsertProfile(nextProfile);
+        if (auth) {
+          void persistProfile(nextProfile);
+        }
       } else {
         setName(value);
       }
     },
-    [profile, setName, upsertProfile]
+    [auth, persistProfile, profile, setName, upsertProfile]
   );
 
   const saveProfile = useCallback(
@@ -223,14 +258,49 @@ export function GameApp({ initialLobbyId = "" }) {
       const normalizedProfile = upsertProfile(nextProfile);
       setProfile(normalizedProfile);
       setNameState(normalizedProfile.username);
+      if (auth) {
+        void persistProfile(normalizedProfile);
+      }
     },
-    [upsertProfile]
+    [auth, persistProfile, upsertProfile]
   );
 
-  const saveUtilityDecks = useCallback((nextDecks) => {
-    const normalizedDecks = nextDecks.slice(0, MAX_STORED_UTILITY_DECKS);
-    setUtilityDecks(normalizedDecks);
-    window.localStorage.setItem(UTILITY_DECK_STORAGE_KEY, JSON.stringify(normalizedDecks));
+  const persistUtilityDecks = useCallback(async (nextDecks) => {
+    try {
+      const response = await fetch("/api/player/decks", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ decks: nextDecks })
+      });
+      const data = await response.json();
+      if (response.ok && data.auth) {
+        setAuth(data.auth);
+      }
+    } catch {
+      return;
+    }
+  }, []);
+
+  const saveUtilityDecks = useCallback(
+    (nextDecks) => {
+      const normalizedDecks = nextDecks.slice(0, MAX_STORED_UTILITY_DECKS);
+      setUtilityDecks(normalizedDecks);
+      window.localStorage.setItem(UTILITY_DECK_STORAGE_KEY, JSON.stringify(normalizedDecks));
+      if (auth) {
+        void persistUtilityDecks(normalizedDecks);
+      }
+    },
+    [auth, persistUtilityDecks]
+  );
+
+  const logout = useCallback(async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } finally {
+      window.location.reload();
+    }
   }, []);
 
   const onPlanValue = useCallback(
@@ -283,20 +353,21 @@ export function GameApp({ initialLobbyId = "" }) {
           </aside>
         ) : null}
 
-        {!lobby && !profile ? (
-          <CreateProfileGate
+        {!lobby && !auth ? (
+          <AuthGate
             initialName={name}
             connectionState={connectionState}
             pingMs={pingMs}
-            onProfileCreate={saveProfile}
           />
         ) : !lobby ? (
           <HomeView
+            auth={auth}
             snapshot={snapshot}
             name={name}
             onNameChange={updateName}
             profile={profile}
             onProfileChange={saveProfile}
+            onLogout={logout}
             activePage={activeHomePage}
             onActivePageChange={setActiveHomePage}
             emit={emit}
@@ -427,8 +498,50 @@ function MatchHeader({ lobby, connectionState, pingMs }) {
           <span className={styles.metaLabel}>Round</span>
           <b className={styles.metaValue}>{lobby.round ?? 0}</b>
         </span>
+        <ActionTimer lobby={lobby} />
       </div>
       <ConnectionSignal connectionState={connectionState} pingMs={pingMs} />
     </header>
   );
+}
+
+function ActionTimer({ lobby }) {
+  const seconds = useDeadlineSeconds(lobby.deadlineAt);
+  const isVisible = Boolean(lobby.deadlineAt && ["draft", "select"].includes(lobby.phase));
+
+  if (!isVisible) {
+    return null;
+  }
+
+  return (
+    <span className={`${styles.metaItem} ${styles.timerItem} ${seconds <= 5 ? styles.timerLow : ""}`} aria-live="polite">
+      <span className={styles.metaLabel}>Timer</span>
+      <b className={styles.metaValue}>{seconds}s</b>
+    </span>
+  );
+}
+
+function useDeadlineSeconds(deadlineAt) {
+  const [seconds, setSeconds] = useState(() => getDeadlineSeconds(deadlineAt));
+
+  useEffect(() => {
+    setSeconds(getDeadlineSeconds(deadlineAt));
+    if (!deadlineAt) {
+      return undefined;
+    }
+
+    const interval = window.setInterval(() => {
+      setSeconds(getDeadlineSeconds(deadlineAt));
+    }, 250);
+
+    return () => {
+      window.clearInterval(interval);
+    };
+  }, [deadlineAt]);
+
+  return seconds;
+}
+
+function getDeadlineSeconds(deadlineAt) {
+  return Math.max(0, Math.ceil((Number(deadlineAt ?? 0) - Date.now()) / 1000));
 }

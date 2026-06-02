@@ -8,13 +8,18 @@ import { ProfileStore } from "./profile/ProfileStore.js";
 const storedNameKey = "valeverce.playerName";
 const pingIntervalMs = 2500;
 
-export function useGameSocket() {
+export function useGameSocket({ initialProfile = null } = {}) {
   const socketRef = useRef(null);
+  const initialProfileRef = useRef(initialProfile);
   const [snapshot, setSnapshot] = useState(null);
   const [selfId, setSelfId] = useState(null);
   const [connectionState, setConnectionState] = useState("connecting");
   const [lastError, setLastError] = useState("");
   const [pingMs, setPingMs] = useState(null);
+
+  useEffect(() => {
+    initialProfileRef.current = initialProfile;
+  }, [initialProfile]);
 
   useEffect(() => {
     const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL || undefined, {
@@ -51,7 +56,7 @@ export function useGameSocket() {
 
     socket.on("connect", () => {
       setConnectionState("connected");
-      const savedProfile = ProfileStore.read();
+      const savedProfile = initialProfileRef.current ?? ProfileStore.read();
       const savedName = window.localStorage.getItem(storedNameKey);
       if (savedProfile) {
         socket.emit(CLIENT_EVENTS.UPSERT_PROFILE, { profile: savedProfile });

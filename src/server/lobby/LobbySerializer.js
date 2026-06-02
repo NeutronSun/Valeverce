@@ -133,8 +133,8 @@ export class LobbySerializer {
       deckCount: player.deck.length,
       draftCount: player.deck.length,
       draftSpent: player.draftSpent,
-      draftBudget: this.SETTINGS.draftBudget,
-      draftBudgetRemaining: Math.max(0, this.SETTINGS.draftBudget - player.draftSpent),
+      draftBudget: this.getDraftBudget(lobby),
+      draftBudgetRemaining: Math.max(0, this.getDraftBudget(lobby) - player.draftSpent),
       cooldowns: player.cooldowns,
       alive: player.alive,
       utilityDeckReady: Boolean(player.utilityDeckReady),
@@ -178,8 +178,8 @@ export class LobbySerializer {
       deck: self.deck.map((cardId) => this.cardsById.get(cardId)).filter(Boolean),
       deckCount: self.deck.length,
       draftSpent: self.draftSpent,
-      draftBudget: this.SETTINGS.draftBudget,
-      draftBudgetRemaining: Math.max(0, this.SETTINGS.draftBudget - self.draftSpent),
+      draftBudget: this.getDraftBudget(lobby),
+      draftBudgetRemaining: Math.max(0, this.getDraftBudget(lobby) - self.draftSpent),
       cooldowns: self.cooldowns,
       utilityDeck: this.serializeCards(self.utilityDeck ?? []),
       utilityDeckReady: Boolean(self.utilityDeckReady),
@@ -276,7 +276,7 @@ export class LobbySerializer {
     const self = lobby.players.get(selfId);
     return {
       target: lobby.draft.target,
-      budget: this.SETTINGS.draftBudget,
+      budget: this.getDraftBudget(lobby),
       currentPlayerId: currentDrafterId,
       taken: lobby.draft.taken,
       pool: lobby.draft.pool.map((cardId) => {
@@ -295,10 +295,14 @@ export class LobbySerializer {
           takenByName: takenBy?.name ?? null,
           isAvailable: !takenBy,
           canPick,
-          canAfford: Boolean(self && self.draftSpent + cost <= this.SETTINGS.draftBudget)
+          canAfford: Boolean(self && self.draftSpent + cost <= this.getDraftBudget(lobby))
         };
       })
     };
+  }
+
+  getDraftBudget(lobby) {
+    return Math.max(0, Number(lobby.draft?.budget ?? lobby.settings?.draftBudget ?? this.SETTINGS.draftBudget));
   }
 
   /**

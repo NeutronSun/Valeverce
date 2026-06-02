@@ -1218,6 +1218,110 @@
   gap: 12px;
 }
 
+.fightCinematic {
+  position: fixed;
+  inset: 66px 8px 8px;
+  z-index: 34;
+  min-width: 0;
+  min-height: 0;
+}
+
+.fightCinematic .fightPanel {
+  position: relative;
+  min-height: 100%;
+  overflow: hidden;
+  border: 0;
+  border-radius: 12px;
+  padding: 0;
+  background: transparent;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.46);
+}
+
+.fightBattlefield {
+  position: absolute;
+  inset: 0;
+  min-height: 0;
+  height: 100%;
+  border-radius: 12px;
+}
+
+.fightCinematic .fightHead {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  z-index: 6;
+  width: min(520px, calc(100% - 32px));
+  border: 1px solid rgba(214, 174, 82, 0.32);
+  border-radius: 10px;
+  padding: 9px 12px;
+  background: rgba(7, 8, 7, 0.74);
+  box-shadow: 0 16px 38px rgba(0, 0, 0, 0.34);
+  transform: translateX(-50%);
+  backdrop-filter: blur(8px);
+  pointer-events: none;
+}
+
+.fightCinematic .fightSteps {
+  position: absolute;
+  top: 94px;
+  left: 50%;
+  z-index: 6;
+  width: min(460px, calc(100% - 32px));
+  transform: translateX(-50%);
+}
+
+.fightCinematic .planner {
+  position: absolute;
+  right: 342px;
+  bottom: 236px;
+  left: 14px;
+  z-index: 6;
+  align-items: end;
+  pointer-events: none;
+}
+
+.fightCinematic .planner > section,
+.fightCinematic .fightPreviewPanel,
+.fightCinematic .notice {
+  pointer-events: auto;
+}
+
+.fightCinematic .choice {
+  max-height: min(32vh, 300px);
+  overflow: auto;
+  border-color: rgba(255, 255, 255, 0.1);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.036), rgba(0, 0, 0, 0.18)),
+    rgba(7, 8, 7, 0.76);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.34);
+  backdrop-filter: blur(8px);
+}
+
+.fightCinematic .fightPreviewPanel {
+  position: absolute;
+  right: 14px;
+  bottom: 236px;
+  z-index: 6;
+  width: 314px;
+  max-width: calc(100% - 28px);
+  background:
+    linear-gradient(90deg, rgba(214, 174, 82, 0.14), rgba(77, 191, 158, 0.06)),
+    rgba(7, 8, 7, 0.78);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.34);
+  backdrop-filter: blur(8px);
+}
+
+.fightCinematic .notice {
+  position: absolute;
+  top: 146px;
+  left: 50%;
+  z-index: 7;
+  width: fit-content;
+  max-width: min(520px, calc(100% - 32px));
+  margin: 0;
+  transform: translateX(-50%);
+}
+
 .fightPanel,
 .choice,
 .preview,
@@ -1315,6 +1419,55 @@
   background:
     linear-gradient(90deg, rgba(214, 174, 82, 0.08), transparent),
     rgba(7, 8, 7, 0.62);
+}
+
+@media (max-width: 1100px) {
+  .fightCinematic {
+    inset: 96px 8px 8px;
+  }
+
+  .fightCinematic .planner {
+    right: 14px;
+    bottom: 228px;
+    max-height: 26vh;
+    overflow: auto;
+  }
+
+  .fightCinematic .fightPreviewPanel {
+    display: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .fightCinematic {
+    inset: 118px 6px 8px;
+  }
+
+  .fightCinematic .fightHead {
+    top: 8px;
+    width: calc(100% - 16px);
+
+    & strong {
+      font-size: 0.88rem;
+    }
+
+    & small {
+      display: none;
+    }
+  }
+
+  .fightCinematic .fightSteps {
+    top: 74px;
+    width: calc(100% - 16px);
+  }
+
+  .fightCinematic .planner {
+    right: 8px;
+    bottom: 212px;
+    left: 8px;
+    grid-template-columns: 1fr;
+    max-height: 24vh;
+  }
 }
 
 .choice[data-plan-kind="attacks"] {

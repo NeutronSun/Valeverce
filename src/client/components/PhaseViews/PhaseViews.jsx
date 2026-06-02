@@ -28,6 +28,7 @@ import {
   validatePlanDraft
 } from "../../ui.js";
 import { AbilityBox, GameCard } from "../Card/Card.jsx";
+import { Battlefield3D } from "../Battlefield3D/Battlefield3D.jsx";
 import { ConnectionSignal } from "../ConnectionSignal/ConnectionSignal.jsx";
 import { ProfileAvatar } from "../ProfileAvatar/ProfileAvatar.jsx";
 import { ValerioStats } from "../ValerioStats/ValerioStats.jsx";
@@ -1094,6 +1095,26 @@ export function SelectView({
 }) {
   const self = lobby.self;
   const needsUtilityDeck = Boolean(self?.isActive && !self.utilityDeckReady);
+  const handFallback = (
+    <div className={styles.hand}>
+      {sortCardsByRarity(self?.deck ?? []).map((card) => {
+        const cooldown = Number(self.cooldowns?.[card.id] ?? 0);
+        const disabled = !self.isActive || cooldown > 0 || Boolean(self.selected?.cardId);
+        return (
+          <GameCard
+            key={card.id}
+            card={card}
+            selected={selectedCardId === card.id || self.selected?.cardId === card.id}
+            disabled={disabled}
+            cooldown={cooldown}
+            onClick={() => {
+              onSelectedCardId(card.id);
+            }}
+          />
+        );
+      })}
+    </div>
+  );
 
   if (needsUtilityDeck) {
     return (
@@ -1118,24 +1139,13 @@ export function SelectView({
         <strong>{self?.isActive ? "Scegli carta coperta" : "Stai guardando il duello"}</strong>
         <span>{lobby.players.filter((player) => player.hasSelected).length}/{lobby.activePair.length} pronte</span>
       </div>
-      <div className={styles.hand}>
-        {sortCardsByRarity(self?.deck ?? []).map((card) => {
-          const cooldown = Number(self.cooldowns?.[card.id] ?? 0);
-          const disabled = !self.isActive || cooldown > 0 || Boolean(self.selected?.cardId);
-          return (
-            <GameCard
-              key={card.id}
-              card={card}
-              selected={selectedCardId === card.id || self.selected?.cardId === card.id}
-              disabled={disabled}
-              cooldown={cooldown}
-              onClick={() => {
-                onSelectedCardId(card.id);
-              }}
-            />
-          );
-        })}
-      </div>
+      <Battlefield3D
+        lobby={lobby}
+        selectedCardId={selectedCardId}
+        phase={lobby.phase}
+        onSelectCard={onSelectedCardId}
+        fallback={handFallback}
+      />
     </section>
   );
 }
@@ -1193,7 +1203,7 @@ export function PlanFightView({ lobby, plan, onPlanValue, onPreviewLines }) {
   const selectedDefenseStats = selectedStats(plan.defenses);
 
   return (
-    <section className={styles.fight}>
+    <section className={classNames(styles.fight, styles.fightCinematic)}>
       <section className={styles.fightPanel}>
         <div className={styles.fightHead}>
           <span>Fight · round {lobby.round}</span>
@@ -1201,10 +1211,18 @@ export function PlanFightView({ lobby, plan, onPlanValue, onPreviewLines }) {
           <small>La configurazione avversaria resta nascosta fino al reveal.</small>
         </div>
 
-        <div className={styles.fightCards}>
-          <PlanCardPanel title="La tua carta" card={selfCard} statsTone="attack" highlighted={selectedAttackStats} />
-          <PlanCardPanel title="Carta avversaria" card={opponentCard} statsTone="defense" highlighted={selectedDefenseStats} />
-        </div>
+        <Battlefield3D
+          lobby={lobby}
+          selectedCardId={lobby.self?.selected?.cardId ?? ""}
+          phase={lobby.phase}
+          className={styles.fightBattlefield}
+          fallback={
+            <div className={styles.fightCards}>
+              <PlanCardPanel title="La tua carta" card={selfCard} statsTone="attack" highlighted={selectedAttackStats} />
+              <PlanCardPanel title="Carta avversaria" card={opponentCard} statsTone="defense" highlighted={selectedDefenseStats} />
+            </div>
+          }
+        />
 
         <div className={styles.fightSteps}>
           <span className={classNames(styles.fightStep, defenseReady && styles.fightStepDone, !defenseReady && styles.fightStepActive)}>
@@ -1395,9 +1413,35 @@ export function RevealView({ lobby, emit }) {
   const effectWindowOpen = lobby.effectWindow?.status === "waiting";
   const outcome = effectWindowOpen ? "Reazione utility" : result.isTie ? "Pareggio" : result.winnerId === lobby.self?.id ? "Hai vinto" : "Hai perso";
   const heroClass = effectWindowOpen ? "is-tie" : result.isTie ? "is-tie" : result.winnerId === lobby.self?.id ? "is-win" : "is-lose";
+  const utilityTargets = lobby.players.filter((player) => lobby.effectWindow?.playerIds?.includes(player.id) && player.id !== lobby.self?.id);
+
+  function playUtilityFromBoard(cardId) {
+    const card = lobby.self?.utilityHand?.find((item) => item.id === cardId);
+    if (!card || !effectWindowOpen) {
+      return;
+    }
+
+    const needsTarget = utilityCardNeedsTarget(card);
+    const targetPlayerId = utilityTargets[0]?.id ?? null;
+    if (needsTarget && !targetPlayerId) {
+      return;
+    }
+
+    emit(CLIENT_EVENTS.PLAY_EFFECT_CARD, {
+      cardId,
+      targetPlayerId: needsTarget ? targetPlayerId : null
+    });
+  }
 
   return (
     <section className={styles.reveal}>
+      <Battlefield3D
+        lobby={lobby}
+        selectedCardId={lobby.self?.selected?.cardId ?? ""}
+        phase={lobby.phase}
+        onPlayUtility={playUtilityFromBoard}
+      />
+
       <div className={classNames(styles.revealHero, styles[heroClass.replace("is-", "")])}>
         <span>Reveal · round {result.round}</span>
         <strong>{outcome}</strong>
